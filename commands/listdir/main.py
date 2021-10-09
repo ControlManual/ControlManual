@@ -12,7 +12,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     path: str = utils.get_path(client.path, '' if len(args) == 0 else args[0])
     
     if not path:
-        return utils.error(f'File "{path}" does not exist.')
+        return utils.error(f'Folder "{args[0]}" does not exist.')
 
     client.utils.success(
         "\n".join(

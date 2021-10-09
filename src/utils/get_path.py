@@ -10,6 +10,10 @@ def get_path(current_path: str, path: str, file: bool = False) -> Union[None, st
         else:
             if os.path.isfile(path):
                 return path if file else None
+            else:
+                return path if not file else None
     else:
-        if os.path.isfile(path):
+        if os.path.isfile(merged):
             return merged if file else None
+        else:
+            return merged if not file else None

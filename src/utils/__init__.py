@@ -10,5 +10,4 @@ from .success import success, make_success
 from .format_json import format_json
 from .run_exe import run_exe
 from .undo_print import undo_print
-from .json_object import JSONFile
 from .get_path import get_path

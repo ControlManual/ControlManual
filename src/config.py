@@ -8,6 +8,6 @@ class Config(JSONFile):
     """Class representing config."""
     def __init__(self) -> None:
         """Class representing config."""
-        super().__init__(cm_dir)
+        super().__init__(config_path)
         
         self.set_value('cm_dir', cm_dir)

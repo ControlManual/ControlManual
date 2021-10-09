@@ -3,7 +3,7 @@ from typing import Dict, Union, Callable, List, Any
 from types import ModuleType
 from .error import CMError
 from pathlib import Path
-from .config import Config, cm_dir
+from .config import Config, cm_dir, config_path
 import os
 from . import utils, api, objects
 from .utils import *
@@ -30,7 +30,9 @@ class Client:
         self._toggled_output: bool = True
         self._origin: Path = self._path
         self._variables: Dict[str, str] = {
-            'path': str(self._path)
+            'path': str(self._path),
+            'config': self.config_path,
+            'cmdir': self.cm_dir
         }
         self._aliases: Dict[str, str] = self._config.aliases
 
@@ -76,6 +78,16 @@ class Client:
         self._commands: Dict[str, Dict[str, Union[ModuleType, str]]] = load_commands(
             join(self._config.cm_dir, 'commands')
         )
+
+    @property
+    def cm_dir(self) -> str:
+        """Top level directory of Control Manual."""
+        return cm_dir
+    
+    @property
+    def config_path(self) -> str:
+        """Location of the config file."""
+        return config_path
 
     @property
     def function_open(self) -> bool:
@@ -277,6 +289,7 @@ class Client:
                         utils.error('Function is not open.')
                     else:
                         self._function_open = False
+                        self._current_function = None
                 else:
                     utils.error('No function currently defined.')
 
