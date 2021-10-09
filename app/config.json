@@ -20,5 +20,5 @@
         "config": "json '{config}'",
         "end": "exit"
     },
-    "cm_dir": "/mnt/e/Projects/Python/Control Manual"
+    "cm_dir": "/mnt/e/Projects/Python/Control Manual/app"
 }

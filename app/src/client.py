@@ -34,9 +34,11 @@ class Client:
             'config': self.config_path,
             'cmdir': self.cm_dir
         }
-        self._aliases: Dict[str, str] = self._config.aliases
+        self._aliases: Dict[str, str] = {}
+        for i in self._config.aliases:
+            self._aliases[i] = self.load_variables(self._config.aliases[i])
 
-        if os.name == 'nt': # if the platform is windows
+        if os.name == 'nt':
             colorama.init(convert=True) # enables ascii stuff for windows
 
         clear(), title('Control Manual')
@@ -48,7 +50,7 @@ class Client:
         try:
             resp = requests.get("https://api.controlmanual.xyz/")
 
-            if resp.status_code == 502:
+            if not resp.status_code == 200:
                 raise Exception()
 
             self._connected = True
