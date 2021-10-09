@@ -152,9 +152,9 @@ class Client:
         """Command aliases."""
         return self._aliases
     
-    def add_alias(self, alias, value) -> None:
-        """Function for adding command aliases"""
-        self._aliases[alias] = value
+    def add_alias(self, alias: str, value: str) -> None:
+        """Function for adding command aliases."""
+        self._aliases[alias] = self.load_variables(value)
 
     @property
     def version(self) -> str:
@@ -203,6 +203,12 @@ class Client:
         """Tell the Control Manual instance to reset after the current command has finished. Only works when run via the main file."""
         self._reset = True
 
+    def load_variables(self, data: str) -> str:
+        """Function for loading variables into a string."""
+        for i in self._variables:
+            data: str = data.replace('{' + i + '}', self._variables[i])
+        
+        return data
 
     def start(self, filename) -> Union[None, Reload]:
         """Start the main loop."""
@@ -231,7 +237,7 @@ class Client:
                 return Reload
 
             filename = False
-            
+    
     def run_command(self, command: str) -> None:
         """Function for running a command."""
         if command.startswith('//'):
@@ -240,9 +246,7 @@ class Client:
         cmds = command.split(';')
     
         for i in cmds:
-            for i in self._variables:
-                command: str = command.replace('{' + i + '}', self._variables[i])
-
+            command = self.load_variables(command)
 
             split: List[str] = command.split(' ')
             raw_args = ' '.join(split[1:]) # unsplit string of arguments
@@ -253,7 +257,7 @@ class Client:
                 cmd = spl[0]
                 if len(spl) > 1:
                     excess: str = " ".join(spl[1:])
-                    raw_args = excess + raw_args
+                    raw_args = excess + ' ' + raw_args
 
     
             args, kwargs, flags = parse(raw_args)

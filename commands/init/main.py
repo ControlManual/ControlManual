@@ -13,8 +13,9 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     config = client.config
     utils = client.utils
     api = client.api
+    objects = client.objects
 
-    if args == []:
+    if not args:
         return utils.error('Please specify a message.')
 
     if 'hello_world' in flags:

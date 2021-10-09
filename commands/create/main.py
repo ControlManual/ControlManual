@@ -35,7 +35,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         
         return utils.success(f'File "{path}" was {event}.')
 
-    if args[0] == 'folder':
+    if (args[0] == 'folder') or (args[0] == 'dir'):
         path: str = utils.join(client.path, args[1])
         event: str = 'created'
 

@@ -21,17 +21,17 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         if not path:
             return utils.error(f'File "{args[1]}" does not exist.')
         
-        shutil.rmtree(path)
+        os.remove(path)
 
         return utils.success(f'Successfully removed file "{args[1]}".')
     
-    if args[0] == 'dir':
+    if (args[0] == 'dir') or (args[0] == 'folder'):
         path: str = utils.get_path(client.path, args[1])
 
         if not path:
             return utils.error(f'Folder "{args[1]}" does not exist.')
         
-        os.rmdir(path)
+        shutil.rmtree(path)
 
         return utils.success(f'Successfully removed folder "{args[1]}".')
     

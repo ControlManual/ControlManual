@@ -10,15 +10,16 @@ FLAGS: dict = {'no-string': 'Insert a JSON value without surrounding the argumen
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     utils = client.utils
+    objects = client.objects
 
     if len(args) < 1:
         return utils.error('Please specify an file.')
 
-    path: str = utils.get_path(client.path, args[0])
+    path: str = utils.get_path(client.path, args[0], file = True)
     if not path:
         return utils.error(f'File "{args[0]}" does not exist.')
 
-    file = utils.JSONFile(path)
+    file = objects.JSONFile(path)
 
 
     if len(args) < 2:

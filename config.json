@@ -12,12 +12,13 @@
         "mk": "create file",
         "set": "var",
         "cd": "path",
-        "rd": "remove dir",
-        "rm": "remove file",
+        "rm": "remove dir",
+        "rd": "remove file",
         "delete": "remove",
         "cls": "clear",
         "touch": "create file",
-        "config": "json {config}"
+        "config": "json '{config}'",
+        "end": "exit"
     },
     "cm_dir": "/mnt/e/Projects/Python/Control Manual"
 }
