@@ -1,20 +1,21 @@
 {
-    "input_sep": ">>",
-    "colorize": true,
-    "check_latest": true,
-    "use_path_env": true,
-    "hide_exe_from_help": true,
-    "aliases": {
-        "echo": "print",
-        "ls": "listdir",
-        "md": "create dir",
-        "mk": "create file",
-        "set": "var",
-        "cd": "path",
-        "rd": "remove dir",
-        "rm": "remove file",
-        "delete": "remove",
-        "cls": "clear"
-    },
-    "cm_dir": "/mnt/e/Projects/Python/Control Manual"
+	"input_sep": ">>",
+	"colorize": true,
+	"check_latest": true,
+	"use_path_env": true,
+	"hide_exe_from_help": true,
+	"aliases": {
+		"echo": "print",
+		"ls": "listdir",
+		"md": "create dir",
+		"mk": "create file",
+		"set": "var",
+		"cd": "path",
+		"rd": "remove dir",
+		"rm": "remove file",
+		"delete": "remove",
+		"cls": "clear",
+		"touch": "create file"
+	},
+	"cm_dir": "/mnt/e/Projects/Python/Control Manual"
 }

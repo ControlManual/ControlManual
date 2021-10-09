@@ -3,7 +3,7 @@ from typing import Dict, Union, Callable, List, Any
 from types import ModuleType
 from .error import CMError
 from pathlib import Path
-from .config import Config
+from .config import Config, cm_dir
 import os
 from . import utils, api, objects
 from .utils import *
