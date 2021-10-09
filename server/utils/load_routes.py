@@ -3,9 +3,13 @@ import importlib
 from fastapi import FastAPI
 from colorama import Fore, Style
 
+directory: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 def load_routes(app: FastAPI) -> None:
     """Function for loading routes into an app."""
-    for root, _, files in os.walk('./routes'):
+    for root, _, files in os.walk(
+        os.path.join(directory, 'routes')
+    ):
         for file in files:
             if file.endswith('.pyc'):
                 continue

@@ -1,10 +1,14 @@
 from fastapi import FastAPI
 import uvicorn
 import json
-from utils import load_routes
+from utils import load_routes, directory
+import os
+
 
 app = FastAPI()
-with open('./config.json') as f:
+with open(
+  os.path.join(directory, 'config.json')
+) as f:
   config: dict = json.load(f)
 
 load_routes(app)

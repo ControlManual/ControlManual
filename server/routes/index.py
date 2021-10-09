@@ -4,5 +4,8 @@ router = APIRouter()
 prefix = ''
 
 @router.get('/')
-def index() -> None:
-    return {'message': "Hello World!"}
+def index() -> dict:
+    return {
+        'message': "Welcome to the Control Manual API!",
+        'status': 200
+    }
