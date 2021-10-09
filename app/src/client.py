@@ -46,26 +46,18 @@ class Client:
         vers: str = f'{bright_green}{version}{reset}' if self._config.colorize else version
 
         print(f'Control Manual [{vers}] ')
-        
-        try:
-            resp = requests.get("https://api.controlmanual.xyz/")
-
-            if not resp.status_code == 200:
-                raise Exception()
-
-            self._connected = True
-        except:
-            print(f'{bright_red}Failed to connect to the Control Manual API.{reset}\n')
-            self._connected = False
-
-        if (self._config.check_latest) and (self._connected):
-            resp = requests.get("https://api.controlmanual.xyz/latest").json()
-            
-            if resp['version'] == version:
-                print(f'{green}Running latest version!\n{reset}')
+        self._connected = is_online()
+        if self._config.check_latest:
+            if not self._connected:
+                error('Failed to connect to the Control Manual API.\n')
             else:
-                print(f"{bright_yellow}Version {resp['version']} is available!\n{reset}")
-        
+                latest = latest_version()
+
+                if latest == version:
+                    success('Running latest version!\n')
+                else:
+                    print(f'{utils.yellow}Version "{latest}" is available.{utils.reset}\n')
+
         self.reload()
         self._vals: Dict[Any, Any] = {}
     

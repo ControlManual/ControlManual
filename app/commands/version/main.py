@@ -25,10 +25,12 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         return utils.error('Please specify a valid version.')
     else:
         bool_keys = ["stable", "latest"]
-        data = f'Info for version "{version}"'
+        data = f'Info for version "{version}"\n{utils.reset}{utils.green}'
 
         for i in bool_keys:
             tmp: bool = info[i]
-            data += '\n' + f'{utils.bright_red}{tmp}{utils.reset}{utils.green}' if not tmp else f'{utils.bright_green}{tmp}{utils.reset}{utils.green}'
+            data += '\n'
+            data += f'{i.capitalize()}: {utils.bright_red}{tmp}{utils.reset}{utils.green}' if not tmp else f'{i.capitalize()}: {utils.bright_green}{tmp}{utils.reset}{utils.green}'
 
+        utils.success(data)
 
