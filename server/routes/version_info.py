@@ -7,7 +7,7 @@ VERSION_INFO: dict = {
     'alpha 1.0.0': {
         'released': False,
         'stable': True,
-        'latst': False
+        'latest': False
     }
 } # hardcoded for now, will be changed and connected to a database later
 
