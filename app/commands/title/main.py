@@ -5,6 +5,7 @@ HELP: str = 'Set the window title.'
 USAGE: str = '<title> [flags]'
 ARGS: dict = {'title': 'Text to set as the window title.'}
 FLAGS: dict = {'prefix': 'Adds the "Control Manual - " prefix to the title.'}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     utils = client.utils

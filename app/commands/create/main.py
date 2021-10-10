@@ -7,6 +7,7 @@ HELP: str = 'Create a file or folder.'
 USAGE: str = '<type> <name> [contents] [flags]'
 ARGS: dict = {'type': 'File or folder.', 'name': 'Name of the file or folder.', 'contents': 'Contents of the file.'}
 FLAGS: dict = {'overwrite': 'Whether to overwrite existing files or folders.'}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 

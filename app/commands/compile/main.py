@@ -6,6 +6,7 @@ HELP: str = 'Run a Control Manual script.'
 USAGE: str = '<file>'
 ARGS: dict = {'file': 'File to run.'}
 FLAGS: dict = {}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 

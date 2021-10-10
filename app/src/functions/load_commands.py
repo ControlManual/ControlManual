@@ -22,6 +22,7 @@ def load_commands(directory: str) -> Dict[str, Dict[str, Union[str, ModuleType]]
             command: ModuleType = importlib.import_module(f'commands.{i}.main')
             cmd_help: str = command.HELP if hasattr(command, 'HELP') else ''
             usage: str = command.USAGE if hasattr(command, 'USAGE') else ''
+            package: str = command.PACKAGE if hasattr(command, 'PACKAGE') else ''
             warning: str = f'({command.WARNING})' if hasattr(command, 'WARNING') else ''
             args: dict = command.ARGS if hasattr(command, 'ARGS') else {}
             flags: dict = command.FLAGS if hasattr(command, 'FLAGS') else {}
@@ -33,7 +34,8 @@ def load_commands(directory: str) -> Dict[str, Dict[str, Union[str, ModuleType]]
                 'warning': warning,
                 'usage': usage, 
                 'args': args, 
-                'flags': flags
+                'flags': flags,
+                'package': package
             }
     
     if config.raw['use_path_env']:

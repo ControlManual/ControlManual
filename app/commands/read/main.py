@@ -6,6 +6,7 @@ HELP: str = 'Reads a file.'
 USAGE: str = '<file>'
 ARGS: dict = {'file': 'File to read.'}
 FLAGS: dict = {}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 

@@ -6,6 +6,7 @@ HELP: str = 'Exit the instance.'
 USAGE: str = '<code>'
 ARGS: dict = {'code': 'Exit code of the program. Set to 0 if left blank.'}
 FLAGS: dict = {}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     utils = client.utils

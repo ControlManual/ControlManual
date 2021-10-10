@@ -6,6 +6,7 @@ HELP: str = 'Set the path to current parent directory.'
 USAGE: str = '<amount>'
 ARGS: dict = {'amount': 'Amount to go up by (defaults to 1).'}
 FLAGS: dict = {}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 

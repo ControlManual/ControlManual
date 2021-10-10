@@ -5,6 +5,7 @@ HELP: str = 'Start a function declaration.'
 USAGE: str = '<name> [arguments]'
 ARGS: dict = {'name': 'Name of the function.', 'arguments': 'Arguments attached to the function, seperated by a space.'}
 FLAGS: dict = {}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 

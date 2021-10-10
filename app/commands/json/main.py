@@ -6,6 +6,7 @@ HELP: str = 'Perform operations with a json file.'
 USAGE: str = '<file> <operation> [key] [value]'
 ARGS: dict = {'file': 'JSON file to perform operation on.', 'operation': 'Whether to read the config, or get, set, or remove a value.', 'key': 'Key to perform the operation on (unneeded if operation is "read").', 'value': 'Value to perform the operation on (only needed if the operation is "set").'}
 FLAGS: dict = {'no-string': 'Insert a JSON value without surrounding the argument in quotes.'}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 

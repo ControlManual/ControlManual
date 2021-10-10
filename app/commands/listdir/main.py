@@ -6,6 +6,7 @@ HELP: str = 'List the current directory.'
 USAGE: str = '<directory>'
 ARGS: dict = {'directory': "Directory to search, will search the current directory if left blank."}
 FLAGS: dict = None
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     utils = client.utils

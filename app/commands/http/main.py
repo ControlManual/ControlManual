@@ -10,6 +10,7 @@ ARGS: dict = {
     'kwargs': 'HTTP arguments to send with request.'
 }
 FLAGS: dict = {'json': 'Show JSON response.', 'text': 'Show text response.', 'headers': 'Show response headers.'}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 

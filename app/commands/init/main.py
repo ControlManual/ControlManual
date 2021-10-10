@@ -7,6 +7,7 @@ HELP: str = 'Basic command.'
 USAGE: str = '<message>'
 ARGS: dict = {'message': 'Message to print.'}
 FLAGS: dict = {'hello_world': 'Whether to print "Hello World".'}
+PACKAGE: str = '{pkg_name}'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
@@ -38,7 +39,7 @@ HELP: str = 'Initalize a command or middleware.'
 USAGE: str = '<name> [flags]'
 ARGS: dict = {'name': 'Name of the command.'}
 FLAGS: dict = {'here': 'Initalizes the command in the current directory.', 'middleware': 'Initalizes middleware instead of a command.'}
-
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     utils = client.utils
@@ -63,7 +64,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     os.makedirs(directory)
 
     with open(os.path.join(directory, 'main.py'), 'w') as f:
-        f.write(BASE if 'middleware' not in flags else MIDDLEWARE)
+        f.write(BASE.replace('{pkg_name}', args[0]) if 'middleware' not in flags else MIDDLEWARE)
 
     client.reload()
     utils.success(f'Successfully initalized {typ} "{args[0]}".')

@@ -7,6 +7,7 @@ HELP: str = 'Removes a file or directory.'
 USAGE: str = '<type> <name>'
 ARGS: dict = {'type': 'Whether to remove a file or directory.'}
 FLAGS: dict = {}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 

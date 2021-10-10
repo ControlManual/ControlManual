@@ -5,6 +5,7 @@ HELP: str = 'Get command aliases.'
 USAGE: str = ''
 ARGS: dict = None
 FLAGS: dict = None
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 

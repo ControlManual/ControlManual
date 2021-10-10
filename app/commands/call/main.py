@@ -5,6 +5,7 @@ HELP: str = 'Call a function.'
 USAGE: str = '<function> [arguments]'
 ARGS: dict = {'functions': 'Name of the function.', 'arguments': 'Arguments to pass into the function.'}
 FLAGS: dict = {}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 

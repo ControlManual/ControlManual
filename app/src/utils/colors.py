@@ -15,6 +15,7 @@ if config.colorize:
     green: str = Fore.GREEN
     blue: str = Fore.BLUE
     yellow: str = Fore.YELLOW
+    gray: str = Style.BRIGHT + Fore.BLACK
     bright_red: str = make_bright(red)
     bright_green: str = make_bright(green)
     bright_blue: str = make_bright(blue)

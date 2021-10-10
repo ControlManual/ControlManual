@@ -2,12 +2,13 @@ from types import ModuleType
 from typing import Dict, Union
 from ..utils import *
 
+
 def make_str(commands: dict, command: str, key: str) -> str:
     item = commands[command][key]
     if (item) or (item == ''):
         return item + '\n'
     else:
-        return f'{bright_red}No {key} specified.{reset}'
+        return f'{gray}No [key].{reset}'
 
 def make_dict(data: dict) -> dict:
     """Will make later."""
@@ -25,12 +26,13 @@ def print_command_help(commands: Dict[str, Dict[str, Union[str, ModuleType]]], c
 
     cmd_help: str = make_str(commands, command, 'help')
     usage: str = make_str(commands, command, 'usage')
+    package: str = make_str(commands, command, 'package')
     args_dict: dict = commands[command]['args']
     flags_dict: dict = commands[command]['flags']
     args = flags = ''
 
     if (args_dict is None) or (args_dict == {}): # TODO: optimize
-        args += f'{bright_red}No arguments.\n'
+        args += f'{gray}No arguments.\n'
     else:
         if args_dict == {}:
             args += make_str(commands, command, 'args')
@@ -39,7 +41,7 @@ def print_command_help(commands: Dict[str, Dict[str, Union[str, ModuleType]]], c
                 args += f'{bright_green}{i}{reset} - {green}{args_dict[i]}{reset}\n'
 
     if (flags_dict is None) or (flags_dict == {}):
-        flags += f'{bright_red}No flags.\n'
+        flags += f'{gray}No flags.\n'
     else:
         if flags_dict == {}:
             flags += make_str(commands, command, 'flags')
@@ -49,6 +51,8 @@ def print_command_help(commands: Dict[str, Dict[str, Union[str, ModuleType]]], c
             
     
     print(f'''{bright_green}{cmd_help}{reset}
+{bright_blue}Package{reset}
+{bright_green}{package}{reset}
 {bright_blue}Usage{reset}
 {bright_green}{command} {normal}{usage}{reset}
 {bright_blue}Args

@@ -6,6 +6,7 @@ HELP: str = 'Wait a certain amount of time.'
 USAGE: str = '<amount> [flags]'
 ARGS: dict = {'amount': 'Amount of time to wait (in seconds).'}
 FLAGS: dict = {'minutes': 'Wait in minutes.', 'milliseconds': 'Wait in milliseconds.'}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 

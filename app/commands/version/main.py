@@ -5,6 +5,7 @@ HELP: str = 'Get version info.'
 USAGE: str = '<version>'
 ARGS: dict = {'version': 'Version to get data of, defaults to the current version if left blank.'}
 FLAGS: dict = {}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 

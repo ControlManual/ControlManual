@@ -6,6 +6,7 @@ HELP: str = 'Interact with the system terminal.'
 USAGE: str = '<command>'
 ARGS: dict = {'command': 'Command that will be run.'}
 FLAGS: dict = {}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     os.system(raw)

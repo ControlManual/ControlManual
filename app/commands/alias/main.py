@@ -5,6 +5,7 @@ HELP: str = 'Add a command alias.'
 USAGE: str = '<alias> <value>'
 ARGS: dict = {'alias': 'Alias of the command.', 'value': 'String to run when alias is called.'}
 FLAGS: dict = None
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     utils = client.utils

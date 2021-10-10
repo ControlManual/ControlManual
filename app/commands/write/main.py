@@ -6,6 +6,7 @@ HELP: str = 'Write to a file.'
 USAGE: str = '<file> <text> [flags]'
 ARGS: dict = {'file': 'File to write to.', 'text': 'Text to write.'}
 FLAGS: dict = {'overwrite': 'Overwrite the file with the specified text.'}
+PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
