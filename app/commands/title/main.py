@@ -11,7 +11,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     utils = client.utils
 
     if not args:
-        return print(f'{utils.bright_red}Please specify a window title{utils.reset}')
+        return utils.error(f'Please specify a window title')
 
     if 'prefix' in flags:
         title: str = f'Control Manual - {args[0]}'

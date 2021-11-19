@@ -5,6 +5,7 @@
     "check_latest": true,
     "use_path_env": true,
     "hide_exe_from_help": true,
+    "theme": "default",
     "aliases": {
         "echo": "print",
         "ls": "listdir",
@@ -19,6 +20,24 @@
         "touch": "create file",
         "config": "json '{config}'",
         "end": "exit"
+    },
+    "comments": [
+        "//",
+        "#"
+    ],
+    "functions": [
+        "{",
+        "}"
+    ],
+    "help_command": "help",
+    "seperator": ";",
+    "errors": {
+        "unknown_command": "Unknown command. Use {primary}\"help\"{danger} to see commands.",
+        "command_error": "{error}Exception occured when running command {primary}\"{cmd}\"{danger}.{reset}",
+        "function_open": "Function is already open.",
+        "function_not_open": "Function is not open.",
+        "function_undefined": "No function currently defined.",
+        "permission_error": "Control Manual does not have permission to do this."
     },
     "cm_dir": "/mnt/e/Projects/Python/Control Manual/app"
 }

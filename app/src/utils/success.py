@@ -1,7 +1,8 @@
-from .colors import *
+from ..theme import *
+from .colors import reset
 
 def success(message: str) -> None:
-    print(f'{bright_green}{message}{reset}')
+    print(f'{primary}{message}{reset}')
 
 def make_success(message: str) -> str:
-    return f'{bright_green}{message}{reset}'
+    return f'{primary}{message}{reset}'

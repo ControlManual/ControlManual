@@ -18,6 +18,22 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
 
     if not fn:
         return utils.error('Please specify a valid function.')
-    
+
+    arguments = fn['arguments']
+    params = args[1:]
+
+    if not fn['defined']:
+        return utils.error(f'Function "{args[0]}" is defined, but does not have a body.')
+
+    if not len(arguments) == len(params):
+        return utils.error('Missing function parameters.')
+
     for i in fn['script']:
-        client.run_command(i)
+        text = i
+        variables: dict = {}
+
+        for index, value in enumerate(arguments):
+            variables[value] = params[index]
+
+        text = client.load_variables_dynamic(text, variables)
+        client.run_command(text)

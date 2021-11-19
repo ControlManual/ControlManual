@@ -1,7 +1,8 @@
-from .colors import *
+from ..theme import *
+from .colors import reset
 
 def error(message: str) -> None:
-    print(f'{bright_red}{message}{reset}')
+    print(f'{danger}{message}{reset}')
 
 def make_error(message: str) -> str:
-    return f'{bright_red}{message}{reset}'
+    return f'{danger}{message}{reset}'

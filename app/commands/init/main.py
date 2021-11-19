@@ -14,7 +14,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     config = client.config
     utils = client.utils
     api = client.api
-    objects = client.objects
+    static = client.static
 
     if not args:
         return utils.error('Please specify a message.')
@@ -48,7 +48,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     typ: str = 'command' if 'middleware' not in flags else 'middleware'
 
     if len(args) == 0:
-        return print(f'{utils.bright_red}Please specify a {typ} name.{utils.reset}')
+        return utils.error(f'Please specify a {typ} name.')
 
     directory: str = os.path.join(
         os.path.join(
@@ -59,7 +59,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     ) if 'here' not in flags else os.path.join(client.path, args[0])
 
     if os.path.exists(directory):
-        return print(f'{utils.bright_red}{typ.capitalize()} already exists.{utils.reset}')
+        return utils.error(f'{typ.capitalize()} already exists.{utils.reset}')
 
     os.makedirs(directory)
 

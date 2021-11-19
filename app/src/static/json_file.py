@@ -1,12 +1,21 @@
 import json
-from typing import Dict, Any
+from typing import Dict, Any, List
+import os
+from .static_error import static_error
+
 
 class JSONFile:
     """Class representing a JSON file."""
-    def __init__(self, file_path: str) -> None:
+    def __init__(self, file_path: str, required: List[str] = [], require_keys_under: Dict[str, List[str]] = {}) -> None:
         """Class representing a JSON file."""
+        if not os.path.exists(file_path):
+            static_error(f'{file_path} does not exist.')
+
         with open(file_path) as f:
-            raw = json.load(f)
+            try:
+                raw = json.load(f)
+            except json.JSONDecodeError:
+                static_error(f'failed to parse JSON file "{file_path}"')
 
         self._raw = raw
 
@@ -14,6 +23,15 @@ class JSONFile:
             setattr(self, i, raw[i])
         
         self._path = file_path
+
+        for i in required:
+            if i not in self._raw:
+                static_error(f'key "{i}" is required in "{file_path}".')
+        
+        for key, value in require_keys_under.items():
+            for i in value:
+                if i not in self._raw[key]:
+                    static_error(f'key "{i}" is required in the "{file_path}" key "{key}".')
 
     @property
     def path(self) -> str:

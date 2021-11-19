@@ -1,6 +1,5 @@
 from .clear import clear
 from .title import title
-from .raise_error import raise_error
 from .colors import *
 from .join import join
 from .format_path import format_path
@@ -11,3 +10,4 @@ from .format_json import format_json
 from .run_exe import run_exe
 from .undo_print import undo_print
 from .get_path import get_path
+from .raise_error import raise_error

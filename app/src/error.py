@@ -1,6 +1,5 @@
 import sys
 import traceback
-from .config import Config
 from . import utils # for some reason using "from .utils import *" was literally just not defining anything
 
 class CMError:
@@ -10,12 +9,6 @@ class CMError:
         self._message = message
         self._error = error
         self._kill = kill
-        self._config = Config()
-    
-    @property
-    def config(self) -> Config:
-        """Config object."""
-        return self._config
 
     @property
     def message(self) -> str:

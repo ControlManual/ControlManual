@@ -5,30 +5,38 @@ from .error import CMError
 from pathlib import Path
 from .config import Config, cm_dir, config_path
 import os
-from . import utils, api, objects
+from . import utils, api, static, theme
 from .utils import *
 from .api import *
+from .theme import *
 import colorama
-import requests
+from threading import Thread
 
 class Reload:
     """Blank object used to reload the instance."""
     pass
 
+def threaded(client: "Client") -> None:
+    """Function ran on seperate thread when initalized."""
+    client._connected = is_online()
+
 class Client:
     """Base class for running Control Manual."""
-    def __init__(self, version: str) -> None:
+    def __init__(self, version: dict) -> None:
         """Base class for running Control Manual."""
 
         self._config = Config()
         self._reset: bool = False
-        self._version: str = version
+        self._version: str = version['string']
         self._path: Path = Path().home()
         self._functions: Dict[str, Dict[str, Union[str, List[str]]]] = {}
         self._current_function: str = None
         self._function_open: bool = False
         self._toggled_output: bool = True
         self._origin: Path = self._path
+        self._actual_functions: Dict[str, Callable] = {
+            'resp': self.get_command_response
+        }
         self._variables: Dict[str, str] = {
             'path': str(self._path),
             'config': self.config_path,
@@ -38,25 +46,17 @@ class Client:
         for i in self._config.aliases:
             self._aliases[i] = self.load_variables(self._config.aliases[i])
 
-        if os.name == 'nt':
-            colorama.init(convert=True) # enables ascii stuff for windows
-
+        colorama.init(convert = os.name == 'nt') # enables ascii stuff
         clear(), title('Control Manual')
 
-        vers: str = f'{bright_green}{version}{reset}' if self._config.colorize else version
+        vers: str = f'{primary}{version["string"]}{reset}'
 
-        print(f'Control Manual [{vers}] ')
-        self._connected = is_online()
-        if self._config.check_latest:
-            if not self._connected:
-                error('Failed to connect to the Control Manual API.\n')
-            else:
-                latest = latest_version()
+        print(f'Running on version {vers}!')
+        if not version["stable"]:
+            error('You are running on an unstable version.\n')
 
-                if latest == version:
-                    success('Running latest version!\n')
-                else:
-                    print(f'{utils.yellow}Version "{latest}" is available.{utils.reset}\n')
+        self._connected = False
+        Thread(target = threaded, args = [self]).start()
 
         self.reload()
         self._vals: Dict[Any, Any] = {}
@@ -94,9 +94,9 @@ class Client:
 
 
     @property
-    def objects(self) -> objects:
+    def static(self) -> static:
         """Module containing standalone objects."""
-        return objects
+        return static
 
     @property
     def functions(self) -> Dict[str, Dict[str, Union[str, List[str]]]]:
@@ -118,7 +118,7 @@ class Client:
         return self._vals
     
     @vals.setter
-    def change_vals(self, key: Any, value: Any) -> None:
+    def vals(self, key: Any, value: Any) -> None:
         self._vals[key] = value
 
     @property
@@ -181,6 +181,11 @@ class Client:
         return api
 
     @property
+    def theme(self) -> theme:
+        """Variables representing theme colors."""
+        return theme
+
+    @property
     def variables(self) -> Dict[str, str]:
         """Dictionary representing variables."""
         return self._variables
@@ -203,8 +208,37 @@ class Client:
             data: str = data.replace('{' + i + '}', self._variables[i])
         
         return data
+    
+    def load_variables_dynamic(self, data: str, variables: dict) -> str:
+        """Function for loading variables into a string."""
+        for i in variables:
+            data: str = data.replace('{' + i + '}', variables[i])
+        
+        return data
 
-    def start(self, filename) -> Union[None, Reload]:
+    @property
+    def theme_dict(self) -> Dict[str, str]:
+        """Dictionary of theme colors and their ascii codes."""
+        return theme_dictionary
+
+    def format_theme_string(self, text: str) -> str:
+        return self._format_string(self.theme_dict, text)
+    
+    def _format_string(self, collection: dict, text: str) -> str:
+        for key, value in collection.items():
+            text = text.replace('{' + key + '}', value)
+        
+        return text
+
+    @property
+    def actual_functions(self) -> Dict[str, Callable]:
+        """Dictionary of functions that can be called in the command line."""
+        return self._actual_functions
+    
+    def get_command_response(self, args: List[str]) -> None:
+        return get_resp(self.run_command, args[0])
+
+    def start(self, filename: str) -> Union[None, Reload]:
         """Start the main loop."""
         while True:
             if filename:
@@ -215,10 +249,9 @@ class Client:
                         for i in f.read().split('\n'):
                             self.run_command(i)
             
-            inp: str = f'{self._path} {bright_blue}{self.config.input_sep}{reset} '
+            inp: str = input_string(self)
             if not os.path.exists(self._path):
-                CMError('Path not found.', kill = True) \
-                    .raise_exc()
+                CMError('Path not found.', kill = True).raise_exc()
             
             print(inp, end="")
 
@@ -234,67 +267,101 @@ class Client:
     
     def run_command(self, command: str) -> None:
         """Function for running a command."""
-        if command.startswith('//'):
-            return
+        config = self._config
+        errors = config.errors
+
+        for i in config.comments:
+            if command.startswith(i):
+                return
             
-        cmds = command.split(';')
-    
-        for i in cmds:
-            command = self.load_variables(command)
+        cmds = command.split(config.seperator)
+        for comm in cmds:
+            comm = self.load_variables(comm)
 
-            split: List[str] = command.split(' ')
-            raw_args = ' '.join(split[1:]) # unsplit string of arguments
-            cmd = split[0]
-    
-            if cmd in self.aliases:
-                spl = self.aliases[cmd].split(' ')
-                cmd = spl[0]
-                if len(spl) > 1:
-                    excess: str = " ".join(spl[1:])
-                    raw_args = excess + ' ' + raw_args
-
-    
-            args, kwargs, flags = parse(raw_args)
-
-            cmd: str = cmd.lower()
-
-            if cmd == '':
+            split: List[str] = comm.split(' ')
+            if not any(split):
                 continue
 
-            if self._function_open:
-                if not command == ')':
-                    return self._functions[self.current_function]['script'].append(command)
+            while not split[0]:
+                split.pop(0)
 
+            raw_args = ' '.join(split[1:]) # unsplit string of arguments
+            cmd = split[0]
+            while True:
+                if cmd in self.aliases:
+                    spl = self.aliases[cmd].split(' ')
+                    cmd = spl[0]
+                    if len(spl) > 1:
+                        excess: str = " ".join(spl[1:])
+                        raw_args = excess + ' ' + raw_args
+                else:
+                    break
+
+            args, kwargs, flags = parse(raw_args)
+            cmd: str = cmd.lower()
+
+            for index, i in enumerate(args):
+                for key, value in self.actual_functions.items():
+                    while True:
+                        find = "{" + key + "("
+                        
+                        if find in i:
+                            index = i.index(find)
+                            text: str = ""
+
+                            for j in i[index:]:
+                                if text.endswith(')}'):
+                                    text = text[:-2]
+                                    break
+
+                                text += j
+                            
+                            params = parse(text)[0]
+                            replace = value(params)
+                            print(replace)
+
+                            args[index] = args[index].replace(f'{find}{text})' + '}', replace)
+                                
+                        else:
+                            break
+                    
+                
+
+            crfn: str = self.current_function
             COMMANDS: Dict[str, Dict[str, Union[ModuleType, str]]] = self.commands
             
             for fn in self.middleware:
                 fn(cmd, raw_args, args, kwargs, flags, COMMANDS)
 
-            if cmd == "(":
-                if self.current_function:
+            if cmd == config.functions[0]:
+                if crfn:
                     if self._function_open:
-                        utils.error('Function is already open.')
+                        utils.error(errors['function_open'])
                     else:
                         self._function_open = True
                 else:
-                    utils.error('No function currently defined.')
+                    utils.error(errors['function_undefined'])
 
                 return
             
-            if cmd == ")":
-                if self.current_function:
+            if cmd == config.functions[1]:
+                if crfn:
                     if not self._function_open:
-                        utils.error('Function is not open.')
+                        utils.error(errors['function_not_open'])
                     else:
+                        self.functions[self.current_function]['defined'] = True
                         self._function_open = False
                         self._current_function = None
                 else:
-                    utils.error('No function currently defined.')
+                    utils.error(errors['function_undefined'])
 
                 return
-    
 
-            if cmd == "help":
+            if self._function_open:
+                if not command == config.functions[1]:
+                    return self._functions[crfn]['script'].append(command)
+
+            if cmd == config.help_command:
                 if args:
                     print_command_help(COMMANDS, args[0])
                 else:
@@ -325,10 +392,9 @@ class Client:
                     runner(raw_args, args, kwargs, flags, self)
                 except Exception as e:
                     if isinstance(e, PermissionError):
-                        error('Control Manual does not have permission to do this.')
+                        error(errors['permission_error'])
                     else:
-                        failure: str = f'{bright_red}Exception occured when running command {bright_green}"{cmd}"{bright_red}.{reset}'
+                        failure: str = self.format_theme_string(errors['command_error']).replace('{cmd}', cmd)
                         CMError(failure, e).raise_exc()
             else:
-                msg = f'{bright_red}Unknown command. Use {normal}{green}"help"{bright_red} to see commands.{reset}'
-                print(msg)
+                error(self.format_theme_string(errors['unknown_command']))

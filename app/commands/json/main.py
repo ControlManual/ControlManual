@@ -11,7 +11,7 @@ PACKAGE: str = 'builtin'
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     utils = client.utils
-    objects = client.objects
+    static = client.static
 
     if len(args) < 1:
         return utils.error('Please specify an file.')
@@ -20,7 +20,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     if not path:
         return utils.error(f'File "{args[0]}" does not exist.')
 
-    file = objects.JSONFile(path)
+    file = static.JSONFile(path)
 
 
     if len(args) < 2:

@@ -49,9 +49,6 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         
         if i == 'data':
             data = kwargs[i]
-
-            
-
     try:
         resp: requests.Response = methods[args[0]](url, params=params, data=data, json=json_args)
     except:

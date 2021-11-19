@@ -38,17 +38,22 @@ import subprocess
 import click
 import shutil
 import platform
+import zipfile
+import threading
+import psutil
 
+from src import Client, Reload, check_health, static
 
-from src import Client, Reload
-
-VERSION: str = 'Alpha 1.0.1'
-
+VERSION: dict = {
+    'string': 'Alpha 1.0.1',
+    'stable': False
+}
 
 @click.command()
 @click.argument('filename', default=False)
 def main(filename) -> None:
     """Main file for running Control Manual."""
+    check_health()
     while True:
         client = Client(VERSION)
         try:
@@ -57,7 +62,15 @@ def main(filename) -> None:
             return
         
         if resp == Reload:
-            continue
+            try:
+                p = psutil.Process(os.getpid())
+                for handler in p.open_files() + p.connections():
+                    os.close(handler.fd)
+            except:
+                static.static_error('fatal error occured when reloading')
+
+            python = sys.executable
+            os.execl(python, python, *sys.argv)
         else:
             sys.exit
 

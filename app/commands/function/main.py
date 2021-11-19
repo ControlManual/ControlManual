@@ -14,9 +14,13 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     if args == []:
         return utils.error('Please specify a function name.')
 
+    if client.current_function:
+        return utils.error(f'Please define body for function "{client.current_function}" before creating a new one.')
+
     client._functions[args[0]] = {
-        'arguments': args[1:] if len(args) > 1 else None,
-        'script': []
+        'arguments': args[1:] if len(args) > 1 else [],
+        'script': [],
+        'defined': False
     }
     client._current_function = args[0]
 
