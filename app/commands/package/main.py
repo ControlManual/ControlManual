@@ -5,7 +5,14 @@ import os
 HELP: str = 'Run operations on packages.'
 USAGE: str = '<operation> [package]'
 ARGS: dict = {'operation': 'Operation to run.', 'package': 'Name of the package, unneeded if operation is "list".'}
-FLAGS: dict = {}
+ARGS_HELP: dict = {
+    'operation': {
+        'valid_values': ['add', 'list']
+    },
+    'package': {
+        'not_required_when': 'Argument "operation" is "list".'
+    }
+}
 PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):

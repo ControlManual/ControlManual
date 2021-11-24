@@ -50,8 +50,8 @@ class Client:
         clear(), title('Control Manual')
 
         vers: str = f'{primary}{version["string"]}{reset}'
-
         print(f'Running on version {vers}!')
+        
         if not version["stable"]:
             error('You are running on an unstable version.\n')
 
@@ -236,7 +236,7 @@ class Client:
         return self._actual_functions
     
     def get_command_response(self, args: List[str]) -> None:
-        return get_resp(self.run_command, args[0])
+        return get_resp(self.run_command, ' '.join(args))
 
     def start(self, filename: str) -> Union[None, Reload]:
         """Start the main loop."""
@@ -306,22 +306,18 @@ class Client:
                         find = "{" + key + "("
                         
                         if find in i:
-                            index = i.index(find)
-                            text: str = ""
 
-                            for j in i[index:]:
-                                if text.endswith(')}'):
-                                    text = text[:-2]
-                                    break
-
-                                text += j
+                            ind = i.index(find)
+                            try:
+                                end: int = i.index(')}')
+                            except ValueError:
+                                end: int = -1
                             
+                            text: str = i[ind + len("{" + key) + 1:end]
+
                             params = parse(text)[0]
                             replace = value(params)
-                            print(replace)
-
-                            args[index] = args[index].replace(f'{find}{text})' + '}', replace)
-                                
+                            args[index] = i = args[index].replace(f'{find}{text})' + '}', replace)
                         else:
                             break
                     
@@ -363,7 +359,10 @@ class Client:
 
             if cmd == config.help_command:
                 if args:
-                    print_command_help(COMMANDS, args[0])
+                    if len(args) > 1:
+                        print_argument_help(COMMANDS, args[0], args[1])
+                    else:
+                        print_command_help(COMMANDS, args[0])
                 else:
                     print_help(COMMANDS)
                 continue

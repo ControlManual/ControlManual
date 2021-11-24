@@ -1,3 +1,4 @@
+from genericpath import isfile
 import os
 from typing import Union
 

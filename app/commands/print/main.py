@@ -4,7 +4,6 @@ from src import Client # Only used for intellisense, will not work if this file 
 HELP: str = 'Print a message.'
 USAGE: str = '<message>'
 ARGS: dict = {'message': 'Message to print.'}
-FLAGS: dict = None
 PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):

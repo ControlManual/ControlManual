@@ -6,6 +6,11 @@ from src import Client # Only used for intellisense, will not work if this file 
 HELP: str = 'Basic command.'
 USAGE: str = '<message>'
 ARGS: dict = {'message': 'Message to print.'}
+ARGS_HELP: dict = {
+    'message': {
+        'not_required_when': 'Flag "hello_world" is passed.'
+    }
+}
 FLAGS: dict = {'hello_world': 'Whether to print "Hello World".'}
 PACKAGE: str = '{pkg_name}'
 
@@ -35,9 +40,9 @@ def run(command: str, raw: str, args: List[str], kwargs: Dict[str, str], flags: 
 from typing import List, Dict
 from src import Client # Only used for intellisense, will not work if this file is run manually.
 
-HELP: str = 'Initalize a command or middleware.'
+HELP: str = 'Initalizes a command or middleware.'
 USAGE: str = '<name> [flags]'
-ARGS: dict = {'name': 'Name of the command.'}
+ARGS: dict = {'name': 'Name of the command or middleware.'}
 FLAGS: dict = {'here': 'Initalizes the command in the current directory.', 'middleware': 'Initalizes middleware instead of a command.'}
 PACKAGE: str = 'builtin'
 

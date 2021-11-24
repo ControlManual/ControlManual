@@ -5,8 +5,19 @@ import shutil
 
 HELP: str = 'Removes a file or directory.'
 USAGE: str = '<type> <name>'
-ARGS: dict = {'type': 'Whether to remove a file or directory.'}
-FLAGS: dict = {}
+ARGS: dict = {'type': 'Type of file to remove.', 'name': 'Name of the file to remove.'}
+ARGS_HELP: dict = {
+    'type': {
+        'valid_values': ['file', 'dir', 'folder'],
+        'effect_when_equals': {
+            'file': 'Argument "name" will look for a file.',
+            ('folder', 'dir'): 'Argument "name" will look for a folder.'
+        }
+    },
+    'name': {
+        'type': 'Path'
+    }
+}
 PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):

@@ -10,6 +10,26 @@ ARGS: dict = {
     'true': 'Command to run if the comparison is true.',
     'false': 'Command to run if the comparison is false.'
 }
+ARGS_HELP: dict = {
+    'item_1': {
+        'type': 'String',
+        'when_flag_is_passed': [['int', 'Argument type becomes "Number"']]
+    },
+    'item_2': {
+        'type': 'String',
+        'when_flag_is_passed': [['int', 'Argument type becomes "Number"']]
+    },
+    'comparison': {
+        'valid_values': ['==', '=', 'is', 'in'],
+        'when_flag_is_passed': [['int', 'Only values of "<", "=", "==", and ">" are allowed.']]
+    },
+    'true': {
+        'type': 'Command'
+    },
+    'false': {
+        'type': 'Command'
+    },
+}
 FLAGS: dict = {
     'int': 'Compare item 1 and 2 numerically.'
 }
@@ -25,9 +45,16 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     item1, operator, item2, true, false = args
     use_int: bool = 'int' in flags
 
-    if operator in ['==', '=', 'is'] if not use_int else ['<', '=', '==', '>']:
+    if operator in ['==', '=', 'is', 'in'] if not use_int else ['<', '=', '==', '>']:
         if not use_int:
-            return client.run_command(true if item1 == item2 else false)
+            comparisons = {
+                'is': item1 == item2,
+                'in': item1 in item2
+            }
+
+            comparison = comparisons[operator if not operator == '=' else '==']
+
+            return client.run_command(true if comparison else false)
         else:
             try:
                 item1 = int(item1)

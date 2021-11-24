@@ -4,7 +4,11 @@ from src import Client # Only used for intellisense, will not work if this file 
 HELP: str = 'Append to the current directory.'
 USAGE: str = '<directory>'
 ARGS: dict = {'directory': 'Directory to append to.'}
-FLAGS: dict = {}
+ARGS_HELP: dict = {
+    'directory': {
+        'type': 'Path'
+    }
+}
 PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):

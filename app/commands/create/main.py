@@ -5,7 +5,22 @@ import os
 
 HELP: str = 'Create a file or folder.'
 USAGE: str = '<type> <name> [contents] [flags]'
-ARGS: dict = {'type': 'File or folder.', 'name': 'Name of the file or folder.', 'contents': 'Contents of the file.'}
+ARGS: dict = {'type': 'Type of file to create.', 'name': 'Name of the file.', 'contents': 'Contents of the file.'}
+ARGS_HELP: dict = {
+    'type': {
+        'valid_values': ['file', 'dir', 'folder'],
+        'effect_when_equals': {
+            'file': 'Argument "name" will look for a file.',
+            ('folder', 'dir'): 'Argument "name" will look for a folder.'
+        }
+    },
+    'name': {
+        'type': 'Path'
+    },
+    'contents': {
+        'ignored_when': 'Argument "type" is "folder" or "dir".'
+    }
+}
 FLAGS: dict = {'overwrite': 'Whether to overwrite existing files or folders.'}
 PACKAGE: str = 'builtin'
 

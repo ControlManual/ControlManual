@@ -9,6 +9,11 @@ ARGS: dict = {
     'url': 'URL to send request.',
     'kwargs': 'HTTP arguments to send with request.'
 }
+ARGS_HELP: dict = {
+    'method': {
+        'valid_values': ['get', 'post', 'put', 'patch', 'delete'],
+    }
+}
 FLAGS: dict = {'json': 'Show JSON response.', 'text': 'Show text response.', 'headers': 'Show response headers.'}
 PACKAGE: str = 'builtin'
 

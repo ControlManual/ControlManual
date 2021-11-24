@@ -1,15 +1,15 @@
 from types import ModuleType
 from typing import Dict, Union
-from ..utils import run_exe, error, success, make_success
+from ..utils import run_exe, error
 from ..theme import *
 
-def make_str(commands: dict, command: str, key: str, prefix: str = '') -> str:
+def make_str(commands: dict, command: str, key: str, prefix: str = '', default = None) -> str:
     item = commands[command][key]
 
     if item:
         return prefix + item + '\n'
     else:
-        return f'{warning}No {key}.\n{reset}'
+        return default or f'{warning}No {key}.\n{reset}'
 
 
 def print_command_help(commands: Dict[str, Dict[str, Union[str, ModuleType]]], command: str) -> None:
@@ -19,16 +19,17 @@ def print_command_help(commands: Dict[str, Dict[str, Union[str, ModuleType]]], c
     if 'exe' in commands[command]:
         return print(run_exe(commands[command]['exe']))
 
-
+    usage_str: str = f'{secondary}{command} {primary}'
+    
     cmd_help: str = make_str(commands, command, 'help')
-    usage: str = make_str(commands, command, 'usage', f'{secondary}{command} {primary}')
+    usage: str = make_str(commands, command, 'usage', usage_str, default = usage_str + '\n')
     package: str = make_str(commands, command, 'package')
     args_dict: dict = commands[command]['args']
     flags_dict: dict = commands[command]['flags']
     args = flags = ''
 
     if (args_dict is None) or (args_dict == {}): # TODO: optimize
-        args += f'{warning}No arguments.\n'
+        args += f'{danger}No arguments.\n'
     else:
         if args_dict == {}:
             args += make_str(commands, command, 'args')
@@ -37,7 +38,7 @@ def print_command_help(commands: Dict[str, Dict[str, Union[str, ModuleType]]], c
                 args += f'{primary}{i}{reset} - {secondary}{args_dict[i]}{reset}\n'
 
     if (flags_dict is None) or (flags_dict == {}):
-        flags += f'{warning}No flags.\n'
+        flags += f'{danger}No flags.\n'
     else:
         if flags_dict == {}:
             flags += make_str(commands, command, 'flags')

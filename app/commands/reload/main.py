@@ -3,7 +3,6 @@ from src import Client # Only used for intellisense, will not work if this file 
 
 HELP: str = 'Reload all commands and middleware.'
 USAGE: str = '[flags]'
-ARGS: dict = {}
 FLAGS: dict = {'hard': 'Entirely reload the Control Manual instance.'}
 PACKAGE: str = 'builtin'
 
@@ -12,5 +11,4 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         return client.invoke_reset()
 
     client.reload()
-
     return client.utils.success('Reloaded commands and middleware.')

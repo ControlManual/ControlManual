@@ -5,6 +5,12 @@ import time as t
 HELP: str = 'Wait a certain amount of time.'
 USAGE: str = '<amount> [flags]'
 ARGS: dict = {'amount': 'Amount of time to wait (in seconds).'}
+ARGS_HELP: dict = {
+    'amount': {
+        'type': 'Number',
+        'when_flag_is_passed': [['minutes', 'will wait in minutes instead of seconds.'], ['milliseconds', 'will wait in milliseconds instead of seconds.']]
+    }
+}
 FLAGS: dict = {'minutes': 'Wait in minutes.', 'milliseconds': 'Wait in milliseconds.'}
 PACKAGE: str = 'builtin'
 

@@ -4,7 +4,18 @@ import json
 
 HELP: str = 'Perform operations with a json file.'
 USAGE: str = '<file> <operation> [key] [value]'
-ARGS: dict = {'file': 'JSON file to perform operation on.', 'operation': 'Whether to read the config, or get, set, or remove a value.', 'key': 'Key to perform the operation on (unneeded if operation is "read").', 'value': 'Value to perform the operation on (only needed if the operation is "set").'}
+ARGS: dict = {'file': 'JSON file to perform operation on.', 'operation': 'Operation to run on the file.', 'key': 'JSON key to perform the operation on.'}
+ARGS_HELP: dict = {
+    'file': {
+        'type': 'Path'
+    },
+    'operation': {
+        'valid_values': ['get', 'set', 'remove', 'read']
+    },
+    'key': {
+        'not_required_when': 'Argument "operation" is "read".'
+    }
+}
 FLAGS: dict = {'no-string': 'Insert a JSON value without surrounding the argument in quotes.'}
 PACKAGE: str = 'builtin'
 

@@ -3,7 +3,9 @@ from .static import JSONFile
 from .check_health import cm_dir, check_health
 
 config_path: str = os.path.join(cm_dir, 'config.json')
+
 check_health()
+
 class Config(JSONFile):
     """Class representing config."""
     def __init__(self) -> None:

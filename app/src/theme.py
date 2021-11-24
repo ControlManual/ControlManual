@@ -18,6 +18,9 @@ Themes should follow this format below:
 def default_input_string(colors: dict, client) -> str:
     return f'{client._path} {colors["primary"]}{client.config.input_sep}{reset} '
 
+def bash_import_string(colors: dict, client) -> str:
+    return f'{colors["primary"]}{client._path}{colors["important"]} $ {reset}'
+
 def crystal_input_string(colors: dict, client) -> str:
     slash = '\\' if os.name == 'nt' else '/'
     path = f'{cyan}{slash}{bright_cyan}'.join(client.path_str.split(slash))
@@ -32,7 +35,7 @@ THEMES: dict = {
         }
     },
     'crystal': {
-        'colors': [bright_cyan, cyan, reset, rgb(176, 255, 64), reset],
+        'colors': [rgb(0,191,230), cyan, reset, rgb(255,54,54), reset],
         'functions': {
             'input_string': crystal_input_string,
         }
@@ -46,7 +49,7 @@ THEMES: dict = {
     'bash': {
         'colors': [bright_green, green, bright_blue, bright_red, bright_yellow],
         'functions': {
-            'input_string': default_input_string
+            'input_string': bash_import_string
         }
     }
 }

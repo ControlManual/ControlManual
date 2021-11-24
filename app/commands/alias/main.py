@@ -2,9 +2,8 @@ from typing import List, Dict
 from src import Client # Only used for intellisense, will not work if this file is run manually.
 
 HELP: str = 'Add a command alias.'
-USAGE: str = '<alias> <value>'
-ARGS: dict = {'alias': 'Alias of the command.', 'value': 'String to run when alias is called.'}
-FLAGS: dict = None
+USAGE: str = '<name> <value>'
+ARGS: dict = {'name': 'Name of the alias.', 'value': 'String to replace alias with when used.'}
 PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):

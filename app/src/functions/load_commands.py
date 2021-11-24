@@ -26,6 +26,7 @@ def load_commands(directory: str) -> Dict[str, Dict[str, Union[str, ModuleType]]
             warning: str = f'({command.WARNING})' if hasattr(command, 'WARNING') else ''
             args: dict = command.ARGS if hasattr(command, 'ARGS') else {}
             flags: dict = command.FLAGS if hasattr(command, 'FLAGS') else {}
+            args_help: dict = command.ARGS_HELP if hasattr(command, 'ARGS_HELP') else {}
 
 
             resp[i] = {
@@ -35,7 +36,8 @@ def load_commands(directory: str) -> Dict[str, Dict[str, Union[str, ModuleType]]
                 'usage': usage, 
                 'args': args, 
                 'flags': flags,
-                'package': package
+                'package': package,
+                'args_help': args_help
             }
     
     if config.raw['use_path_env']:

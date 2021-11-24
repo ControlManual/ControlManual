@@ -5,7 +5,6 @@ import os
 HELP: str = 'Interact with the system terminal.'
 USAGE: str = '<command>'
 ARGS: dict = {'command': 'Command that will be run.'}
-FLAGS: dict = {}
 PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
@@ -15,4 +14,4 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         return utils.error('Please specify a command.')
 
     os.system(raw)
-    utils.success('Sucessfully ran command.')
+    utils.success('Ran command.')
