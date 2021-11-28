@@ -1,50 +1,30 @@
-import sys
-import traceback
-from . import utils # for some reason using "from .utils import *" was literally just not defining anything
+class InvalidArguments(Exception):
+    """Raised when arguments passed to the command are invalid."""
+    pass
 
-class CMError:
-    """Control Manual Error."""
-    def __init__(self, message: str, error: Exception = None, kill: bool = False) -> None:
-        """Control Manual Error."""
-        self._message = message
-        self._error = error
-        self._kill = kill
+class NotEnoughArguments(Exception):
+    """Raised when insufficent arguments are passed to the command."""
+    pass
 
-    @property
-    def message(self) -> str:
-        """Message of the exception."""
-        return self._message
-    
-    @property
-    def error(self) -> Exception:
-        """Exception object."""
-        return self._error
-    
-    @property
-    def kill(self) -> bool:
-        """Whether to kill the program after handling the exception."""
-        return self._kill
-    
-    def print_exc(self) -> None:
-        """Print out the error message."""
-        msg = self.get_exc()
-        print(msg)
-    
-    def get_exc(self) -> str:
-        """Function for getting the error message string."""
-        
-        if self._kill:
-            status: str = f'{utils.red}FATAL ERROR'
-        else:
-            status: str = f'{utils.red}ERROR'
+class Other(Exception):
+    """Raised as a custom error."""
+    pass
 
-        trace: str = ''.join(traceback.format_exception(None, self.error, self.error.__traceback__)) if self._error else 'No Traceback.'
-        resp: str = f'\n{status}: {self.message}\n{utils.red}TRACEBACK: {utils.bright}\n{trace}{utils.reset}'
+class Exists(Exception):
+    """Raised when something exists, that shouldn't."""
+    pass
 
-        return resp
-    def raise_exc(self) -> None:
-        """Raise an exception."""
-        self.print_exc()
-        if self.kill:
-            sys.exit(1)
-        
+class NotExists(Exception):
+    """Raised when something doesn't exist, that should."""
+    pass
+
+class InvalidArgument(Exception):
+    """Raised when a specific argument is invalid."""
+    pass
+
+class APIError(Exception):
+    """Raised when an error occurs related to the API."""
+    pass
+
+class NothingChanged(Exception):
+    """Raised when nothing changes on a command execution."""

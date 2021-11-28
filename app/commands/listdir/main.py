@@ -16,15 +16,18 @@ PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     utils = client.utils
+    errors = client.errors
+    console = client.console
+
     path: str = utils.get_path(client.path, '' if len(args) == 0 else args[0])
     
     if not path:
-        return utils.error(f'Folder "{args[0]}" does not exist.')
+        raise errors.NotExists(f'Folder "{args[0]}" does not exist.')
 
-    client.utils.success(
-        "\n".join(
-            os.listdir(
-                path
-            )
-        )
-    )
+    for i in os.listdir(path):
+        if os.path.isfile(os.path.join(path, i)):
+            console.primary(i)
+        else:
+            console.secondary(i)
+
+    return utils.make_meta()

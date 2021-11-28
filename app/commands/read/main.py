@@ -15,14 +15,15 @@ PACKAGE: str = 'builtin'
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     utils = client.utils
+    errors = client.errors
 
-    if args == []:
-        return utils.error('Please specify a file.')
+    if not args:
+        raise errors.NotEnoughArguments('Please specify a file.')
 
     path: str = utils.join(client.path, args[0])
 
     if (not os.path.exists(path)) or (not os.path.isfile(path)):
-        return utils.error(f'File "{args[0]}" does not exist.')
+        raise errors.NotExists(f'File "{args[0]}" does not exist.')
 
     with open(path, 'r') as f:
-        utils.success(f.read())
+        utils.success(f.read()), utils.make_meta(trigger = 'explicit')

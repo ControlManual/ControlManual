@@ -32,12 +32,19 @@
     "help_command": "help",
     "seperator": ";",
     "errors": {
-        "unknown_command": "Unknown command. Use {primary}\"help\"{danger} to see commands.",
-        "command_error": "{error}Exception occured when running command {primary}\"{cmd}\"{danger}.{reset}",
+        "unknown_command": "Unknown command. Use \"help\" to see commands.",
+        "command_error": "Exception occured when running command \"{cmd}\".",
         "function_open": "Function is already open.",
         "function_not_open": "Function is not open.",
         "function_undefined": "No function currently defined.",
         "permission_error": "Control Manual does not have permission to do this."
     },
-    "cm_dir": "/mnt/c/users/yeeti/desktop/projects/python/controlmanual/app"
+    "cm_dir": "/mnt/c/Users/yeeti/desktop/Projects/Python/ControlManual/app",
+    "columns": [
+        "info",
+        "data",
+        "log",
+        "directory",
+        "exceptions"
+    ]
 }

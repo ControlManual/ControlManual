@@ -9,9 +9,10 @@ PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     utils = client.utils
+    errors = client.errors
 
     if not args:
-        return utils.error(f'Please specify a window title')
+        raise errors.NotEnoughArguments(f'Please specify a window title')
 
     if 'prefix' in flags:
         title: str = f'Control Manual - {args[0]}'
@@ -19,4 +20,4 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         title: str = args[0]
 
     utils.title(title)
-    utils.success('Successfully updated window title.')
+    return utils.success('Successfully updated window title.'), utils.make_meta(prefix = 'prefix' in flags)

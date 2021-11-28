@@ -4,10 +4,11 @@ from pathlib import Path
 
 HELP: str = 'Set the path to current parent directory.'
 USAGE: str = '<amount>'
-ARGS: dict = {'amount': 'Amount to go up by (defaults to 1).'}
+ARGS: dict = {'amount': 'Amount to go up by.'}
 ARGS_HELP: dict = {
     'amount': {
-        'type': 'Number'
+        'type': 'Number',
+        'when_unspecified': 'Defaults to 1.'
     }
 }
 PACKAGE: str = 'builtin'
@@ -15,6 +16,7 @@ PACKAGE: str = 'builtin'
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     utils = client.utils
+    errors = client.errors
 
     if args == []:
         amount: int = 1
@@ -24,11 +26,11 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         try:
             amount = int(amount)
         except ValueError:
-            return utils.error('Invalid number for amount.')
+            raise errors.InvalidArgument('Invalid number for amount.')
     
     for i in range(amount):
         path = Path(client.path)
         client.change_path(path.parent)
 
-    utils.success('Successfully updated directory.')
+    return utils.success('Successfully updated directory.'), utils.make_meta()
 

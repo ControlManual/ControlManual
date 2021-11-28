@@ -11,4 +11,4 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         return client.invoke_reset()
 
     client.reload()
-    return client.utils.success('Reloaded commands and middleware.')
+    return client.utils.success('Reloaded commands and middleware.'), client.utils.make_meta()

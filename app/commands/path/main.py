@@ -13,20 +13,21 @@ PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     utils = client.utils
+    errors = client.errors
 
     if not args:
-        return utils.error('Please specify a directory.')
+        raise errors.NotEnoughArguments('Please specify a directory.')
 
     path: str = utils.get_path(client.path, raw)
 
     if not path:
-        return utils.error(f'Directory "{raw}" does not exist.')
+        raise errors.NotExists(f'Directory "{raw}" does not exist.')
 
     if path == client.path_str:
-        return utils.error(f'Nothing changed, path is already {path}.')
+        raise errors.NothingChanged(f'Nothing changed, path is already {path}.')
 
     client.change_path(
         utils.format_path(path)
     )
 
-    utils.success('Successfully updated directory.')
+    utils.success('Successfully updated directory.'), utils.make_meta()

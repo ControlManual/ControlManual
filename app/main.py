@@ -41,6 +41,10 @@ import platform
 import zipfile
 import threading
 import psutil
+import rich
+import platform
+import getpass
+import datetime
 
 from src import Client, Reload, check_health, static
 

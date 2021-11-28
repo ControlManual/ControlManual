@@ -10,6 +10,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
 
     utils = client.utils
     api = client.api
+    errors = client.errors
 
     if not args:
         version = client.version
@@ -17,12 +18,12 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         version = raw
     
     if not client.connected:
-        return utils.error('Not connected to the API.')
+        raise errors.APIError('Not connected to the API.')
     
     info = api.version_info(version)
 
     if not info:
-        return utils.error('Please specify a valid version.')
+        return errors.InvalidArgument('Please specify a valid version.')
     else:
         bool_keys = ["stable", "latest"]
         data = f'Info for version "{version}"\n{utils.reset}{utils.green}'
@@ -32,5 +33,5 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
             data += '\n'
             data += f'{i.capitalize()}: {utils.bright_red}{tmp}{utils.reset}{utils.green}' if not tmp else f'{i.capitalize()}: {utils.bright_green}{tmp}{utils.reset}{utils.green}'
 
-        utils.success(data)
+        return utils.success(data), utils.make_meta(trigger = 'explicit')
 

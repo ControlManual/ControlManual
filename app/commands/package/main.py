@@ -19,22 +19,23 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
 
     utils = client.utils
     api = client.api
+    errors = client.errors
 
     if not args:
-        return utils.error('Please specify an operation.')
+        raise errors.NotEnoughArguments('Please specify an operation.')
 
     if args[0] == 'add':
         if len(args) < 2:
-            return utils.error('Please specify a package name.')
+            raise errors.NotEnoughArguments('Please specify a package name.')
         
         commands_path: str = os.path.join(client.cm_dir, 'commands')
         temp_path: str = os.path.join(commands_path, f'temp_package_{args[1]}.zip')
 
         if not api.download_package(args[1], temp_path, commands_path):
-            return utils.error('Please specify a valid package.')
+            raise errors.InvalidArgument('Please specify a valid package.')
         else:
             os.remove(temp_path)
-            return utils.success(f'Successfully downloaded package "{args[1]}"')
+            return utils.success(f'Successfully downloaded package "{args[1]}"'), utils.make_meta(trigger = 'explicit')
 
     if args[0] == 'list':
         commands = client.commands
@@ -47,7 +48,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         for i in packages:
             utils.success(i)
         
-        return
+        return utils.make_meta(trigger = 'explicit')
     
-    utils.error('Please specify a valid operation.')
+    utils.error('Please specify a valid operation.'), utils.make_meta()
         

@@ -1,16 +1,21 @@
 from .functions import *
 from typing import Dict, Union, Callable, List, Any
 from types import ModuleType
-from .error import CMError
 from pathlib import Path
 from .config import Config, cm_dir, config_path
 import os
-from . import utils, api, static, theme
+from . import utils, api, static, error as command_errors
 from .utils import *
 from .api import *
-from .theme import *
 import colorama
 from threading import Thread
+from .console import console, ConsoleWrapper
+import platform
+import os
+import psutil
+from .error import *
+import getpass
+import datetime
 
 class Reload:
     """Blank object used to reload the instance."""
@@ -47,14 +52,8 @@ class Client:
             self._aliases[i] = self.load_variables(self._config.aliases[i])
 
         colorama.init(convert = os.name == 'nt') # enables ascii stuff
-        clear(), title('Control Manual')
-
-        vers: str = f'{primary}{version["string"]}{reset}'
-        print(f'Running on version {vers}!')
+        console.clear(), title('Control Manual')
         
-        if not version["stable"]:
-            error('You are running on an unstable version.\n')
-
         self._connected = False
         Thread(target = threaded, args = [self]).start()
 
@@ -181,15 +180,15 @@ class Client:
         return api
 
     @property
-    def theme(self) -> theme:
-        """Variables representing theme colors."""
-        return theme
-
-    @property
     def variables(self) -> Dict[str, str]:
         """Dictionary representing variables."""
         return self._variables
 
+    @property
+    def console(self) -> ConsoleWrapper:
+        """Console object."""
+        return console
+    
     def add_variable(self, name: str, value: str) -> None:
         """Function for adding a variable to the instance."""
         self._variables[name] = value
@@ -216,14 +215,6 @@ class Client:
         
         return data
 
-    @property
-    def theme_dict(self) -> Dict[str, str]:
-        """Dictionary of theme colors and their ascii codes."""
-        return theme_dictionary
-
-    def format_theme_string(self, text: str) -> str:
-        return self._format_string(self.theme_dict, text)
-    
     def _format_string(self, collection: dict, text: str) -> str:
         for key, value in collection.items():
             text = text.replace('{' + key + '}', value)
@@ -234,6 +225,25 @@ class Client:
     def actual_functions(self) -> Dict[str, Callable]:
         """Dictionary of functions that can be called in the command line."""
         return self._actual_functions
+    
+    @property
+    def errors(self) -> command_errors:
+        """Errors to raise in commands."""
+        return command_errors
+
+    @property
+    def error_map(self) -> dict:
+        """Map of errors and their corresponding metadata."""
+        return {
+            InvalidArguments: 5005,
+            Other: 5006,
+            NotEnoughArguments: 5007,
+            Exists: 5008,
+            NotExists: 5009,
+            InvalidArgument: 5010,
+            APIError: 5011,
+            NothingChanged: 5012
+        }
     
     def get_command_response(self, args: List[str]) -> None:
         return get_resp(self.run_command, ' '.join(args))
@@ -249,13 +259,25 @@ class Client:
                         for i in f.read().split('\n'):
                             self.run_command(i)
             
-            inp: str = input_string(self)
-            if not os.path.exists(self._path):
-                CMError('Path not found.', kill = True).raise_exc()
-            
-            print(inp, end="")
+            inp: str = f'[white on black]{self._path} [primary]>>[/primary] '
 
-            command: str = input()
+            if not os.path.exists(self._path):
+                static.static_error("path does not exist.")
+
+            console.set_dir(self._path)
+
+            battery = psutil.sensors_battery()
+            console.set_info(f"""User: [primary]{getpass.getuser()}[/primary]
+OS: [primary]{platform.system()} {platform.release()}[/primary]
+Battery: [primary]{str(battery.percent)}%[/primary]
+CPU Usage: [primary]{psutil.cpu_percent()}%[/primary]
+Available Memory: [primary]{psutil.virtual_memory().available * 100 // psutil.virtual_memory().total}%[/primary]
+System Time: [primary]{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}[/primary]
+""")
+            command: str = console.take_input(inp)
+
+            console.clear_panel("exceptions")
+            console.clear_panel("data")
             command = command.replace(r'\n', '\n')
     
             self.run_command(command)
@@ -388,12 +410,33 @@ class Client:
                 runner: Callable = COMMANDS[cmd]['entry']
 
                 try:
-                    runner(raw_args, args, kwargs, flags, self)
+                    call = runner(raw_args, args, kwargs, flags, self)
                 except Exception as e:
+                    emap = self.error_map
+
+                    if type(e) in emap:
+                        console.error(str(e))
+                        return console.set_data(error_meta(emap[type(e)], 'explicit'))
+
                     if isinstance(e, PermissionError):
-                        error(errors['permission_error'])
+                        code: int = 5003
+                        error(errors["permission_error"])
                     else:
-                        failure: str = self.format_theme_string(errors['command_error']).replace('{cmd}', cmd)
-                        CMError(failure, e).raise_exc()
+                        code: int = 5002
+                        failure: str = errors["command_error"].replace('{cmd}', cmd)
+                        console.error(failure)
+                    
+                    console.show_exc(e)
+                    return console.set_data(error_meta(code))
+                
+                try:
+                    m: dict = call[-1] if not isinstance(call, dict) else call
+                    console.set_data(m)
+                except: # a lot of things could go wrong so i wont specify the error
+                    console.set_data(error_meta(5004))
+
             else:
-                error(self.format_theme_string(errors['unknown_command']))
+                console.set_data(
+                    error_meta(5001)
+                )
+                error(errors['unknown_command'])

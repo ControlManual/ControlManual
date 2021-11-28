@@ -5,7 +5,9 @@ HELP: str = 'Displays all variables and their values.'
 PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
-    theme = client.theme
+    console = client.console
 
     for key, value in client.variables.items():
-        print(f'{theme.secondary}{key}{theme.reset} - {theme.primary}{value}{theme.reset}')
+        console.key_value(key, value)
+
+    return client.utils.make_meta()

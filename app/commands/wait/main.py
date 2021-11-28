@@ -17,14 +17,15 @@ PACKAGE: str = 'builtin'
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     utils = client.utils
+    errors = client.errors
 
     if not args:
-        return utils.error('Please specify an amount of time.')
+        raise errors.NotEnoughArguments('Please specify an amount of time.')
 
     try:
         time: int = int(args[0])
     except ValueError:
-        return utils.error('Please specify a valid amount of time.')
+        raise errors.InvalidArgument('Please specify a valid amount of time.')
 
     if 'milliseconds' in flags:
         time = time / 1000
@@ -33,3 +34,5 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         time = time * 60
     
     t.sleep(time)
+
+    return utils.make_meta(amount = time)

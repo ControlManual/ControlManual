@@ -4,4 +4,3 @@ from .check_health import check_health
 from .client import *
 from .error import *
 from .config import *
-from .theme import *

@@ -1,8 +1,4 @@
-from ..theme import *
-from .colors import reset
+from ..console import console
 
 def success(message: str) -> None:
-    print(f'{primary}{message}{reset}')
-
-def make_success(message: str) -> str:
-    return f'{primary}{message}{reset}'
+    console.success(message)

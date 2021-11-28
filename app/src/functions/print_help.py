@@ -1,7 +1,7 @@
 from typing import Dict, Union
 from types import ModuleType
-from ..theme import *
 from ..config import Config
+from ..console import console
 
 def print_help(commands: Dict[str, Dict[str, Union[str, ModuleType]]]) -> None:
     config = Config()
@@ -10,11 +10,11 @@ def print_help(commands: Dict[str, Dict[str, Union[str, ModuleType]]]) -> None:
         if 'exe' in commands[i]:
             if config.hide_exe_from_help:
                 continue
-            hlp = f'{warning}Executable File.{reset}'
+            hlp = f'[danger]Executable File.[/danger]'
         else:
-            hlp = f'{secondary}{commands[i]["help"]} {danger}{commands[i]["warning"]}{reset}'
+            hlp = f'[secondary]{commands[i]["help"]}[/secondary] [danger]{commands[i]["warning"]}[/danger]'
 
 
-        print(f'{primary}{i.lower()}{reset} - {hlp}')
+        console.print(f'[primary]{i.lower()}[/primary] - {hlp}')
     
-    print(f'\n{important}For more info on a command, use {primary}"help <command>"{reset}\n')
+    console.print(f'\n[important]For more info on a command, use [/important][primary]"help <command>"[/primary]\n')

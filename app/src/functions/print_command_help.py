@@ -1,7 +1,9 @@
 from types import ModuleType
 from typing import Dict, Union
 from ..utils import run_exe, error
-from ..theme import *
+from ..console import console
+
+warning = reset = important = secondary = primary = danger = ''
 
 def make_str(commands: dict, command: str, key: str, prefix: str = '', default = None) -> str:
     item = commands[command][key]
@@ -56,5 +58,5 @@ def print_command_help(commands: Dict[str, Dict[str, Union[str, ModuleType]]], c
 {args}
 {important}Flags
 {flags}{reset}
-{important}For more information on a certain argument or flag, use {primary}"help {command} <argument>"{reset}
+{important}For more information on a certain argument, use {primary}"help {command} <argument>"{reset}
 ''')

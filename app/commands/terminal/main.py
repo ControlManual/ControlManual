@@ -9,9 +9,10 @@ PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     utils = client.utils
+    errors = client.errors
 
     if not args:
-        return utils.error('Please specify a command.')
+        raise errors.NotEnoughArguments('Please specify a command.')
 
     os.system(raw)
     utils.success('Ran command.')
