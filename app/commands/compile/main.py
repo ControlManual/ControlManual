@@ -15,19 +15,22 @@ PACKAGE: str = 'builtin'
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     utils = client.utils
+    errors = client.errors
 
-    if args == []:
-        return utils.error('Please specify a file.')
+    if not args:
+        raise errors.NotEnoughArguments('Please specify a file.')
 
     path: str = utils.get_path(client.path, args[0], file = True)
     
     if not path:
-        return utils.error(f'File "{args[0]}" was not found.')
+        raise errors.NotExists(f'File "{args[0]}" was not found.')
     
     with open(path) as f:
         read: str = f.read()
 
     for i in read.split('\n'):
         client.run_command(i)
+    
+    return utils.make_meta()
     
 

@@ -28,3 +28,6 @@ class APIError(Exception):
 
 class NothingChanged(Exception):
     """Raised when nothing changes on a command execution."""
+
+class Collision(Exception):
+    """Raised when a collision between items occurs."""

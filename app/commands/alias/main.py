@@ -8,10 +8,10 @@ PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     utils = client.utils
+    errors = client.errors
 
     if len(args) < 2:
-        return utils.error('Please specify an alias and value.')
+        raise errors.NotEnoughArguments('Please specify an alias and value.')
 
     client.add_alias(args[0], args[1])
-
-    return utils.success(f'"{args[0]}" was aliased to "{args[1]}"')
+    return utils.success(f'"{args[0]}" was aliased to "{args[1]}"'), utils.make_meta()

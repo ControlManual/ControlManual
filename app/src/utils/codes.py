@@ -11,5 +11,6 @@ codes = {
     5009: 'item_not_exists',
     5010: 'invalid_argument',
     5011: 'api_error',
-    5012: 'nothing_changed'
+    5012: 'nothing_changed',
+    5013: 'item_collision'
 }

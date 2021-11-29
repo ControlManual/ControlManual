@@ -6,10 +6,13 @@ import os
 from .config import Config
 from typing import Literal, Type
 
+
+primary: str = "rgb(0,179,0) on black"
 custom_theme = Theme({
     "danger": "bold red",
-    "primary": "rgb(0,179,0) on black" if not os.name == 'nt' else 'green',
-    "secondary": "rgb(21,128,0) on black" if not os.name == 'nt' else 'dim green'
+    "primary": primary if not os.name == 'nt' else 'bold green',
+    "secondary": "rgb(21,128,0) on black" if not os.name == 'nt' else 'dim green',
+    "important": f"bold {primary}"
 })
 
 config = Config()
@@ -79,28 +82,28 @@ class ConsoleWrapper:
         self._feed = []
         self.edit_panel("feed", "")
 
-    def print(self, message: str):
+    def print(self, message: str, lb: bool = True):
         """Function for writing to the feed."""
         f = self._feed
-        end: str = ''
-        amount_string: str = lambda a: f' [primary]x{a}[/primary]'
+        suffix: str = ''
+        amount_string: str = lambda a: f' [important]x{a}[/important]'
         
         if message == f[-1] if f else None:
             self._amount += 1
-            end: str = amount_string(self._amount)
+            suffix: str = amount_string(self._amount)
         else:
             if self._amount:
                 f[-1] = f[-1] + amount_string(self._amount)
                 self._amount = 0
             self._feed.append(message)
         
-        self.edit_panel("feed", f'\n'.join(f) + end)
+        self.edit_panel("feed", f'\n'.join(f) + suffix)
     
-    def error(self, message: str) -> None:
-        self.print(f"[danger]Error:[/danger] {message}")
+    def error(self, message: str, *args, **kwargs) -> None:
+        self.print(f"[danger]Error:[/danger] {message}", *args, **kwargs)
 
-    def success(self, message: str) -> None:
-        self.print(f"[primary]Success:[/primary] {message}")
+    def success(self, message: str, *args, **kwargs) -> None:
+        self.print(f"[important]Success:[/important] {message}", *args, **kwargs)
     
     def set_info(self, text: str) -> None:
         self.edit_panel("info", text)
@@ -141,11 +144,11 @@ class ConsoleWrapper:
     def clear_panel(self, panel: str) -> None:
         self.edit_panel(panel, f'{panel.capitalize()} will show here...')
 
-    def primary(self, message: str) -> None:
-        self.print(f'[primary]{message}[/primary]')
+    def primary(self, message: str, *args, **kwargs) -> None:
+        self.print(f'[primary]{message}[/primary]', *args, **kwargs)
     
-    def secondary(self, message: str) -> None:
-        self.print(f'[secondary]{message}[/secondary]')
+    def secondary(self, message: str, *args, **kwargs) -> None:
+        self.print(f'[secondary]{message}[/secondary]', *args, **kwargs)
 
     @staticmethod
     def clear() -> None:

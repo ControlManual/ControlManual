@@ -20,9 +20,10 @@ PACKAGE: str = 'builtin'
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     utils = client.utils
+    errors = client.errors
 
     if len(args) < 2:
-        return utils.error('Please specify a method and url.')
+        raise errors.NotEnoughArguments('Please specify a method and url.')
     
     methods: dict = {
         'get': requests.get,
@@ -57,7 +58,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     try:
         resp: requests.Response = methods[args[0]](url, params=params, data=data, json=json_args)
     except:
-        return utils.error('Please specify a valid URL.')
+        raise errors.InvalidArgument('Please specify a valid URL.')
     
     final: str = utils.make_error(f'Response {resp.status_code}\n') if (not resp.status_code < 300) and (not resp.status_code > 200) else utils.make_success(f'Response {resp.status_code}\n')
 
@@ -77,5 +78,5 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         for i in resp.headers:
             final += f'{utils.bright_green}{i}{utils.reset} - {utils.green}{resp.headers[i]}{utils.reset}\n'
 
-    return utils.success(final)
+    return utils.success(final), utils.make_meta()
     

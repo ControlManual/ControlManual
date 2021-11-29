@@ -23,7 +23,8 @@ class Config(JSONFile):
             "help_command",
             "seperator",
             "theme",
-            "errors"
+            "errors",
+            "columns"
         ], {
                 "errors": [
                     "unknown_command",

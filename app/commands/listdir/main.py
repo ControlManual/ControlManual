@@ -26,8 +26,8 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
 
     for i in os.listdir(path):
         if os.path.isfile(os.path.join(path, i)):
-            console.primary(i)
+            console.primary(i, end = ' ')
         else:
-            console.secondary(i)
+            console.secondary(i, end = ' ')
 
     return utils.make_meta()

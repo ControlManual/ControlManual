@@ -15,14 +15,14 @@ FLAGS: dict = {'hello_world': 'Whether to print "Hello World".'}
 PACKAGE: str = '{pkg_name}'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
-
-    config = client.config
-    utils = client.utils
-    api = client.api
-    static = client.static
+    config = client.config # Config file operations
+    utils = client.utils # All utilities
+    api = client.api # All functions regarding the API
+    static = client.static # Functions with no dependencies on the rest of the project
+    errors = client.errors # All error classes
 
     if not args:
-        return utils.error('Please specify a message.')
+        raise errors.NotEnoughArguments('Please specify a message.')
 
     if 'hello_world' in flags:
         print("Hello World")
@@ -49,11 +49,12 @@ PACKAGE: str = 'builtin'
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     utils = client.utils
     config = client.config
+    errors = client.errors
 
     typ: str = 'command' if 'middleware' not in flags else 'middleware'
 
-    if len(args) == 0:
-        return utils.error(f'Please specify a {typ} name.')
+    if not args:
+        raise errors.NotEnoughArguments(f'Please specify a {typ} name.')
 
     directory: str = os.path.join(
         os.path.join(
@@ -64,7 +65,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     ) if 'here' not in flags else os.path.join(client.path, args[0])
 
     if os.path.exists(directory):
-        return utils.error(f'{typ.capitalize()} already exists.{utils.reset}')
+        raise errors.Exists(f'{typ.capitalize()} already exists.{utils.reset}')
 
     os.makedirs(directory)
 
@@ -72,4 +73,4 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         f.write(BASE.replace('{pkg_name}', args[0]) if 'middleware' not in flags else MIDDLEWARE)
 
     client.reload()
-    utils.success(f'Successfully initalized {typ} "{args[0]}".')
+    utils.success(f'Successfully initalized {typ} "{args[0]}".'), utils.make_meta()

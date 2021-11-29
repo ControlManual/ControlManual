@@ -9,23 +9,24 @@ PACKAGE: str = 'builtin'
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     utils = client.utils
+    errors = client.errors
 
-    if args == []:
-        return utils.error('Please specify a function name.')
+    if not args:
+        raise errors.NotEnoughArguments('Please specify a function name.')
 
     fn = client.functions.get(args[0])
 
     if not fn:
-        return utils.error('Please specify a valid function.')
+        raise errors.InvalidArgument('Please specify a valid function.')
 
     arguments = fn['arguments']
     params = args[1:]
 
     if not fn['defined']:
-        return utils.error(f'Function "{args[0]}" is defined, but does not have a body.')
+        raise errors.NothingChanged(f'Function "{args[0]}" is defined, but does not have a body.')
 
     if not len(arguments) == len(params):
-        return utils.error('Missing function parameters.')
+        raise errors.NotEnoughArguments('Missing function parameters.')
 
     for i in fn['script']:
         text = i

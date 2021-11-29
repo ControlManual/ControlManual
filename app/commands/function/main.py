@@ -9,12 +9,13 @@ PACKAGE: str = 'builtin'
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     utils = client.utils
+    errors = client.errors
 
-    if args == []:
-        return utils.error('Please specify a function name.')
+    if not args:
+        raise errors.NotEnoughArguments('Please specify a function name.')
 
     if client.current_function:
-        return utils.error(f'Please define body for function "{client.current_function}" before creating a new one.')
+        raise errors.Collision(f'Please define body for function "{client.current_function}" before creating a new one.')
 
     client._functions[args[0]] = {
         'arguments': args[1:] if len(args) > 1 else [],
@@ -23,4 +24,4 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     }
     client._current_function = args[0]
 
-    return utils.success(f'Successfully created shallow function "{args[0]}".')
+    return utils.success(f'Successfully created shallow function "{args[0]}".'), utils.make_meta()

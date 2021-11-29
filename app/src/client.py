@@ -17,7 +17,7 @@ from .error import *
 import getpass
 import datetime
 import distro
-import socket
+import time
 
 class Reload:
     """Blank object used to reload the instance."""
@@ -244,7 +244,8 @@ class Client:
             NotExists: 5009,
             InvalidArgument: 5010,
             APIError: 5011,
-            NothingChanged: 5012
+            NothingChanged: 5012,
+            Collision: 5013,
         }
     
     def get_command_response(self, args: List[str]) -> None:
@@ -275,15 +276,17 @@ class Client:
 
             battery = psutil.sensors_battery()
             system = distro.name(pretty = True) if platform.system() == 'Linux' else f'{platform.system()} {platform.release()} {platform.version()}'
-            console.set_info(f"""User: [primary]{getpass.getuser()}[/primary]
-OS: [primary]{system}[/primary]
-Machine: [primary]{platform.machine()}[/primary]
-System Time: [primary]{datetime.datetime.now().strftime('%H:%M:%S')}[/primary]
-CPU Usage: [primary]{psutil.cpu_percent()}%[/primary]
-Memory: [primary]{memory}[/primary]
-Disk: [primary]{disk}[/primary]
-Battery: [primary]{str(battery.percent)}%[/primary]
-Computer Name: [primary]{platform.node()}[/primary]
+            uptime: float = time.time() - psutil.boot_time()
+            console.set_info(f"""User: [important]{getpass.getuser()}[/important]
+OS: [important]{system}[/important]
+Machine: [important]{platform.machine()}[/important]
+System Time: [important]{datetime.datetime.now().strftime('%H:%M:%S')}[/important]
+CPU Usage: [important]{psutil.cpu_percent()}%[/important]
+Memory: [important]{memory}[/important]
+Disk: [important]{disk}[/important]
+Battery: [important]{str(battery.percent)}%[/important]
+Computer Name: [important]{platform.node()}[/important]
+Uptime: [important]{int(uptime) // 60} minutes[/important]
 """)
             command: str = console.take_input(inp)
 
@@ -426,7 +429,7 @@ Computer Name: [primary]{platform.node()}[/primary]
 
                     if type(e) in emap:
                         console.error(str(e))
-                        return console.set_data(error_meta(emap[type(e)], 'explicit'))
+                        return console.set_data(error_meta(emap[type(e)]))
 
                     if isinstance(e, PermissionError):
                         code: int = 5003
@@ -443,7 +446,7 @@ Computer Name: [primary]{platform.node()}[/primary]
                     m: dict = call[-1] if not isinstance(call, dict) else call
                     console.set_data(m)
                 except: # a lot of things could go wrong so i wont specify the error
-                    console.set_data(error_meta(5004))
+                    console.set_data(make_meta(status = 5000, success = '[danger]unknown[/danger]'))
 
             else:
                 console.set_data(

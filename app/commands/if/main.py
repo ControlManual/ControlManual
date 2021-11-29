@@ -37,10 +37,11 @@ PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
+    errors = client.errors
     utils = client.utils
 
     if len(args) < 5:
-        return utils.error('Invalid arguments.')
+        raise errors.NotEnoughArguments('Invalid arguments.')
     
     item1, operator, item2, true, false = args
     use_int: bool = 'int' in flags
@@ -54,13 +55,13 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
 
             comparison = comparisons[operator if not operator == '=' else '==']
 
-            return client.run_command(true if comparison else false)
+            return client.run_command(true if comparison else false), utils.make_meta()
         else:
             try:
                 item1 = int(item1)
                 item2 = int(item2)
             except ValueError:
-                return utils.error('Please specify a valid number.')
+                raise errors.InvalidArgument('Please specify a valid number.')
 
             comparisons = {
                 '<': item1 < item2,
@@ -68,6 +69,6 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
                 '==': item1 == item2
             }
             comparison = comparisons[operator if not operator == '=' else '==']
-            return client.run_command(true if comparison else false)
+            return client.run_command(true if comparison else false), utils.make_meta()
     else:
-        return utils.error('Please specify a valid comparison operator.')
+        raise errors.InvalidArgument('Please specify a valid comparison operator.')

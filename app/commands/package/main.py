@@ -35,7 +35,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
             raise errors.InvalidArgument('Please specify a valid package.')
         else:
             os.remove(temp_path)
-            return utils.success(f'Successfully downloaded package "{args[1]}"'), utils.make_meta(trigger = 'explicit')
+            return utils.success(f'Successfully downloaded package "{args[1]}"'), utils.make_meta()
 
     if args[0] == 'list':
         commands = client.commands
@@ -48,7 +48,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         for i in packages:
             utils.success(i)
         
-        return utils.make_meta(trigger = 'explicit')
+        return utils.make_meta()
     
     utils.error('Please specify a valid operation.'), utils.make_meta()
         

@@ -1,12 +1,12 @@
 from typing import Literal
 
-def make_meta(success: bool = True, status: int = 5000, trigger: Literal['generic', 'explicit'] = 'generic', **kwargs) -> dict:
+def make_meta(success: bool = True, status: int = 5000, **kwargs) -> dict:
     """Function for generating a metadata dictionary."""
     scolor = 'primary' if status == 5000 else 'danger'
+    s = '[primary]true[/primary]' if success else '[danger]false[/danger]'
     base = {
-        'success': success,
-        'status': f'[{scolor}]{status}[/{scolor}]',
-        'trigger': trigger
+        'success': s,
+        'status': f'[{scolor}]{status}[/{scolor}]'
     }
 
     base.update(kwargs)
