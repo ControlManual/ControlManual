@@ -16,6 +16,8 @@ import psutil
 from .error import *
 import getpass
 import datetime
+import distro
+import socket
 
 class Reload:
     """Blank object used to reload the instance."""
@@ -265,14 +267,23 @@ class Client:
                 static.static_error("path does not exist.")
 
             console.set_dir(self._path)
+            memory_raw = psutil.virtual_memory()
+            memory = f'{memory_raw.used // 1000000}mB / {memory_raw.total // 1000000}mB'
+
+            disk_raw = psutil.disk_usage('/')
+            disk = f'{disk_raw.used // 1000000000}gB / {disk_raw.total // 1000000000}gB'
 
             battery = psutil.sensors_battery()
+            system = distro.name(pretty = True) if platform.system() == 'Linux' else f'{platform.system()} {platform.release()} {platform.version()}'
             console.set_info(f"""User: [primary]{getpass.getuser()}[/primary]
-OS: [primary]{platform.system()} {platform.release()}[/primary]
-Battery: [primary]{str(battery.percent)}%[/primary]
+OS: [primary]{system}[/primary]
+Machine: [primary]{platform.machine()}[/primary]
+System Time: [primary]{datetime.datetime.now().strftime('%H:%M:%S')}[/primary]
 CPU Usage: [primary]{psutil.cpu_percent()}%[/primary]
-Available Memory: [primary]{psutil.virtual_memory().available * 100 // psutil.virtual_memory().total}%[/primary]
-System Time: [primary]{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}[/primary]
+Memory: [primary]{memory}[/primary]
+Disk: [primary]{disk}[/primary]
+Battery: [primary]{str(battery.percent)}%[/primary]
+Computer Name: [primary]{platform.node()}[/primary]
 """)
             command: str = console.take_input(inp)
 
@@ -342,7 +353,6 @@ System Time: [primary]{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}[/p
                             args[index] = i = args[index].replace(f'{find}{text})' + '}', replace)
                         else:
                             break
-                    
                 
 
             crfn: str = self.current_function
@@ -399,7 +409,7 @@ System Time: [primary]{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}[/p
                     
                     args.extend(ext)
 
-                    return print(
+                    return console.print(
                         run_exe(COMMANDS[cmd]['exe'],
                         ''.join(
                             args[0:]

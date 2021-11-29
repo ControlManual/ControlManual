@@ -45,6 +45,7 @@ import rich
 import platform
 import getpass
 import datetime
+import distro
 
 from src import Client, Reload, check_health, static
 

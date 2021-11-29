@@ -41,7 +41,7 @@ def load_commands(directory: str) -> Dict[str, Dict[str, Union[str, ModuleType]]
             }
     
     if config.raw['use_path_env']:
-        for i in os.environ['PATH'].split(';'):
+        for i in os.environ['PATH'].split(';' if os.name == 'nt' else ':'):
             if os.path.exists(i):
                 for x in os.listdir(i):
                     if not x[:-4] in resp:
