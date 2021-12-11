@@ -24,4 +24,4 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     }
     client._current_function = args[0]
 
-    return utils.success(f'Successfully created shallow function "{args[0]}".'), utils.make_meta()
+    return utils.success(f'Successfully created shallow function "{args[0]}".')

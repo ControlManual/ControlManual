@@ -34,5 +34,3 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         time = time * 60
     
     t.sleep(time)
-
-    return utils.make_meta(amount = time)

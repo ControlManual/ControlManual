@@ -20,4 +20,4 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         title: str = args[0]
 
     utils.title(title)
-    return utils.success('Successfully updated window title.'), utils.make_meta(prefix = 'prefix' in flags)
+    return utils.success('Successfully updated window title.')

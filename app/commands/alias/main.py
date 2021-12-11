@@ -14,4 +14,4 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         raise errors.NotEnoughArguments('Please specify an alias and value.')
 
     client.add_alias(args[0], args[1])
-    return utils.success(f'"{args[0]}" was aliased to "{args[1]}"'), utils.make_meta()
+    return utils.success(f'"{args[0]}" was aliased to "{args[1]}"')

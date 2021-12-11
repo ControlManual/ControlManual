@@ -14,7 +14,7 @@ def make_str(commands: dict, command: str, key: str, prefix: str = '', default =
         return default or f'{warning}No {key}.\n{reset}'
 
 
-def print_command_help(commands: Dict[str, Dict[str, Union[str, ModuleType]]], command: str) -> None:
+def print_command_help(commands: dict, command: str) -> None:
     if not (command in commands):
         return error(f'Command does not exist.')
     

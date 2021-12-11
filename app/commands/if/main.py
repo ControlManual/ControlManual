@@ -55,7 +55,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
 
             comparison = comparisons[operator if not operator == '=' else '==']
 
-            return client.run_command(true if comparison else false), utils.make_meta()
+            return client.run_command(true if comparison else false)
         else:
             try:
                 item1 = int(item1)
@@ -69,6 +69,6 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
                 '==': item1 == item2
             }
             comparison = comparisons[operator if not operator == '=' else '==']
-            return client.run_command(true if comparison else false), utils.make_meta()
+            return client.run_command(true if comparison else false)
     else:
         raise errors.InvalidArgument('Please specify a valid comparison operator.')

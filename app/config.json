@@ -39,12 +39,12 @@
         "function_undefined": "No function currently defined.",
         "permission_error": "Control Manual does not have permission to do this."
     },
-    "cm_dir": "/mnt/c/Users/yeeti/Desktop/Projects/Python/ControlManual/app",
+    "cm_dir": "/mnt/e/projects/python/Control Manual/app",
     "columns": [
         "info",
-        "data",
         "log",
         "directory",
         "exceptions"
-    ]
+    ],
+    "truecolor": true
 }

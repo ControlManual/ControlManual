@@ -9,12 +9,9 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     aliases: Dict[str, str] = client.aliases
     console = client.console
     errors = client.errors
-    utils = client.utils
 
     if not aliases:
         raise errors.NothingChanged('No aliases exist.')
 
     for key, value in aliases.items():
         console.key_value(key, value)
-    
-    return utils.make_meta()

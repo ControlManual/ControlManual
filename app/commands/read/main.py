@@ -26,4 +26,4 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         raise errors.NotExists(f'File "{args[0]}" does not exist.')
 
     with open(path, 'r') as f:
-        utils.success(f.read()), utils.make_meta()
+        utils.success(f.read())

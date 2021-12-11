@@ -4,37 +4,37 @@ from rich.layout import Layout
 from rich.panel import Panel
 import os
 from .config import Config
-from typing import Literal, Type
+from typing import Literal, Tuple, Type, Optional, Dict, overload, Union
 
 
 primary: str = "rgb(0,179,0) on black"
+config = Config()
+
+truecolor: bool = config.truecolor
+
 custom_theme = Theme({
     "danger": "bold red",
-    "primary": primary if not os.name == 'nt' else 'bold green',
-    "secondary": "rgb(21,128,0) on black" if not os.name == 'nt' else 'dim green',
+    "primary": primary if truecolor else 'bold green',
+    "secondary": "rgb(21,128,0) on black" if truecolor else 'dim green',
     "important": f"bold {primary}"
 })
 
-config = Config()
 
-def make_panel(name: str) -> Layout:
+
+@overload
+def make_panel(name: str, force: bool = True) -> Layout:
+    ...
+
+@overload
+def make_panel(name: str, force: bool = False) -> Optional[Layout]: # overloads are weird sometimes
+    ...
+
+def make_panel(name: str, force: bool = False) -> Optional[Layout]:
     c: str = name.capitalize()
     text: str = f'{c} will show here...'
-    if (name in config.columns) or (name == "feed"):
+
+    if (name in config.columns) or (force):
         return Layout(Panel(text, title = c), name = name)
-
-def render(layout: Layout, typ: Literal["row", "column"], *rows):
-    if typ not in ["row", "column"]:
-        raise ValueError("typ must be row or column") # mainly for safety purposes
-    
-    target = layout.split_row if typ == "row" else layout.split_column
-
-    r = list(rows)
-    for i in r:
-        if i is None:
-            r.remove(i)
-    
-    target(*r)
 
 
 class ConsoleWrapper:
@@ -44,21 +44,20 @@ class ConsoleWrapper:
         self._console = Console(color_system = colorsys if config.colorize else None, theme = custom_theme)
         layout = Layout()
         layout.split_row(
-            make_panel("feed"),
+            make_panel("feed", True),
             Layout(name="lower")
         )
-        render(layout["lower"], "column",
+        self.render(layout["lower"], "column",
             make_panel("info"),
             Layout(name = "command_data"),
             Layout(name = "small")
         )
 
-        render(layout["command_data"], "row", 
-            make_panel("data"),
+        self.render(layout["command_data"], "row", 
             make_panel("exceptions")
         )
 
-        render(layout["small"], "row",
+        self.render(layout["small"], "row",
             make_panel("directory"),
             make_panel("log")
         )
@@ -66,6 +65,22 @@ class ConsoleWrapper:
         self._screen = layout
         self._feed = []
         self._amount = 0
+
+    def render(self, layout: Layout, typ: Literal["row", "column"], *rows: Optional[Layout]):
+        """Internal utility method. Used for rendering panels to the screen."""
+        
+        if typ not in ["row", "column"]:
+            raise ValueError("typ must be row or column") # mainly for safety purposes
+        
+        target = layout.split_row if typ == "row" else layout.split_column
+
+        r = list(rows)
+
+        for i in r:
+            if i is None:
+                r.remove(i)
+        
+        target(*r) # type: ignore
 
     @property
     def console(self) -> Console:
@@ -80,13 +95,18 @@ class ConsoleWrapper:
     def empty(self) -> None:
         """Empty the feed."""
         self._feed = []
-        self.edit_panel("feed", "")
+        self.clear_panel("feed")
 
-    def print(self, message: str, lb: bool = True):
+    def print(self, message: str):
+        """Function for printing a message."""
+        prefix: str = '\n' if self._feed else ''
+        self.write(prefix + message)
+
+    def write(self, message: str):
         """Function for writing to the feed."""
         f = self._feed
         suffix: str = ''
-        amount_string: str = lambda a: f' [important]x{a}[/important]'
+        amount_string = lambda a: f' [important]x{a}[/important]'
         
         if message == f[-1] if f else None:
             self._amount += 1
@@ -97,38 +117,27 @@ class ConsoleWrapper:
                 self._amount = 0
             self._feed.append(message)
         
-        self.edit_panel("feed", f'\n'.join(f) + suffix)
+        self.edit_panel("feed", ''.join(f) + suffix)
     
     def error(self, message: str, *args, **kwargs) -> None:
         self.print(f"[danger]Error:[/danger] {message}", *args, **kwargs)
 
-    def success(self, message: str, *args, **kwargs) -> None:
+    def success(self, message: str, *args: Tuple[str], **kwargs: Dict[str, str]) -> None:
         self.print(f"[important]Success:[/important] {message}", *args, **kwargs)
     
     def set_info(self, text: str) -> None:
         self.edit_panel("info", text)
 
-    def set_data(self, data: dict) -> None:
-        final: str = ''
-        
-        for key, value in data.items():
-            if isinstance(key, bool):
-                c = 'primary' if key else 'danger'
-                key = f'[{c}]{key}[/{c}]'
-            final += f'{key}: {value}\n'
-
-        self.edit_panel("data", final)
-
     def edit_panel(self, panel: str, text: str) -> None:
         self.screen[panel].update(Panel(text, title = panel.capitalize()))
 
-    def show_exc(self, error: Type[Exception]):
+    def show_exc(self, error: Exception):
         self.edit_panel("exceptions", repr(error))
 
     def key_value(self, key: str, value: str) -> None:
         self.print(f'[primary]{key}[/primary] - [secondary]{value}[/secondary]')
 
-    def set_dir(self, path: str) -> None:
+    def set_dir(self, path: Union[os.PathLike, str]) -> None:
         final: str = ''
 
         for i in os.listdir(path):

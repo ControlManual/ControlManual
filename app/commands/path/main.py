@@ -30,4 +30,4 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         utils.format_path(path)
     )
 
-    utils.success('Successfully updated directory.'), utils.make_meta()
+    utils.success('Successfully updated directory.')

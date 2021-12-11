@@ -78,5 +78,5 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         for i in resp.headers:
             final += f'{utils.bright_green}{i}{utils.reset} - {utils.green}{resp.headers[i]}{utils.reset}\n'
 
-    return utils.success(final), utils.make_meta()
+    return utils.success(final)
     

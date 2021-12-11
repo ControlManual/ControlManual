@@ -2,7 +2,7 @@ from ..utils import error
 from ..console import console
 from typing import Any
 
-def extract(col: dict, key: str, default: str = '') -> Any:
+def extract(col: dict, key: str, default: Any = '') -> Any:
     return col.get(key) or default
 
 def rq(key: str, col: dict) -> str:

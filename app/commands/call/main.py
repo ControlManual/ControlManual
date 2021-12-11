@@ -8,7 +8,6 @@ PACKAGE: str = 'builtin'
 
 def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
-    utils = client.utils
     errors = client.errors
 
     if not args:

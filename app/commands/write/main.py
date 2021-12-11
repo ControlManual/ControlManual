@@ -25,4 +25,4 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     with open(path, operation) as f:
         f.write(args[1])
     
-    return utils.success(f'Successfully wrote to "{args[0]}"'), utils.make_meta(file = path)
+    return utils.success(f'Successfully wrote to "{args[0]}"')

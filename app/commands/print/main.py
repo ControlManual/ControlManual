@@ -12,7 +12,4 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     console = client.console
 
     target = console.print if 'with-success' not in flags else utils.success
-    
     target(' '.join(args))
-
-    return utils.make_meta()

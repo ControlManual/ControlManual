@@ -1,6 +1,5 @@
 from .functions import *
-from typing import Dict, Union, Callable, List, Any
-from types import ModuleType
+from typing import Dict, Type, Union, Callable, List, Any, Optional
 from pathlib import Path
 from .config import Config, cm_dir, config_path
 import os
@@ -18,6 +17,7 @@ import getpass
 import datetime
 import distro
 import time
+from types import ModuleType
 
 class Reload:
     """Blank object used to reload the instance."""
@@ -36,8 +36,8 @@ class Client:
         self._reset: bool = False
         self._version: str = version['string']
         self._path: Path = Path().home()
-        self._functions: Dict[str, Dict[str, Union[str, List[str]]]] = {}
-        self._current_function: str = None
+        self._functions: dict = {}
+        self._current_function: Optional[str] = None
         self._function_open: bool = False
         self._toggled_output: bool = True
         self._origin: Path = self._path
@@ -70,7 +70,7 @@ class Client:
                 'middleware'
             )
         )
-        self._commands: Dict[str, Dict[str, Union[ModuleType, str]]] = load_commands(
+        self._commands: dict = load_commands(
             join(self._config.cm_dir, 'commands')
         )
 
@@ -93,19 +93,18 @@ class Client:
     def set_function_open(self, value) -> None:
         self._function_open = value
 
-
     @property
-    def static(self) -> static:
+    def static(self):
         """Module containing standalone objects."""
         return static
 
     @property
-    def functions(self) -> Dict[str, Dict[str, Union[str, List[str]]]]:
+    def functions(self) -> dict:
         """Dictionary of defined functions."""
         return self._functions
     
     @property
-    def current_function(self) -> str:
+    def current_function(self) -> Optional[str]:
         """Current function being edited."""
         return self._current_function
     
@@ -157,7 +156,7 @@ class Client:
         return self._version
 
     @property
-    def commands(self) -> Dict[str, ModuleType]:
+    def commands(self) -> Dict[str, Union[str, Dict[str, Union[str, Union[Callable, dict]]]]]:
         """Dictionary representation of commands."""
         return self._commands
 
@@ -172,12 +171,12 @@ class Client:
         return str(self._path)
     
     @property
-    def utils(self) -> utils: # for easier access to utils in commands
+    def utils(self):
         """Utilities for commands."""
         return utils
     
     @property
-    def api(self) -> api:
+    def api(self):
         """Functions regarding the API."""
         return api
 
@@ -203,19 +202,13 @@ class Client:
         """Tell the Control Manual instance to reset after the current command has finished. Only works when run via the main file."""
         self._reset = True
 
-    def load_variables(self, data: str) -> str:
+    def load_variables(self, text: str) -> str: # type: ignore
         """Function for loading variables into a string."""
-        for i in self._variables:
-            data: str = data.replace('{' + i + '}', self._variables[i])
+
+        for key, value in self.variables.items():
+            text: str = text.replace('{' + key + '}', value)
         
-        return data
-    
-    def load_variables_dynamic(self, data: str, variables: dict) -> str:
-        """Function for loading variables into a string."""
-        for i in variables:
-            data: str = data.replace('{' + i + '}', variables[i])
-        
-        return data
+        return text
 
     def _format_string(self, collection: dict, text: str) -> str:
         for key, value in collection.items():
@@ -229,29 +222,30 @@ class Client:
         return self._actual_functions
     
     @property
-    def errors(self) -> command_errors:
+    def errors(self):
         """Errors to raise in commands."""
         return command_errors
 
     @property
-    def error_map(self) -> dict:
+    def error_map(self) -> list:
         """Map of errors and their corresponding metadata."""
-        return {
-            InvalidArguments: 5005,
-            Other: 5006,
-            NotEnoughArguments: 5007,
-            Exists: 5008,
-            NotExists: 5009,
-            InvalidArgument: 5010,
-            APIError: 5011,
-            NothingChanged: 5012,
-            Collision: 5013,
-        }
+        return [
+            InvalidArguments,
+            Other,
+            NotEnoughArguments,
+            Exists,
+            NotExists,
+            InvalidArgument,
+            APIError,
+            NothingChanged,
+            Collision,
+        ]
     
     def get_command_response(self, args: List[str]) -> None:
-        return get_resp(self.run_command, ' '.join(args))
+        pass
+        # return get_resp(self.run_command, ' '.join(args))
 
-    def start(self, filename: str) -> Union[None, Reload]:
+    def start(self, filename: Union[str, bool]) -> Union[None, Type[Reload]]:
         """Start the main loop."""
         while True:
             if filename:
@@ -274,7 +268,8 @@ class Client:
             disk_raw = psutil.disk_usage('/')
             disk = f'{disk_raw.used // 1000000000}gB / {disk_raw.total // 1000000000}gB'
 
-            battery = psutil.sensors_battery()
+            battery = psutil.sensors_battery() # type: ignore
+            # for some reason its saying sensors_battery() doesn't exist
             system = distro.name(pretty = True) if platform.system() == 'Linux' else f'{platform.system()} {platform.release()} {platform.version()}'
             uptime: float = time.time() - psutil.boot_time()
             console.set_info(f"""User: [important]{getpass.getuser()}[/important]
@@ -291,7 +286,6 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
             command: str = console.take_input(inp)
 
             console.clear_panel("exceptions")
-            console.clear_panel("data")
             command = command.replace(r'\n', '\n')
     
             self.run_command(command)
@@ -358,8 +352,8 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                             break
                 
 
-            crfn: str = self.current_function
-            COMMANDS: Dict[str, Dict[str, Union[ModuleType, str]]] = self.commands
+            crfn: Optional[str] = self.current_function
+            COMMANDS = self.commands
             
             for fn in self.middleware:
                 fn(cmd, raw_args, args, kwargs, flags, COMMANDS)
@@ -410,46 +404,35 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                     if len(args) == 1:
                         ext: list = ['']
                     
-                    args.extend(ext)
+                    args.extend(ext) # type: ignore
+                    return
 
-                    return console.print(
-                        run_exe(COMMANDS[cmd]['exe'],
+                    """
+                    return run_exe(COMMANDS[cmd]['exe'],
                         ''.join(
-                            args[0:]
+                            args
                             )
                         )
-                    )
+                    """
 
-                runner: Callable = COMMANDS[cmd]['entry']
+                runner: Callable = COMMANDS[cmd]['entry'] # type: ignore
+                # i have no clue what this error message is supposed to mean
 
                 try:
-                    call = runner(raw_args, args, kwargs, flags, self)
+                    runner(raw_args, args, kwargs, flags, self)
                 except Exception as e:
                     emap = self.error_map
 
                     if type(e) in emap:
-                        console.error(str(e))
-                        return console.set_data(error_meta(emap[type(e)]))
+                        return console.error(str(e))
 
                     if isinstance(e, PermissionError):
-                        code: int = 5003
                         error(errors["permission_error"])
                     else:
-                        code: int = 5002
                         failure: str = errors["command_error"].replace('{cmd}', cmd)
                         console.error(failure)
                     
                     console.show_exc(e)
-                    return console.set_data(error_meta(code))
-                
-                try:
-                    m: dict = call[-1] if not isinstance(call, dict) else call
-                    console.set_data(m)
-                except: # a lot of things could go wrong so i wont specify the error
-                    console.set_data(make_meta(status = 5000, success = '[danger]unknown[/danger]'))
 
             else:
-                console.set_data(
-                    error_meta(5001)
-                )
                 error(errors['unknown_command'])

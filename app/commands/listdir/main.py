@@ -24,10 +24,8 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     if not path:
         raise errors.NotExists(f'Folder "{args[0]}" does not exist.')
 
+    final: str = ''
     for i in os.listdir(path):
-        if os.path.isfile(os.path.join(path, i)):
-            console.primary(i, end = ' ')
-        else:
-            console.secondary(i, end = ' ')
+        final += f'[primary]{i}[/primary] ' if os.path.isfile(os.path.join(path, i)) else f'[secondary]{i}[/secondary] '
 
-    return utils.make_meta()
+    console.print(final)

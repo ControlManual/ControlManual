@@ -9,5 +9,3 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
 
     for key, value in client.variables.items():
         console.key_value(key, value)
-
-    return client.utils.make_meta()

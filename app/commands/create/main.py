@@ -50,7 +50,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
 
             f.write(write)
         
-        return utils.success(f'File "{path}" was {event}.'), utils.make_meta()
+        return utils.success(f'File "{path}" was {event}.')
 
     if (args[0] == 'folder') or (args[0] == 'dir'):
         path: str = utils.join(client.path, args[1])
@@ -64,6 +64,6 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         
         os.makedirs(path)
 
-        return utils.success(f'Folder "{path}" was {event}.'), utils.make_meta()
+        return utils.success(f'Folder "{path}" was {event}.')
     
     raise errors.InvalidArgument(f'Please specify a valid type.')

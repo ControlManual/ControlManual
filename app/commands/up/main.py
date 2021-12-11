@@ -32,5 +32,5 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         path = Path(client.path)
         client.change_path(path.parent)
 
-    return utils.success('Successfully updated directory.'), utils.make_meta()
+    return utils.success('Successfully updated directory.')
 

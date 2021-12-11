@@ -30,7 +30,6 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
 
     for i in read.split('\n'):
         client.run_command(i)
-    
-    return utils.make_meta()
+
     
 

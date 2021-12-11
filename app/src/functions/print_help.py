@@ -3,7 +3,7 @@ from types import ModuleType
 from ..config import Config
 from ..console import console
 
-def print_help(commands: Dict[str, Dict[str, Union[str, ModuleType]]]) -> None:
+def print_help(commands: dict) -> None:
     config = Config()
 
     for i in commands:

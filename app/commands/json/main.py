@@ -45,7 +45,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         if not args[2] in raw:
             raise errors.NotExists(f'Key "{args[2]}" does not exist.')
 
-        return utils.success(raw[args[2]]), utils.make_meta()
+        return utils.success(raw[args[2]])
     
     if args[1] == 'set':
         if len(args) < 3:
@@ -61,7 +61,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
 
         file.set_value(args[2], value)
 
-        return utils.success(f'Key "{args[2]}" was set to {args[3]}.'), utils.make_meta()
+        return utils.success(f'Key "{args[2]}" was set to {args[3]}.')
 
     if args[1] == 'remove':
         if len(args) < 3:

@@ -73,4 +73,4 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         f.write(BASE.replace('{pkg_name}', args[0]) if 'middleware' not in flags else MIDDLEWARE)
 
     client.reload()
-    utils.success(f'Successfully initalized {typ} "{args[0]}".'), utils.make_meta()
+    utils.success(f'Successfully initalized {typ} "{args[0]}".')

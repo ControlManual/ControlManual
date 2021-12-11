@@ -33,5 +33,5 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
             data += '\n'
             data += f'{i.capitalize()}: {utils.bright_red}{tmp}{utils.reset}{utils.green}' if not tmp else f'{i.capitalize()}: {utils.bright_green}{tmp}{utils.reset}{utils.green}'
 
-        return utils.success(data), utils.make_meta()
+        return utils.success(data)
 
