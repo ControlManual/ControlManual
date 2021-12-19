@@ -113,3 +113,6 @@ dmypy.json
 
 icon.ico
 build.bat
+middleware/
+logs/
+commands/

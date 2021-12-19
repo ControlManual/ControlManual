@@ -17,8 +17,8 @@ ARGS_HELP: dict = {
 FLAGS: dict = {'json': 'Show JSON response.', 'text': 'Show text response.', 'headers': 'Show response headers.'}
 PACKAGE: str = 'builtin'
 
-def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
-
+async def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
+    """
     utils = client.utils
     errors = client.errors
 
@@ -60,7 +60,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     except:
         raise errors.InvalidArgument('Please specify a valid URL.')
     
-    final: str = utils.make_error(f'Response {resp.status_code}\n') if (not resp.status_code < 300) and (not resp.status_code > 200) else utils.make_success(f'Response {resp.status_code}\n')
+    final: str = utils.error(f'Response {resp.status_code}\n') if (not resp.status_code < 300) and (not resp.status_code > 200) else utils.make_success(f'Response {resp.status_code}\n')
 
     if 'json' in flags:
         try:
@@ -76,7 +76,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
     
     if 'headers' in flags:
         for i in resp.headers:
-            final += f'{utils.bright_green}{i}{utils.reset} - {utils.green}{resp.headers[i]}{utils.reset}\n'
+            
 
     return utils.success(final)
-    
+    """

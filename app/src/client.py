@@ -1,5 +1,5 @@
 from .functions import *
-from typing import Dict, Type, Union, Callable, List, Any, Optional
+from typing import Coroutine, Dict, Type, Union, Callable, List, Any, Optional
 from pathlib import Path
 from .config import Config, cm_dir, config_path
 import os
@@ -17,7 +17,23 @@ import getpass
 import datetime
 import distro
 import time
-from types import ModuleType
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import tempfile
+from .logger import log
+import aiofiles
+
+pipe = tempfile.NamedTemporaryFile(prefix='controlmanual_', suffix='_pipe')
+pipe_file: str = pipe.name
+
+os.environ['cmpipe'] = pipe_file
+class MyHandler(FileSystemEventHandler):
+    def on_modified(self, _):
+        with open(pipe_file) as f:
+            lines = f.read()
+            f.write('')
+        
+        console.print(lines)            
 
 class Reload:
     """Blank object used to reload the instance."""
@@ -27,11 +43,27 @@ def threaded(client: "Client") -> None:
     """Function ran on seperate thread when initalized."""
     client._connected = is_online()
 
+    event_handler = MyHandler()
+    observer = Observer()
+    observer.schedule(event_handler, path = pipe_file, recursive = False)
+    observer.start()
+    try:
+        while True:
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
+
+
 class Client:
     """Base class for running Control Manual."""
-    def __init__(self, version: dict) -> None:
-        """Base class for running Control Manual."""
 
+    async def __new__(cls, version: dict):
+        self = super().__new__(cls)
+        await cls.init(self, version)
+        return self
+
+    async def init(self, version: dict) -> None:
         self._config = Config()
         self._reset: bool = False
         self._version: str = version['string']
@@ -50,27 +82,31 @@ class Client:
             'cmdir': self.cm_dir
         }
         self._aliases: Dict[str, str] = {}
+        self._vals: Dict[Any, Any] = {}
+
         for i in self._config.aliases:
-            self._aliases[i] = self.load_variables(self._config.aliases[i])
+            self._aliases[i] = await self.load_variables(self._config.aliases[i])
 
         colorama.init(convert = os.name == 'nt') # enables ascii stuff
         console.clear(), title('Control Manual')
         
         self._connected = False
         Thread(target = threaded, args = [self]).start()
+        
+        with console.console.status('Loading commands...', spinner = 'material'):
+            await self.reload()
 
-        self.reload()
-        self._vals: Dict[Any, Any] = {}
+
     
-    def reload(self) -> None:
+    async def reload(self) -> None:
         """Function for reloading commands and middleware."""
-        self._middleware: List[Callable] = load_middleware(
+        self._middleware: List[Coroutine] = await load_middleware(
             join(
                 self._config.cm_dir,
                 'middleware'
             )
         )
-        self._commands: dict = load_commands(
+        self._commands: dict = await load_commands(
             join(self._config.cm_dir, 'commands')
         )
 
@@ -122,7 +158,7 @@ class Client:
         self._vals[key] = value
 
     @property
-    def middleware(self) -> List[Callable]:
+    def middleware(self) -> List[Coroutine]:
         """List of callables ran when a command is executed."""
         return self._middleware
 
@@ -146,9 +182,9 @@ class Client:
         """Command aliases."""
         return self._aliases
     
-    def add_alias(self, alias: str, value: str) -> None:
+    async def add_alias(self, alias: str, value: str) -> None:
         """Function for adding command aliases."""
-        self._aliases[alias] = self.load_variables(value)
+        self._aliases[alias] = await self.load_variables(value)
 
     @property
     def version(self) -> str:
@@ -202,7 +238,7 @@ class Client:
         """Tell the Control Manual instance to reset after the current command has finished. Only works when run via the main file."""
         self._reset = True
 
-    def load_variables(self, text: str) -> str: # type: ignore
+    async def load_variables(self, text: str) -> str: # type: ignore
         """Function for loading variables into a string."""
 
         for key, value in self.variables.items():
@@ -210,7 +246,7 @@ class Client:
         
         return text
 
-    def _format_string(self, collection: dict, text: str) -> str:
+    async def _format_string(self, collection: dict, text: str) -> str:
         for key, value in collection.items():
             text = text.replace('{' + key + '}', value)
         
@@ -241,27 +277,37 @@ class Client:
             Collision,
         ]
     
-    def get_command_response(self, args: List[str]) -> None:
+    async def get_command_response(self, args: List[str]) -> None:
         pass
         # return get_resp(self.run_command, ' '.join(args))
 
-    def start(self, filename: Union[str, bool]) -> Union[None, Type[Reload]]:
+    async def start(self, filename: Union[str, bool]) -> Union[None, Type[Reload]]:
         """Start the main loop."""
+
         while True:
+            await log('new iteration started in main loop')
+            
             if filename:
+                await log('specific file was passed, checking')
                 if not os.path.exists(filename):
+                    await log('failed to find specified file')
                     error('Could not find file.')
                 else:
-                    with open(filename) as f:
-                        for i in f.read().split('\n'):
-                            self.run_command(i)
+                    async with aiofiles.open(filename) as f:
+                        await log('reading file')
+                        read = await f.read()
+        
+                        for i in read.split('\n'):
+                            await self.run_command(i)
             
             inp: str = f'[white on black]{self._path} [primary]>>[/primary] '
 
             if not os.path.exists(self._path):
+                await log('current path not found')
                 static.static_error("path does not exist.")
 
             console.set_dir(self._path)
+
             memory_raw = psutil.virtual_memory()
             memory = f'{memory_raw.used // 1000000}mB / {memory_raw.total // 1000000}mB'
 
@@ -283,30 +329,37 @@ Battery: [important]{str(battery.percent)}%[/important]
 Computer Name: [important]{platform.node()}[/important]
 Uptime: [important]{int(uptime) // 60} minutes[/important]
 """)
+            await log('taking input')
             command: str = console.take_input(inp)
 
             console.clear_panel("exceptions")
             command = command.replace(r'\n', '\n')
-    
-            self.run_command(command)
             
+            await self.run_command(command)
+            await log('command finished running')
+
             if self._reset:
+                await log('reload invoked, sending back to main function')
                 return Reload
 
             filename = False
     
-    def run_command(self, command: str) -> None:
+    async def run_command(self, command: str) -> None:
         """Function for running a command."""
+        await log(f'preparing to run command: {command}')
+
         config = self._config
         errors = config.errors
 
         for i in config.comments:
             if command.startswith(i):
+                await log('comment found, ending')
                 return
             
         cmds = command.split(config.seperator)
         for comm in cmds:
-            comm = self.load_variables(comm)
+            await log('iterating through found command(s)')
+            comm = await self.load_variables(comm)
 
             split: List[str] = comm.split(' ')
             if not any(split):
@@ -319,6 +372,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
             cmd = split[0]
             while True:
                 if cmd in self.aliases:
+                    await log('alias found')
                     spl = self.aliases[cmd].split(' ')
                     cmd = spl[0]
                     if len(spl) > 1:
@@ -327,7 +381,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                 else:
                     break
 
-            args, kwargs, flags = parse(raw_args)
+            args, kwargs, flags = await parse(raw_args)
             cmd: str = cmd.lower()
 
             for index, i in enumerate(args):
@@ -345,7 +399,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                             
                             text: str = i[ind + len("{" + key) + 1:end]
 
-                            params = parse(text)[0]
+                            params = await parse(text)[0] # type: ignore
                             replace = value(params)
                             args[index] = i = args[index].replace(f'{find}{text})' + '}', replace)
                         else:
@@ -356,48 +410,62 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
             COMMANDS = self.commands
             
             for fn in self.middleware:
-                fn(cmd, raw_args, args, kwargs, flags, COMMANDS)
+                await fn(cmd, raw_args, args, kwargs, flags, COMMANDS) # type: ignore
 
             if cmd == config.functions[0]:
+                await log('command is a function opener')
                 if crfn:
                     if self._function_open:
+                        await log('function is already open, ending')
                         utils.error(errors['function_open'])
                     else:
+                        await log('opened function, closing')
                         self._function_open = True
                 else:
+                    await log('function is not defined, ending')
                     utils.error(errors['function_undefined'])
 
                 return
             
             if cmd == config.functions[1]:
+                await log('command is a function closer')
                 if crfn:
                     if not self._function_open:
+                        await log('function is not open, ending')
                         utils.error(errors['function_not_open'])
                     else:
+                        await log('closed function, ending')
                         self.functions[self.current_function]['defined'] = True
                         self._function_open = False
                         self._current_function = None
                 else:
+                    await log('function is not defined, ending')
                     utils.error(errors['function_undefined'])
 
                 return
 
             if self._function_open:
+                await log('function is currently open, appending command to script')
                 if not command == config.functions[1]:
                     return self._functions[crfn]['script'].append(command)
 
             if cmd == config.help_command:
+                await log('command is the help command')
                 if args:
                     if len(args) > 1:
-                        print_argument_help(COMMANDS, args[0], args[1])
+                        await print_argument_help(COMMANDS, args[0], args[1])
                     else:
-                        print_command_help(COMMANDS, args[0])
+                        await print_command_help(COMMANDS, args[0])
                 else:
-                    print_help(COMMANDS)
+                    await print_help(COMMANDS)
+                
                 continue
-            
+        
             if cmd in COMMANDS:
                 if 'exe' in COMMANDS[cmd]:
+                    await log('command is an executable')
+
+                    await log('handling argument parsing')
                     if len(args) == 0:
                         ext: list = ['', '']
                     
@@ -405,28 +473,27 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                         ext: list = ['']
                     
                     args.extend(ext) # type: ignore
-                    return
+                    
+                    executable: str = COMMANDS[cmd]['exe'] # type: ignore
+                    return run_exe(executable, ''.join(args))
 
-                    """
-                    return run_exe(COMMANDS[cmd]['exe'],
-                        ''.join(
-                            args
-                            )
-                        )
-                    """
+                    
 
                 runner: Callable = COMMANDS[cmd]['entry'] # type: ignore
                 # i have no clue what this error message is supposed to mean
 
                 try:
-                    runner(raw_args, args, kwargs, flags, self)
+                    await log('running command')
+                    await runner(raw_args, args, kwargs, flags, self)
                 except Exception as e:
                     emap = self.error_map
 
                     if type(e) in emap:
                         return console.error(str(e))
 
+                    await log('command ran into exception', e)
                     if isinstance(e, PermissionError):
+                        await log('permission error found')
                         error(errors["permission_error"])
                     else:
                         failure: str = errors["command_error"].replace('{cmd}', cmd)
@@ -435,4 +502,5 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                     console.show_exc(e)
 
             else:
+                await log('command not found')
                 error(errors['unknown_command'])

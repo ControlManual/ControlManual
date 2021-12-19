@@ -4,7 +4,7 @@ from src import Client # Only used for intellisense, will not work if this file 
 HELP: str = 'Get command aliases.'
 PACKAGE: str = 'builtin'
 
-def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
+async def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     aliases: Dict[str, str] = client.aliases
     console = client.console

@@ -7,7 +7,7 @@ ARGS: dict = {'message': 'Message to print.'}
 FLAGS: dict = {'with-success': 'Prints the message as a success.'}
 PACKAGE: str = 'builtin'
 
-def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
+async def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     utils = client.utils
     console = client.console
 

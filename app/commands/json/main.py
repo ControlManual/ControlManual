@@ -19,7 +19,7 @@ ARGS_HELP: dict = {
 FLAGS: dict = {'no-string': 'Insert a JSON value without surrounding the argument in quotes.'}
 PACKAGE: str = 'builtin'
 
-def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
+async def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     utils = client.utils
     static = client.static

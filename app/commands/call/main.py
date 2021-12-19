@@ -6,7 +6,7 @@ USAGE: str = '<function> [arguments]'
 ARGS: dict = {'functions': 'Name of the function.', 'arguments': 'Arguments to pass into the function.'}
 PACKAGE: str = 'builtin'
 
-def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
+async def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     errors = client.errors
 
@@ -34,5 +34,5 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         for index, value in enumerate(arguments):
             variables[value] = params[index]
 
-        text = client.load_variables_dynamic(text, variables)
-        client.run_command(text)
+        text = await client._format_string(variables, text)
+        await client.run_command(text)

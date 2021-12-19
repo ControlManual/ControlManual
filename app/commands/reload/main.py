@@ -6,7 +6,7 @@ USAGE: str = '[flags]'
 FLAGS: dict = {'hard': 'Entirely reload the Control Manual instance.'}
 PACKAGE: str = 'builtin'
 
-def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
+async def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     if 'hard' in flags:
         return client.invoke_reset()
 

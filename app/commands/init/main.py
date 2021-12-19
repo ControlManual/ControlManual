@@ -46,7 +46,7 @@ ARGS: dict = {'name': 'Name of the command or middleware.'}
 FLAGS: dict = {'here': 'Initalizes the command in the current directory.', 'middleware': 'Initalizes middleware instead of a command.'}
 PACKAGE: str = 'builtin'
 
-def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
+async def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     utils = client.utils
     config = client.config
     errors = client.errors

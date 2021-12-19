@@ -13,7 +13,7 @@ ARGS_HELP: dict = {
 }
 PACKAGE: str = 'builtin'
 
-def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
+async def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     utils = client.utils
     errors = client.errors

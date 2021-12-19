@@ -4,11 +4,12 @@ from rich.layout import Layout
 from rich.panel import Panel
 import os
 from .config import Config
-from typing import Literal, Tuple, Type, Optional, Dict, overload, Union
+from typing import Literal, Tuple, Any, Optional, Dict, overload, Union
 
 
 primary: str = "rgb(0,179,0) on black"
 config = Config()
+basic: bool = config.basic
 
 truecolor: bool = config.truecolor
 
@@ -40,9 +41,9 @@ def make_panel(name: str, force: bool = False) -> Optional[Layout]:
 class ConsoleWrapper:
     """Class wrapping around the Rich Console API."""
     def __init__(self):
-        colorsys: str = 'truecolor' if not os.name == 'nt' else 'standard'
-        self._console = Console(color_system = colorsys if config.colorize else None, theme = custom_theme)
+        self._console = Console(color_system = 'truecolor' if config.truecolor else 'standard' if config.colorize else None, theme = custom_theme)
         layout = Layout()
+        
         layout.split_row(
             make_panel("feed", True),
             Layout(name="lower")
@@ -97,16 +98,17 @@ class ConsoleWrapper:
         self._feed = []
         self.clear_panel("feed")
 
-    def print(self, message: str):
+    def print(self, message: Any):
         """Function for printing a message."""
         prefix: str = '\n' if self._feed else ''
-        self.write(prefix + message)
+        self.write(prefix + str(message))
 
-    def write(self, message: str):
+    def write(self, message: Any):
         """Function for writing to the feed."""
         f = self._feed
         suffix: str = ''
         amount_string = lambda a: f' [important]x{a}[/important]'
+        message = str(message)
         
         if message == f[-1] if f else None:
             self._amount += 1
@@ -119,10 +121,10 @@ class ConsoleWrapper:
         
         self.edit_panel("feed", ''.join(f) + suffix)
     
-    def error(self, message: str, *args, **kwargs) -> None:
+    def error(self, message: Any, *args, **kwargs) -> None:
         self.print(f"[danger]Error:[/danger] {message}", *args, **kwargs)
 
-    def success(self, message: str, *args: Tuple[str], **kwargs: Dict[str, str]) -> None:
+    def success(self, message: Any, *args: Tuple[str], **kwargs: Dict[str, str]) -> None:
         self.print(f"[important]Success:[/important] {message}", *args, **kwargs)
     
     def set_info(self, text: str) -> None:

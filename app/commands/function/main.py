@@ -6,7 +6,7 @@ USAGE: str = '<name> [arguments]'
 ARGS: dict = {'name': 'Name of the function.', 'arguments': 'Arguments attached to the function, seperated by a space.'}
 PACKAGE: str = 'builtin'
 
-def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
+async def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     utils = client.utils
     errors = client.errors

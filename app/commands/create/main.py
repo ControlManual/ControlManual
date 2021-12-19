@@ -24,7 +24,7 @@ ARGS_HELP: dict = {
 FLAGS: dict = {'overwrite': 'Whether to overwrite existing files or folders.'}
 PACKAGE: str = 'builtin'
 
-def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
+async def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     utils = client.utils
     errors = client.errors
@@ -33,7 +33,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         raise errors.NotEnoughArguments('Please specify a type and name.')
 
     if args[0] == 'file':
-        path: str = utils.join(client.path, args[1])
+        path: str = utils.join(str(client.path), args[1])
         event: str = 'created'
 
         if (os.path.exists(path)) and (os.path.isfile(path)):
@@ -53,7 +53,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
         return utils.success(f'File "{path}" was {event}.')
 
     if (args[0] == 'folder') or (args[0] == 'dir'):
-        path: str = utils.join(client.path, args[1])
+        path: str = utils.join(str(client.path), args[1])
         event: str = 'created'
 
         if (os.path.exists(path)) and (not os.path.isfile(path)):

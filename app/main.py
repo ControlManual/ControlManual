@@ -23,66 +23,82 @@
 # -------------------------------------------------------------------------------------------
 
 # Dependencies
-import os
-import sys
-import typing
-import types
-import importlib
-import shlex
-import pathlib
-import atexit
-import colorama
-import requests
-import io
-import subprocess
-import click
-import shutil
-import platform
-import zipfile
-import threading
-import psutil
-import rich
-import platform
-import getpass
-import datetime
-import distro
-import time
+from rich.console import Console
+tmp = Console() 
+with tmp.status('Starting...', spinner = 'point'):
+    import os
+    import sys
+    import typing
+    import types
+    import importlib
+    import shlex
+    import pathlib
+    import atexit
+    import colorama
+    import requests
+    import io
+    import subprocess
+    import click
+    import shutil
+    import platform
+    import zipfile
+    import threading
+    import psutil
+    import rich
+    import platform
+    import getpass
+    import datetime
+    import distro
+    import time
+    import watchdog
+    import tempfile
+    import datetime
+    import inspect
+    import asyncio
+    import aiofiles
 
-from src import Client, Reload, check_health, static
+    from src import Client, Reload, check_health, static, log, flush
 
 VERSION: dict = {
     'string': 'Alpha 1.0.1',
     'stable': False
 }
 
-@click.command()
-@click.argument('filename', default=False)
-def main(filename) -> None:
+
+async def main(filename: str) -> None:
     """Main file for running Control Manual."""
-    check_health()
+    await log('checking health')
+    await check_health()
     while True:
-        client = Client(VERSION)
-        try:
-            resp = client.start(filename)
-        except KeyboardInterrupt: # supress keyboard interupt error
-            return
+        
+        client = await Client(VERSION)
+        await log('entering main loop')
+        resp = await client.start(filename)
         
         if resp == Reload:
+            await log('reload invoked, starting process')
             try:
                 p = psutil.Process(os.getpid())
-                for handler in p.open_files() + p.connections():
+                for handler in p.open_files() + p.connections(): # type: ignore
                     os.close(handler.fd)
             except:
                 static.static_error('fatal error occured when reloading')
 
             python = sys.executable
+            await log('restarting app')
             os.execl(python, python, *sys.argv)
         else:
             sys.exit
 
+@click.command()
+@click.argument('filename', default=False)
+def main_sync(filename: str):
+    asyncio.run(main(filename))
+
 @atexit.register
 def shutdown(): # will be called on shutdown
     print()
+    asyncio.run(flush())
 
 if __name__ == '__main__':
-    main()
+    main_sync() # type: ignore

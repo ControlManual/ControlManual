@@ -12,7 +12,7 @@ def rq(key: str, col: dict) -> str:
 def mfl(data: str) -> str: # i kept adding a capital letter to some values
     return data[0].lower() + data[1:]
 
-def print_argument_help(commands: dict, command: str, argument: str) -> None:
+async def print_argument_help(commands: dict, command: str, argument: str) -> None:
     cmd = commands.get(command)
 
     if not cmd:

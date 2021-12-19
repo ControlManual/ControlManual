@@ -1,6 +1,8 @@
 import os
+from .logger import log
+from .cm_dir import cm_dir
+import aiofiles
 
-cm_dir: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 config_base = """{
     "input_sep": ">>",
     "flag_prefix": "--",
@@ -40,9 +42,8 @@ config_base = """{
         "function_open": "Function is already open.",
         "function_not_open": "Function is not open.",
         "function_undefined": "No function currently defined.",
-        "permission_error": "Control Manual does not have permission to do this."
+        "permission_error": "Insufficent permissions."
     },
-    "cm_dir": "c:\\Users\\yeeti\\Desktop\\Projects\\Python\\ControlManual\\app",
     "columns": [
         "info",
         "data",
@@ -52,9 +53,9 @@ config_base = """{
     ]
 }"""
 
-def check_health() -> None:
+async def check_health() -> None:
     """Function for checking if required files and folders exist."""
-    dirs = ['commands', 'middleware']
+    dirs = ['commands', 'middleware', 'logs']
     files = {
         'config.json': config_base
     }
@@ -62,15 +63,17 @@ def check_health() -> None:
     for i in dirs:
         path = os.path.join(cm_dir, i)
         if not os.path.exists(path):
+            await log(f"{i} not found, creating")
             print(f'directory "{i}" does not exist, creating...')
             os.makedirs(path)
     
     for key, value in files.items():
         path = os.path.join(cm_dir, key)
         if not os.path.exists(path):
+            await log(f'{key} not found, creating and writing contents')
             print(f'file "{key}" does not exist, creating...')
             
-            with open(path, 'w') as f:
-                f.write(value)
+            async with aiofiles.open(path, 'w') as f:
+                await f.write(value)
     
 

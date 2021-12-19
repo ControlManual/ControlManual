@@ -4,5 +4,5 @@ from src import Client # Only used for intellisense, will not work if this file 
 HELP: str = 'Clears the screen.'
 PACKAGE: str = 'builtin'
 
-def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
+async def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     client.console.empty()

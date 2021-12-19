@@ -1,5 +1,3 @@
-from types import ModuleType
-from typing import Dict, Union
 from ..utils import run_exe, error
 from ..console import console
 
@@ -14,7 +12,7 @@ def make_str(commands: dict, command: str, key: str, prefix: str = '', default =
         return default or f'{warning}No {key}.\n{reset}'
 
 
-def print_command_help(commands: dict, command: str) -> None:
+async def print_command_help(commands: dict, command: str) -> None:
     if not (command in commands):
         return error(f'Command does not exist.')
     
@@ -49,7 +47,7 @@ def print_command_help(commands: dict, command: str) -> None:
                 flags += f'{primary}{i}{reset} - {secondary}{flags_dict[i]}{reset}\n'
             
     
-    print(f'''{primary}{cmd_help}{reset}
+    console.print(f'''{primary}{cmd_help}{reset}
 {important}Package{reset}
 {primary}{package}{reset}
 {important}Usage{reset}

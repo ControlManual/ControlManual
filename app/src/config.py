@@ -1,11 +1,9 @@
 import os
 from .static import JSONFile
 from .check_health import cm_dir, check_health
-from typing import Dict, List, Any
+from .logger import log
 
 config_path: str = os.path.join(cm_dir, 'config.json')
-
-check_health()
 
 class Config(JSONFile):
     """Class representing config."""
@@ -28,6 +26,7 @@ class Config(JSONFile):
         self.columns: list = []
         self.cm_dir: str = ''
         self.hide_exe_from_help: bool = False
+        self.basic: bool = False
 
         super().__init__(config_path, [
             "input_sep",
@@ -42,7 +41,8 @@ class Config(JSONFile):
             "help_command",
             "seperator",
             "errors",
-            "columns"
+            "columns",
+            "basic"
         ], {
                 "errors": [
                     "unknown_command",
@@ -55,3 +55,5 @@ class Config(JSONFile):
             }
         )
         self.set_value('cm_dir', cm_dir)
+        os.environ['cm_dir'] = cm_dir
+

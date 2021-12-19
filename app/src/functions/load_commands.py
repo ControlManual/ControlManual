@@ -1,15 +1,17 @@
 import os
 import sys
 import importlib
-from typing import Dict, Union, List, Any, Callable
+from typing import Coroutine, Dict, Union, List, Any
 from types import ModuleType
 from ..config import Config
+from ..logger import log
 
 def get(command: ModuleType, target: str, default: Any = '') -> Any:
     return getattr(command, target) if hasattr(command, target) else default
 
-def load_commands(directory: str) -> Dict[str, Union[str, Dict[str, Union[str, Union[Callable, dict]]]]]:
+async def load_commands(directory: str) -> Dict[str, Union[str, Dict[str, Union[str, Union[Coroutine, dict]]]]]:
     """Function for creating the commands dict for the client."""
+    await log('starting command loading process')
     config = Config()
     windows: bool = os.name == 'nt'
 
@@ -17,8 +19,10 @@ def load_commands(directory: str) -> Dict[str, Union[str, Dict[str, Union[str, U
     
     sys.path.append(directory)
     for i in os.listdir(directory):
-        if os.path.isfile(os.path.join(directory, i)):        
-            resp[i[:-4]] = {'exe': os.path.join(directory, i)}
+        if os.path.isfile(os.path.join(directory, i)):
+            await log('file found, adding to executable list')
+            back = -4 if os.name == 'nt' else None
+            resp[i[:back]] = {'exe': os.path.join(directory, i)}
         else:
             command: ModuleType = importlib.import_module(f'commands.{i}.main')
             cmd_help: str = get(command, 'HELP')
@@ -42,6 +46,7 @@ def load_commands(directory: str) -> Dict[str, Union[str, Dict[str, Union[str, U
             }
     
     if config.raw['use_path_env']:
+        await log('reading PATH for binaries')
         for i in os.environ['PATH'].split(';' if windows else ':'):
             if os.path.exists(i):
                 for x in os.listdir(i):
@@ -55,6 +60,4 @@ def load_commands(directory: str) -> Dict[str, Union[str, Dict[str, Union[str, U
                             if not no_ext in resp:
                                 resp[x] = {'exe': os.path.join(i, x)}
 
-
-    
     return resp

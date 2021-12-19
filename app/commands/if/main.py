@@ -35,7 +35,7 @@ FLAGS: dict = {
 }
 PACKAGE: str = 'builtin'
 
-def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
+async def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
 
     errors = client.errors
     utils = client.utils

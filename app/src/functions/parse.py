@@ -2,12 +2,15 @@ from typing import Tuple, Dict, List
 import shlex
 from ..utils import *
 from ..config import Config
+from ..logger import log
 
-def parse(raw: str) -> Tuple[List[str], Dict[str, str], List[str]]:
+async def parse(raw: str) -> Tuple[List[str], Dict[str, str], List[str]]:
     """Function for parsing the input into different items."""
+
     try:
         split: List[str] = shlex.split(raw)
     except ValueError:
+        await log('split failed, returning blank for all items')
         error('Invalid quotation in arguments.')
 
         return [], {}, []
@@ -22,14 +25,10 @@ def parse(raw: str) -> Tuple[List[str], Dict[str, str], List[str]]:
             split: List[str] = i.split('=')
             kwargs[split[0]] = split[1]
 
-        elif i.startswith(
-            config.flag_prefix
-        ):
+        elif i.startswith(config.flag_prefix):
             flags.append(i[2:])
-        
         else:
             args.append(i)
 
-
-
+    await log('parsed arguments')
     return args, kwargs, flags
