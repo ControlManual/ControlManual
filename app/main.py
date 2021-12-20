@@ -73,7 +73,12 @@ async def main(filename: str) -> None:
         
         client = await Client(VERSION)
         await log('entering main loop')
-        resp = await client.start(filename)
+        try:
+            resp = await client.start(filename)
+        except KeyboardInterrupt:
+            client._base_thread.kill = True # type: ignore
+            return
+
         
         if resp == Reload:
             await log('reload invoked, starting process')
@@ -100,5 +105,12 @@ def shutdown(): # will be called on shutdown
     print()
     asyncio.run(flush())
 
+
+
 if __name__ == '__main__':
-    main_sync() # type: ignore
+    try:
+        main_sync() # type: ignore
+    except KeyboardInterrupt:
+        sys.exit(0)
+    
+        

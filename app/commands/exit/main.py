@@ -23,5 +23,6 @@ async def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str
             code: int = int(args[0])
         except ValueError:
             raise errors.InvalidArgument('Please enter a valid status code.')
-        
+    
+    client._base_thread.kill = True # type: ignore
     sys.exit(code)

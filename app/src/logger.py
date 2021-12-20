@@ -17,6 +17,7 @@ async def log(*args) -> None:
     now = datetime.now()
 
     frame: FrameType = inspect.currentframe().f_back # type: ignore
+    
     os.environ['cmlog_buffer'] += now.strftime(f"[%H:%M:%S] {frame.f_code.co_name} at {os.path.basename(frame.f_code.co_filename)}:{frame.f_lineno} - {' '.join(args)}\n")
 
 async def flush() -> None:

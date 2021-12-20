@@ -7,7 +7,7 @@ from . import utils, api, static, error as command_errors
 from .utils import *
 from .api import *
 import colorama
-from threading import Thread
+from threading import Thread, currentThread
 from .console import console, ConsoleWrapper
 import platform
 import os
@@ -49,6 +49,8 @@ def threaded(client: "Client") -> None:
     observer.start()
     try:
         while True:
+            if hasattr(currentThread(), "kill"):
+                return
             time.sleep(0.1)
     except KeyboardInterrupt:
         observer.stop()
@@ -91,12 +93,13 @@ class Client:
         console.clear(), title('Control Manual')
         
         self._connected = False
-        Thread(target = threaded, args = [self]).start()
+
+        t = Thread(target = threaded, args = [self])
+        self._base_thread = t
+        t.start()
         
         with console.console.status('Loading commands...', spinner = 'material'):
             await self.reload()
-
-
     
     async def reload(self) -> None:
         """Function for reloading commands and middleware."""
@@ -475,7 +478,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                     args.extend(ext) # type: ignore
                     
                     executable: str = COMMANDS[cmd]['exe'] # type: ignore
-                    return run_exe(executable, ''.join(args))
+                    return await run_exe(executable, ''.join(args))
 
                     
 
