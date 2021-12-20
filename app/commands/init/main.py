@@ -14,7 +14,7 @@ ARGS_HELP: dict = {
 FLAGS: dict = {'hello_world': 'Whether to print "Hello World".'}
 PACKAGE: str = '{pkg_name}'
 
-def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
+async def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     config = client.config # Config file operations
     utils = client.utils # All utilities
     api = client.api # All functions regarding the API
@@ -33,7 +33,7 @@ def run(raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], cli
 MIDDLEWARE: str = '''from typing import List, Dict
 from src import Client # Only used for intellisense, will not work if this file is run manually.
 
-def run(command: str, raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
+async def run(command: str, raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client: Client):
     print(f'Command "{command}" was run!')
 '''
 

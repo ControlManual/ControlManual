@@ -74,7 +74,8 @@ async def main(filename: str) -> None:
         try:
             resp = await client.start(filename)
         except Exception as e:
-            client._thread_running = True
+            client._thread_running = False
+            
             raise e
 
         
