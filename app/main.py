@@ -75,7 +75,7 @@ async def main(filename: str) -> None:
             resp = await client.start(filename)
         except Exception as e:
             client._thread_running = False
-            
+            await log(f'exception occured: {e}')
             raise e
 
         
