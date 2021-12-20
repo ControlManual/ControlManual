@@ -34,6 +34,7 @@ def threaded(client: "Client") -> None:
 
 class Client:
     """Base class for running Control Manual."""
+
     async def __new__(cls, version: dict):
         self = super().__new__(cls)
         await cls.init(self, version)
@@ -61,8 +62,7 @@ class Client:
         self._vals: Dict[Any, Any] = {}
 
         for i in self._config.aliases:
-            self._aliases[i] = await self.load_variables(
-                self._config.aliases[i])
+            self._aliases[i] = await self.load_variables(self._config.aliases[i])
 
         colorama.init(convert=os.name == "nt")  # enables ascii stuff
         console.clear(), title("Control Manual")
@@ -77,9 +77,11 @@ class Client:
     async def reload(self) -> None:
         """Function for reloading commands and middleware."""
         self._middleware: List[Coroutine] = await load_middleware(
-            join(self._config.cm_dir, "middleware"))
+            join(self._config.cm_dir, "middleware")
+        )
         self._commands: dict = await load_commands(
-            join(self._config.cm_dir, "commands"))
+            join(self._config.cm_dir, "commands")
+        )
 
     @property
     def cm_dir(self) -> str:
@@ -259,8 +261,7 @@ class Client:
         pass
         # return get_resp(self.run_command, ' '.join(args))
 
-    async def start(self, filename: Union[str,
-                                          bool]) -> Union[None, Type[Reload]]:
+    async def start(self, filename: Union[str, bool]) -> Union[None, Type[Reload]]:
         """Start the main loop."""
 
         while True:
@@ -296,8 +297,9 @@ class Client:
             battery = psutil.sensors_battery()  # type: ignore
             # for some reason its saying sensors_battery() doesn't exist
             system = (
-                distro.name(pretty=True) if platform.system() == "Linux" else
-                f"{platform.system()} {platform.release()} {platform.version()}"
+                distro.name(pretty=True)
+                if platform.system() == "Linux"
+                else f"{platform.system()} {platform.release()} {platform.version()}"
             )
             uptime: float = time.time() - psutil.boot_time()
             console.set_info(
@@ -311,7 +313,8 @@ Disk: [important]{disk}[/important]
 Battery: [important]{str(battery.percent)}%[/important]
 Computer Name: [important]{platform.node()}[/important]
 Uptime: [important]{int(uptime) // 60} minutes[/important]
-""")
+"""
+            )
             await log("taking input")
             command: str = console.take_input(inp)
 
@@ -390,12 +393,13 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                             except ValueError:
                                 end: int = -1
 
-                            text: str = i[ind + len("{" + key) + 1:end]
+                            text: str = i[ind + len("{" + key) + 1 : end]
 
                             params = await parse(text)[0]  # type: ignore
                             replace = value(params)
                             args[index] = i = args[index].replace(
-                                f"{find}{text})" + "}", replace)
+                                f"{find}{text})" + "}", replace
+                            )
                         else:
                             break
 
@@ -403,8 +407,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
             COMMANDS = self.commands
 
             for fn in self.middleware:
-                await fn(cmd, raw_args, args, kwargs, flags,
-                         COMMANDS)  # type: ignore
+                await fn(cmd, raw_args, args, kwargs, flags, COMMANDS)  # type: ignore
 
             if cmd == config.functions[0]:
                 await log("command is a function opener")
@@ -439,8 +442,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                 return
 
             if self._function_open:
-                await log(
-                    "function is currently open, appending command to script")
+                await log("function is currently open, appending command to script")
                 if not command == config.functions[1]:
                     return self._functions[crfn]["script"].append(command)
 
@@ -489,8 +491,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                         await log("permission error found")
                         error(errors["permission_error"])
                     else:
-                        failure: str = errors["command_error"].replace(
-                            "{cmd}", cmd)
+                        failure: str = errors["command_error"].replace("{cmd}", cmd)
                         console.error(failure)
 
                     console.show_exc(e)
