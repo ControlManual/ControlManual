@@ -293,7 +293,7 @@ class Client:
             uptime: float = time.time() - psutil.boot_time()
             console.set_info(f"""User: [important]{getpass.getuser()}[/important]
 OS: [important]{system}[/important]
-Machine: [important]{platform.machine()}[/important]
+Architecture: [important]{platform.machine()}[/important]
 System Time: [important]{datetime.datetime.now().strftime('%H:%M:%S')}[/important]
 CPU Usage: [important]{psutil.cpu_percent()}%[/important]
 Memory: [important]{memory}[/important]

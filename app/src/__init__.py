@@ -5,3 +5,7 @@ from .client import *
 from .error import *
 from .config import *
 from .logger import *
+
+
+import asyncio
+asyncio.run(check_health())

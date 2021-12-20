@@ -52,12 +52,11 @@ with tmp.status('Starting...', spinner = 'point'):
     import time
     import watchdog
     import tempfile
-    import datetime
     import inspect
     import asyncio
     import aiofiles
 
-    from src import Client, Reload, check_health, static, log, flush
+    from src import Client, Reload, static, log, flush
 
 VERSION: dict = {
     'string': 'Alpha 1.0.1',
@@ -67,8 +66,7 @@ VERSION: dict = {
 
 async def main(filename: str) -> None:
     """Main file for running Control Manual."""
-    await log('checking health')
-    await check_health()
+
     while True:
         
         client = await Client(VERSION)
