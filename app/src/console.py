@@ -5,6 +5,7 @@ from rich.panel import Panel
 import os
 from .config import Config
 from typing import Literal, Tuple, Any, Optional, Dict, overload, Union
+import sys
 
 
 primary: str = "rgb(0,179,0) on black"
@@ -176,5 +177,6 @@ class ConsoleWrapper:
         p = Panel(self.screen, title = "Terminal", height = self.console.height - 1)
         c.print(p)
         return c.input(prompt)
+
 
 console = ConsoleWrapper()

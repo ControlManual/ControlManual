@@ -42,7 +42,7 @@ with tmp.status('Starting...', spinner = 'point'):
     import shutil
     import platform
     import zipfile
-    import threading
+    import rethread
     import psutil
     import rich
     import platform
@@ -75,9 +75,9 @@ async def main(filename: str) -> None:
         await log('entering main loop')
         try:
             resp = await client.start(filename)
-        except KeyboardInterrupt:
-            client._base_thread.kill = True # type: ignore
-            return
+        except Exception as e:
+            client._thread_running = True
+            raise e
 
         
         if resp == Reload:

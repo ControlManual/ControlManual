@@ -7,7 +7,7 @@ from . import utils, api, static, error as command_errors
 from .utils import *
 from .api import *
 import colorama
-from threading import Thread, currentThread
+import rethread
 from .console import console, ConsoleWrapper
 import platform
 import os
@@ -17,23 +17,9 @@ import getpass
 import datetime
 import distro
 import time
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-import tempfile
 from .logger import log
 import aiofiles
 
-pipe = tempfile.NamedTemporaryFile(prefix='controlmanual_', suffix='_pipe')
-pipe_file: str = pipe.name
-
-os.environ['cmpipe'] = pipe_file
-class MyHandler(FileSystemEventHandler):
-    def on_modified(self, _):
-        with open(pipe_file) as f:
-            lines = f.read()
-            f.write('')
-        
-        console.print(lines)            
 
 class Reload:
     """Blank object used to reload the instance."""
@@ -42,20 +28,6 @@ class Reload:
 def threaded(client: "Client") -> None:
     """Function ran on seperate thread when initalized."""
     client._connected = is_online()
-
-    event_handler = MyHandler()
-    observer = Observer()
-    observer.schedule(event_handler, path = pipe_file, recursive = False)
-    observer.start()
-    try:
-        while True:
-            if hasattr(currentThread(), "kill"):
-                return
-            time.sleep(0.1)
-    except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
-
 
 class Client:
     """Base class for running Control Manual."""
@@ -93,10 +65,8 @@ class Client:
         console.clear(), title('Control Manual')
         
         self._connected = False
-
-        t = Thread(target = threaded, args = [self])
-        self._base_thread = t
-        t.start()
+        self._thread_running = True
+        rethread.thread(threaded, self)
         
         with console.console.status('Loading commands...', spinner = 'material'):
             await self.reload()

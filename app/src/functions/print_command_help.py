@@ -1,4 +1,4 @@
-from ..utils import run_exe, error
+from ..utils import error
 from ..console import console
 
 warning = reset = important = secondary = primary = danger = ''
@@ -17,7 +17,7 @@ async def print_command_help(commands: dict, command: str) -> None:
         return error(f'Command does not exist.')
     
     if 'exe' in commands[command]:
-        return print(run_exe(commands[command]['exe']))
+        return console.error("Command is an executable.")
 
     usage_str: str = f'{secondary}{command} {primary}'
     
