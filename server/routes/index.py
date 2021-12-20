@@ -1,11 +1,9 @@
 from fastapi import APIRouter
 
 router = APIRouter()
-prefix = ''
+prefix = ""
 
-@router.get('/')
+
+@router.get("/")
 def index() -> dict:
-    return {
-        'message': "Welcome to the Control Manual API!",
-        'status': 200
-    }
+    return {"message": "Welcome to the Control Manual API!", "status": 200}

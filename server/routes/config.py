@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 router = APIRouter()
-prefix = '/config-base'
+prefix = "/config-base"
 
 BASE_CONFIG: str = """{
 	"input_sep": ">>",
@@ -40,9 +40,7 @@ BASE_CONFIG: str = """{
 	"cm_dir": "/mnt/e/Projects/Python/Control Manual/app"
 }"""
 
-@router.get('/')
+
+@router.get("/")
 def config_base() -> dict:
-    return {
-        "base": BASE_CONFIG,
-        "status": 200
-    }
+    return {"base": BASE_CONFIG, "status": 200}

@@ -116,3 +116,6 @@ build.bat
 middleware/
 logs/
 commands/
+
+# VSCode
+.vscode/

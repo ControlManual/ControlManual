@@ -24,8 +24,9 @@
 
 # Dependencies
 from rich.console import Console
-tmp = Console() 
-with tmp.status('Starting...', spinner = 'point'):
+
+tmp = Console()
+with tmp.status("Starting...", spinner="point"):
     import os
     import sys
     import typing
@@ -58,58 +59,53 @@ with tmp.status('Starting...', spinner = 'point'):
 
     from src import Client, Reload, static, log, flush
 
-VERSION: dict = {
-    'string': 'Alpha 1.0.1',
-    'stable': False
-}
+VERSION: dict = {"string": "Alpha 1.0.1", "stable": False}
 
 
 async def main(filename: str) -> None:
     """Main file for running Control Manual."""
 
     while True:
-        
+
         client = await Client(VERSION)
-        await log('entering main loop')
+        await log("entering main loop")
         try:
             resp = await client.start(filename)
         except Exception as e:
             client._thread_running = False
-            await log(f'exception occured: {e}')
+            await log(f"exception occured: {e}")
             raise e
 
-        
         if resp == Reload:
-            await log('reload invoked, starting process')
+            await log("reload invoked, starting process")
             try:
                 p = psutil.Process(os.getpid())
-                for handler in p.open_files() + p.connections(): # type: ignore
+                for handler in p.open_files() + p.connections():  # type: ignore
                     os.close(handler.fd)
             except:
-                static.static_error('fatal error occured when reloading')
+                static.static_error("fatal error occured when reloading")
 
             python = sys.executable
-            await log('restarting app')
+            await log("restarting app")
             os.execl(python, python, *sys.argv)
         else:
             sys.exit
 
+
 @click.command()
-@click.argument('filename', default=False)
+@click.argument("filename", default=False)
 def main_sync(filename: str):
     asyncio.run(main(filename))
 
+
 @atexit.register
-def shutdown(): # will be called on shutdown
+def shutdown():  # will be called on shutdown
     print()
     asyncio.run(flush())
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
-        main_sync() # type: ignore
+        main_sync()  # type: ignore
     except KeyboardInterrupt:
         sys.exit(0)
-    
-        

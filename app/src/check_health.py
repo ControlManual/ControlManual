@@ -43,25 +43,22 @@ config_base = """{
 	"basic": true
 }"""
 
+
 async def check_health() -> None:
     """Function for checking if required files and folders exist."""
-    dirs = ['commands', 'middleware', 'logs']
-    files = {
-        'config.json': config_base
-    }
+    dirs = ["commands", "middleware", "logs"]
+    files = {"config.json": config_base}
 
     for i in dirs:
         path = os.path.join(cm_dir, i)
         if not os.path.exists(path):
             print(f'directory "{i}" does not exist, creating...')
             os.makedirs(path)
-    
+
     for key, value in files.items():
         path = os.path.join(cm_dir, key)
         if not os.path.exists(path):
             print(f'file "{key}" does not exist, creating...')
-            
-            async with aiofiles.open(path, 'w') as f:
-                await f.write(value)
-    
 
+            async with aiofiles.open(path, "w") as f:
+                await f.write(value)
