@@ -180,10 +180,15 @@ class ConsoleWrapper:
             print("\033c", end="")  # clears screen for linux and mac
 
     @staticmethod
-    def clear_autocomplete(current: str) -> str:
+    def clear_autocomplete(current: str) -> Literal['']:
         print(' ' * len(current), end = "")
         print('\b' * len(current), flush = True, end = "")
         return ''
+
+    def set_highlight(self, text: str, color: str) -> Literal[True]:
+        print("\b" * len(text), flush = True, end = "")
+        self.console.print(f"[{color}]{text}[/{color}]", end = "")
+        return True
 
     def take_input(self, prompt: str, commands: dict, aliases: dict) -> str:
         """Render a new screen frame and take input."""
@@ -201,7 +206,17 @@ class ConsoleWrapper:
         while True:
             for i in both:
                 if string:
-                    cmd = string.split(' ')[0]
+                    split = string.split(' ')
+                    cmd = split[0]
+
+                    if len(split) > 1:
+                        if cmd not in both:
+                            current_autocomplete = self.clear_autocomplete(current_autocomplete)
+                            highlighted = self.set_highlight(string, 'danger')
+                            break
+
+
+                    
                     if cmd in both:
                         if not highlighted:
                             if cmd in commands:
@@ -212,15 +227,12 @@ class ConsoleWrapper:
                             else:
                                 color: str = "secondary"        
 
-                            print("\b" * len(string), flush = True, end = "")
-                            c.print(f"[{color}]{string}[/{color}]", end = "")
-                            highlighted = True
+                            highlighted = self.set_highlight(string, color)
                             break
                     elif highlighted:
                         print("\b" * len(string), flush = True, end = "")
                         c.print(f"[white]{string}[/white]", end = "")
                         highlighted = False
-
 
                     if i.startswith(string):
                         if not highlighted:
