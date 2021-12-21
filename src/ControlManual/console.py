@@ -20,6 +20,7 @@ custom_theme = Theme({
     "secondary": "rgb(21,128,0) on black" if truecolor else "dim green",
     "important": f"bold {primary}",
     "grayed": "rgb(61,61,61)",
+    "disabled": "rgb(77,77,77)"
 })
 
 
@@ -204,6 +205,7 @@ class ConsoleWrapper:
         both = {**commands, **aliases}
         main_color: str = 'white'
         comment = False
+        is_flag: bool = False
 
         while True:
             for i in both:
@@ -213,8 +215,8 @@ class ConsoleWrapper:
 
                     if cmd in config.comments:
                         if not comment:
-                            main_color: str = 'grayed'
-                            highlighted = self.set_highlight(string, 'grayed')
+                            main_color: str = 'disabled'
+                            highlighted = self.set_highlight(string, 'disabled')
                             current_autocomplete = self.clear_autocomplete(current_autocomplete)
                             comment = True
                         break
@@ -235,6 +237,10 @@ class ConsoleWrapper:
                             current_autocomplete = self.clear_autocomplete(current_autocomplete)
                             highlighted = self.set_highlight(string, 'danger')
                             break
+
+                        if split[-1].startswith(config.flag_prefix):
+                            main_color: str = 'secondary'
+                            is_flag = True
 
                     if cmd in both:
                         if not highlighted:
@@ -285,7 +291,14 @@ class ConsoleWrapper:
             elif ord(char) == 27:
                 pass
             else:
-                c.print(f'[{main_color}]{char}', end = '')
+                col = main_color
+                if is_flag and (char == '-'):
+                    col = 'white'
+                
+                if char == ' ':
+                    is_flag = False
+
+                c.print(f'[{col}]{char}', end = '')
                 string += char
 
         return string

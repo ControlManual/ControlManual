@@ -46,6 +46,5 @@
         "directory",
         "exceptions"
     ],
-    "truecolor": true,
-    "basic": true
+    "truecolor": true
 }

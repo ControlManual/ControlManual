@@ -45,7 +45,6 @@ class Config(JSONFile):
                 "seperator",
                 "errors",
                 "columns",
-                "basic",
             ],
             {
                 "errors": [
