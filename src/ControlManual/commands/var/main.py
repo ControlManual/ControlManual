@@ -7,7 +7,7 @@ ARGS: dict = {
     'name': 'Name of the variable.',
     'value': 'Value of the variable.'
 }
-FLAGS: dict = None
+FLAGS: dict = {}
 PACKAGE: str = 'builtin'
 
 

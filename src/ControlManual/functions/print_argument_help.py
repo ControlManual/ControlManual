@@ -10,7 +10,7 @@ def extract(col: dict, key: str, default: Any = "") -> Any:
 def rq(key: str, col: dict) -> str:
     raw: str = extract(col, key.lower())
     return (
-        f'\n\n[important]{key.replace("_", " ")}[/important]\n[primary]{raw}[/primary]'
+        f'\n\n[important]{key.replace("_", " ")}:[/important] [primary]{raw}[/primary]'
         if raw else "")
 
 
@@ -35,9 +35,9 @@ async def print_argument_help(commands: dict, command: str,
 
     description = extract(h, "description", args[argument])
     valid_raw = extract(h, "valid_values")
-    arg_type = f"\n\n[important]Type[/important][primary]\n{extract(h, 'type', 'String')}[/primary]"
+    arg_type = f"\n\n[important]Type: [/important][primary]{extract(h, 'type', 'String')}[/primary]"
     valid = (
-        f'\n\n[important]Valid Values[/important][primary]\n{f"[/primary], [primary]".join(valid_raw)}[/primary]'
+        f'\n\n[important]Valid Values: [/important][primary]{f"[/primary], [primary]".join(valid_raw)}[/primary]'
         if valid_raw else "")
 
     not_required_when: str = rq("Not_Required_When", h)

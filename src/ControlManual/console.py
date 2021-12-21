@@ -191,6 +191,12 @@ class ConsoleWrapper:
         self.console.print(f"[{color}]{text}[/{color}]", end = "")
         return True
 
+    def set_autocomplete(self, current: str, full: str) -> str:
+        append: str = full[len(current):]
+        self.console.print(f"[grayed]{append}[/grayed]", end = "")
+        print("\b" * len(append), flush = True, end = "")
+        return full
+
     def take_input(self, prompt: str, commands: dict, aliases: dict) -> str:
         """Render a new screen frame and take input."""
         c = self.console
@@ -202,10 +208,11 @@ class ConsoleWrapper:
         string: str = ''
         highlighted: bool = False
         current_autocomplete: str = ''
-        both = {**commands, **aliases}
+        both = {'help': {}, **commands, **aliases}
         main_color: str = 'white'
         comment = False
         is_flag: bool = False
+        highlight_type: str = ''
 
         while True:
             for i in both:
@@ -224,7 +231,7 @@ class ConsoleWrapper:
                         main_color: str = 'white'
                         comment = False
 
-                    if string in config.functions:
+                    if (string in config.functions) or (string in [str(i) for i in range(1, 11)]):
                         main_color: str = 'important'
                         highlighted = self.set_highlight(string, 'important')
                         current_autocomplete = self.clear_autocomplete(current_autocomplete)
@@ -246,29 +253,27 @@ class ConsoleWrapper:
                         if not highlighted:
                             if cmd in commands:
                                 if 'exe' in commands[cmd]:
-                                    color: str = "secondary"
+                                    highlight_type: str = "secondary"
                                 else:
-                                    color: str = "primary"
+                                    highlight_type: str = "primary"
                             else:
-                                color: str = "secondary"        
+                                highlight_type: str = "secondary"        
 
-                            highlighted = self.set_highlight(string, color)
+                            highlighted = self.set_highlight(string, highlight_type)
                             current_autocomplete = self.clear_autocomplete(current_autocomplete)
                             break
                     elif highlighted:
                         print("\b" * len(string), flush = True, end = "")
                         c.print(f"[white]{string}[/white]", end = "")
                         highlighted = False
+                        highlight_type = ''
+                
 
                     if i.startswith(string):
                         if not highlighted:
                             self.clear_autocomplete(current_autocomplete)
 
-                            append: str = i[len(string):]
-
-                            c.print(f"[grayed]{append}[/grayed]", end = "")
-                            print("\b" * len(append), flush = True, end = "")
-                            current_autocomplete = i
+                            current_autocomplete = self.set_autocomplete(string, i)
                             break
                         else:
                             current_autocomplete = self.clear_autocomplete(current_autocomplete)
@@ -276,8 +281,6 @@ class ConsoleWrapper:
                         current_autocomplete = self.clear_autocomplete(current_autocomplete)
                 else:
                     current_autocomplete = self.clear_autocomplete(current_autocomplete)           
- 
-                        
 
             char: str = getch()
 
