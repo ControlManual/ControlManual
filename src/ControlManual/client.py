@@ -486,7 +486,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                     if type(e) in emap:
                         return console.error(str(e))
 
-                    await log("command ran into exception", e)
+                    await log(f"command ran into exception: {e}")
                     if isinstance(e, PermissionError):
                         await log("permission error found")
                         error(errors["permission_error"])

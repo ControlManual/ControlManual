@@ -68,7 +68,7 @@ async def run(raw: str, args: List[str], kwargs: Dict[str, str],
             client.path, args[0])
 
     if os.path.exists(directory):
-        raise errors.Exists(f'{typ.capitalize()} already exists.{utils.reset}')
+        raise errors.Exists(f'{typ.capitalize()} already exists.')
 
     os.makedirs(directory)
 
@@ -77,5 +77,5 @@ async def run(raw: str, args: List[str], kwargs: Dict[str, str],
             BASE.replace('{pkg_name}', args[0]) if 'middleware' not in
             flags else MIDDLEWARE)
 
-    client.reload()
+    await client.reload()
     utils.success(f'Successfully initalized {typ} "{args[0]}".')

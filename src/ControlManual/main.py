@@ -63,6 +63,10 @@ with tmp.status("Starting...", spinner="point"):
 
 VERSION: dict = {"string": "Alpha 0.0.2", "stable": False}
 
+@atexit.register
+def shutdown():
+    print()
+    asyncio.run(flush())
 
 async def main(filename: str) -> None:
     """Main file for running Control Manual."""
@@ -99,13 +103,6 @@ async def main(filename: str) -> None:
 @click.argument("filename", default = '')
 def main_sync(filename: str):
     asyncio.run(main(filename))
-
-
-@atexit.register
-def shutdown():  # will be called on shutdown
-    print()
-    asyncio.run(flush())
-
 
 def main_wrap():
     try:
