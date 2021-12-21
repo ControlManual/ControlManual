@@ -107,8 +107,12 @@ def shutdown():  # will be called on shutdown
     asyncio.run(flush())
 
 
-if __name__ == "__main__":
+def main_wrap():
     try:
         main_sync()  # type: ignore
     except KeyboardInterrupt:
         sys.exit(0)
+
+
+if __name__ == "__main__":
+    main_wrap()

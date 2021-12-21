@@ -5,12 +5,15 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="ControlManual",
-    version="0.0.2",
+    version="0.0.3",
     author="ZeroIntensity",
     author_email="admin@controlmanual.xyz",
     description="A universal console-like interface",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    entry_points={
+        "console_scripts": ["ControlManual=ControlManual.ControlManual:main"]
+    },
     url="https://github.com/ZeroIntensity/ControlManual",
     project_urls={
         "Bug Tracker": "https://github.com/ZeroIntensity/ControlManual/issues",
