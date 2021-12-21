@@ -1,5 +1,5 @@
-![https://github.com/ZeroIntensity/ControlManual/blob/main/LICENSE](https://img.shields.io/github/license/ZeroIntensity/ControlManual)
-
 # Control Manual
+
+![https://github.com/ZeroIntensity/ControlManual/blob/main/LICENSE](https://img.shields.io/github/license/ZeroIntensity/ControlManual)
 
 Under development, do not use!
