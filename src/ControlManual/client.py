@@ -315,7 +315,7 @@ Computer Name: [important]{platform.node()}[/important]
 Uptime: [important]{int(uptime) // 60} minutes[/important]
 """)
             await log("taking input")
-            command: str = console.take_input(inp, self.commands)
+            command: str = console.take_input(inp, self.commands, self.aliases)
 
             console.clear_panel("exceptions")
             command = command.replace(r"\n", "\n")

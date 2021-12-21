@@ -19,7 +19,7 @@ custom_theme = Theme({
     "primary": primary if truecolor else "bold green",
     "secondary": "rgb(21,128,0) on black" if truecolor else "dim green",
     "important": f"bold {primary}",
-    "grayed": "rgb(61,61,61)"
+    "grayed": "rgb(61,61,61)",
 })
 
 
@@ -179,7 +179,13 @@ class ConsoleWrapper:
         else:  # for anything other than windows
             print("\033c", end="")  # clears screen for linux and mac
 
-    def take_input(self, prompt: str, commands: dict) -> str:
+    @staticmethod
+    def clear_autocomplete(current: str) -> str:
+        print(' ' * len(current), end = "")
+        print('\b' * len(current), flush = True, end = "")
+        return ''
+
+    def take_input(self, prompt: str, commands: dict, aliases: dict) -> str:
         """Render a new screen frame and take input."""
         c = self.console
         self.clear()
@@ -188,17 +194,50 @@ class ConsoleWrapper:
 
         c.print(prompt, end = "")
         string: str = ''
+        highlighted: bool = False
+        current_autocomplete: str = ''
+        both = {**commands, **aliases}
 
         while True:
-            for i in commands:
+            for i in both:
                 if string:
-                    if not string in commands:
-                        if i.startswith(string):
+                    cmd = string.split(' ')[0]
+                    if cmd in both:
+                        if not highlighted:
+                            if cmd in commands:
+                                if 'exe' in commands[cmd]:
+                                    color: str = "secondary"
+                                else:
+                                    color: str = "primary"
+                            else:
+                                color: str = "secondary"        
+
+                            print("\b" * len(string), flush = True, end = "")
+                            c.print(f"[{color}]{string}[/{color}]", end = "")
+                            highlighted = True
+                            break
+                    elif highlighted:
+                        print("\b" * len(string), flush = True, end = "")
+                        c.print(f"[white]{string}[/white]", end = "")
+                        highlighted = False
+
+
+                    if i.startswith(string):
+                        if not highlighted:
+                            self.clear_autocomplete(current_autocomplete)
+
                             append: str = i[len(string):]
 
-                            c.print(f"[grayed]{append}[/grayed]", end="")
+                            c.print(f"[grayed]{append}[/grayed]", end = "")
                             print("\b" * len(append), flush = True, end = "")
+                            current_autocomplete = i
                             break
+                        else:
+                            current_autocomplete = self.clear_autocomplete(current_autocomplete)
+                else:
+                    current_autocomplete = self.clear_autocomplete(current_autocomplete)           
+ 
+                        
 
             char: str = getch()
 
