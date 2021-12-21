@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="ControlManual",
-    version="0.0.1",
+    version="0.0.2",
     author="ZeroIntensity",
     author_email="admin@controlmanual.xyz",
     description="A universal console-like interface",
@@ -22,5 +22,17 @@ setuptools.setup(
     ],
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
+    install_requires=[
+        "colorama",
+        "requests",
+        "click",
+        "rethread",
+        "psutil",
+        "rich",
+        "distro",
+        "aiofiles",
+        "getch",
+        "watchdog",
+    ],
     python_requires=">=3.8",
 )
