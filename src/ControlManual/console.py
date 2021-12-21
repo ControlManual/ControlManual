@@ -202,6 +202,8 @@ class ConsoleWrapper:
         highlighted: bool = False
         current_autocomplete: str = ''
         both = {**commands, **aliases}
+        main_color: str = 'white'
+        comment = False
 
         while True:
             for i in both:
@@ -209,14 +211,31 @@ class ConsoleWrapper:
                     split = string.split(' ')
                     cmd = split[0]
 
+                    if cmd in config.comments:
+                        if not comment:
+                            main_color: str = 'grayed'
+                            highlighted = self.set_highlight(string, 'grayed')
+                            current_autocomplete = self.clear_autocomplete(current_autocomplete)
+                            comment = True
+                        break
+                    else:
+                        main_color: str = 'white'
+                        comment = False
+
+                    if string in config.functions:
+                        main_color: str = 'important'
+                        highlighted = self.set_highlight(string, 'important')
+                        current_autocomplete = self.clear_autocomplete(current_autocomplete)
+                        break
+                    else:
+                        main_color: str = 'white'
+
                     if len(split) > 1:
                         if cmd not in both:
                             current_autocomplete = self.clear_autocomplete(current_autocomplete)
                             highlighted = self.set_highlight(string, 'danger')
                             break
 
-
-                    
                     if cmd in both:
                         if not highlighted:
                             if cmd in commands:
@@ -266,7 +285,7 @@ class ConsoleWrapper:
             elif ord(char) == 27:
                 pass
             else:
-                print(char, end = '', flush = True)
+                c.print(f'[{main_color}]{char}', end = '')
                 string += char
 
         return string
