@@ -5,7 +5,8 @@ from rich.panel import Panel
 import os
 from .config import Config
 from typing import Literal, Tuple, Any, Optional, Dict, overload, Union
-import sys
+from getch import getch
+
 
 primary: str = "rgb(0,179,0) on black"
 config = Config()
@@ -18,6 +19,7 @@ custom_theme = Theme({
     "primary": primary if truecolor else "bold green",
     "secondary": "rgb(21,128,0) on black" if truecolor else "dim green",
     "important": f"bold {primary}",
+    "grayed": "rgb(61,61,61)"
 })
 
 
@@ -177,15 +179,44 @@ class ConsoleWrapper:
         else:  # for anything other than windows
             print("\033c", end="")  # clears screen for linux and mac
 
-    def take_input(self, prompt: str) -> str:
-        """Begin rendering the screen."""
+    def take_input(self, prompt: str, commands: dict) -> str:
+        """Render a new screen frame and take input."""
         c = self.console
         self.clear()
-        p = Panel(self.screen,
-                  title="Terminal",
-                  height=self.console.height - 1)
+        p = Panel(self.screen, title="Terminal", height=self.console.height - 1)
         c.print(p)
-        return c.input(prompt)
+
+        c.print(prompt, end = "")
+        string: str = ''
+
+        while True:
+            for i in commands:
+                if string:
+                    if not string in commands:
+                        if i.startswith(string):
+                            append: str = i[len(string):]
+
+                            c.print(f"[grayed]{append}[/grayed]", end="")
+                            print("\b" * len(append), flush = True, end = "")
+                            break
+
+            char: str = getch()
+
+            if char == '\n':
+                break
+            
+            if char == '\x7f':
+                if string:
+                    string = string[:-1]
+                    print('\b \b', end = '', flush = True)
+            elif char == '\x1b':
+                if string:
+                    print(char, end = '', flush = True)
+            else:
+                print(char, end = '', flush = True)
+                string += char
+
+        return string
 
 
 console = ConsoleWrapper()

@@ -78,9 +78,9 @@ class Client:
     async def reload(self) -> None:
         """Function for reloading commands and middleware."""
         self._middleware: List[
-            Coroutine] = await load_middleware.load_middleware(
+            Coroutine] = await load_middleware(
                 join(self._config.cm_dir, "middleware"))
-        self._commands: dict = await load_commands.load_commands(
+        self._commands: dict = await load_commands(
             join(self._config.cm_dir, "commands"))
 
     @property
@@ -315,7 +315,7 @@ Computer Name: [important]{platform.node()}[/important]
 Uptime: [important]{int(uptime) // 60} minutes[/important]
 """)
             await log("taking input")
-            command: str = console.take_input(inp)
+            command: str = console.take_input(inp, self.commands)
 
             console.clear_panel("exceptions")
             command = command.replace(r"\n", "\n")
@@ -376,7 +376,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                 else:
                     break
 
-            args, kwargs, flags = await parse.parse(raw_args)
+            args, kwargs, flags = await parse(raw_args)
             cmd: str = cmd.lower()
 
             for index, i in enumerate(args):
@@ -394,7 +394,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
 
                             text: str = i[ind + len("{" + key) + 1:end]
 
-                            params = await parse.parse(text)[0]  # type: ignore
+                            params = await parse(text)[0]  # type: ignore
                             replace = value(params)
                             args[index] = i = args[index].replace(
                                 f"{find}{text})" + "}", replace)
@@ -472,7 +472,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                     args.extend(ext)  # type: ignore
 
                     executable: str = COMMANDS[cmd]["exe"]  # type: ignore
-                    return await run_exe.run_exe(executable, "".join(args))
+                    return await run_exe(executable, "".join(args))
 
                 runner: Callable = COMMANDS[cmd]["entry"]  # type: ignore
                 # i have no clue what this error message is supposed to mean

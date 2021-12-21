@@ -6,3 +6,4 @@ psutil<=5.8.0
 rich<=10.15.1
 distro<=1.6.0
 aiofiles<=0.7.0
+getch==1.0

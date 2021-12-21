@@ -4,8 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    # TODO: transfer to ZeroIntensity
-    name="ControlManual-2231puppy",
+    name="ControlManual",
     version="0.0.1",
     author="ZeroIntensity",
     author_email="admin@controlmanual.xyz",
