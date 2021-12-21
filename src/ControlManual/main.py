@@ -61,7 +61,7 @@ with tmp.status("Starting...", spinner="point"):
     from . import static
     from .logger import log, flush
 
-VERSION: dict = {"string": "Alpha 1.0.1", "stable": False}
+VERSION: dict = {"string": "Alpha 0.0.1", "stable": False}
 
 
 async def main(filename: str) -> None:
