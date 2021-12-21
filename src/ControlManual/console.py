@@ -194,7 +194,7 @@ class ConsoleWrapper:
         """Render a new screen frame and take input."""
         c = self.console
         self.clear()
-        p = Panel(self.screen, title="Terminal", height=self.console.height - 1)
+        p = Panel(self.screen, title = "Terminal", height = self.console.height - 1)
         c.print(p)
 
         c.print(prompt, end = "")
@@ -228,6 +228,7 @@ class ConsoleWrapper:
                                 color: str = "secondary"        
 
                             highlighted = self.set_highlight(string, color)
+                            current_autocomplete = self.clear_autocomplete(current_autocomplete)
                             break
                     elif highlighted:
                         print("\b" * len(string), flush = True, end = "")
@@ -246,6 +247,8 @@ class ConsoleWrapper:
                             break
                         else:
                             current_autocomplete = self.clear_autocomplete(current_autocomplete)
+                    elif current_autocomplete:
+                        current_autocomplete = self.clear_autocomplete(current_autocomplete)
                 else:
                     current_autocomplete = self.clear_autocomplete(current_autocomplete)           
  
@@ -260,14 +263,12 @@ class ConsoleWrapper:
                 if string:
                     string = string[:-1]
                     print('\b \b', end = '', flush = True)
-            elif char == '\x1b':
-                if string:
-                    print(char, end = '', flush = True)
+            elif ord(char) == 27:
+                pass
             else:
                 print(char, end = '', flush = True)
                 string += char
 
         return string
-
 
 console = ConsoleWrapper()
