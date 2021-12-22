@@ -226,7 +226,14 @@ class ConsoleWrapper:
             return {'[A': 'up', '[B': 'down', '[C': 'right', '[D': 'left'}[getch() + getch()]
         else:
             return first_char
-    
+
+    @staticmethod
+    def move(string: str):
+        print(' ' * len(string), '\b' * len(string), end = '', flush = True)
+
+        print('\b' + string, end = '', flush = True)
+        print('\b' * (len(string) + 0), end = '', flush = True) # ? this only works if you do (len(ap) + 0) and not len(ap) wtf python
+
     def take_input(self, prompt: str, commands: dict, aliases: dict) -> str:
         """Render a new screen frame and take input."""
         c = self.console
@@ -323,11 +330,7 @@ class ConsoleWrapper:
                     print('\b \b', end = '', flush = True)
 
                     if index < (len(string) - 1):
-                        ap = string[index - 1:]
-                        print(' ' * len(ap), '\b' * len(ap), end = '', flush = True)
-
-                        print('\b' + ap, end = '', flush = True)
-                        print('\b' * len(ap), end = '', flush = True)
+                        self.move(string[index - 1:])
                     index -= 1
             elif char == 'up':
                 if not (current_command_history == len(self._command_history)):
@@ -352,7 +355,9 @@ class ConsoleWrapper:
                     print('\b', end = '', flush = True)
                     index -= 1
             elif char == 'right':
-                pass
+                if index < (len(string) - 1):
+                    print(string[index], end = '', flush = True)
+                    index += 1
             else:
                 col = main_color
                 if is_flag and (char == '-'):
@@ -362,11 +367,7 @@ class ConsoleWrapper:
                     is_flag = False
 
                 if index < (len(string) - 1):
-                        ap = string[index - 1:]
-                        print(' ' * len(ap), '\b' * len(ap), end = '', flush = True)
-
-                        print(ap, end = '', flush = True)
-                        print('\b' * (len(ap) + 1), end = '', flush = True)
+                        self.move(string[index - 1:])
                 c.print(f'[{col}]{char}', end = '')
 
                 string = string[:index] + char + string[index:]
