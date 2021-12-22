@@ -108,17 +108,21 @@ class ConsoleWrapper:
 
     def print(self, message: Any):
         """Function for printing a message."""
-        prefix: str = "\n" if self._feed else ""
-        self.write(prefix + str(message))
+        self.write(str(message) + "\n")
 
     def write(self, message: Any):
         """Function for writing to the feed."""
         f = self._feed
         suffix: str = ""
-        amount_string = lambda a: f" [important]x{a}[/important]"
+        amount_string = lambda a: f" [important]x{a}[/important]\n"
         message = str(message)
 
+        if message.endswith("\n"):
+            message = message[:-1]
+
         if message == f[-1] if f else None:
+            if f[-1].endswith('\n'):
+                f[-1] = f[-1][:-1]
             self._amount += 1
             suffix: str = amount_string(self._amount)
         else:
@@ -127,7 +131,8 @@ class ConsoleWrapper:
                 self._amount = 0
             self._feed.append(message)
 
-        self.edit_panel("feed", "".join(f) + suffix)
+        lines = "".join(f) + suffix
+        self.edit_panel("feed", lines)
 
     def error(self, message: Any, *args, **kwargs) -> None:
         self.print(f"[danger]Error:[/danger] {message}", *args, **kwargs)

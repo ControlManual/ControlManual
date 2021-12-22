@@ -70,6 +70,8 @@ def shutdown():
 
 async def main(filename: str) -> None:
     """Main file for running Control Manual."""
+    if float(platform.python_version()[:3]) < 3.8:
+        static.static_error("invalid python version - at least 3.8 is required")
 
     while True:
 
