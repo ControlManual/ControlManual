@@ -37,7 +37,8 @@ async def run(raw: str, args: List[str], kwargs: Dict[str, str],
         temp_path: str = os.path.join(commands_path,
                                       f'temp_package_{args[1]}.zip')
 
-        if not api.download_package(args[1], temp_path, commands_path):
+        client.console.print(args[1] + '  ' + temp_path + '  ' + commands_path)
+        if not await api.download_package(args[1], temp_path, commands_path):
             raise errors.InvalidArgument('Please specify a valid package.')
         else:
             os.remove(temp_path)
@@ -49,7 +50,7 @@ async def run(raw: str, args: List[str], kwargs: Dict[str, str],
         packages = set()
 
         for i in commands:
-            current_package = commands[i]['package']
+            current_package = commands[i]['package'] # type: ignore
             packages.add(current_package)
 
         for i in packages:

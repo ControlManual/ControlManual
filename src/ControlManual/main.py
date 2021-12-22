@@ -36,7 +36,6 @@ with tmp.status("Starting...", spinner="point"):
     import pathlib
     import atexit
     import colorama
-    import requests
     import io
     import subprocess
     import click
@@ -56,6 +55,7 @@ with tmp.status("Starting...", spinner="point"):
     import inspect
     import asyncio
     import aiofiles
+    import aiohttp
 
     from .client import Client, Reload
     from . import static

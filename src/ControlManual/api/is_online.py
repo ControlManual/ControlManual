@@ -1,12 +1,13 @@
-import requests
+import aiohttp
 
 
-def is_online() -> bool:
+async def is_online() -> bool:
     """Function for checking if the api is online."""
     try:
-        resp = requests.get("https://api.controlmanual.xyz/")
-        if not resp.status_code == 200:
-            raise Exception()
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://api.github.com') as response:
+                if not response.status == 200:
+                    raise Exception()
 
         return True
     except:

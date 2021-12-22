@@ -20,18 +20,17 @@ import distro
 import time
 from .logger import log
 import aiofiles
+import asyncio
 
 
 class Reload:
     """Blank object used to reload the instance."""
-
     pass
 
 
 def threaded(client: "Client") -> None:
     """Function ran on seperate thread when initalized."""
-    client._connected = is_online()
-
+    client._connected = asyncio.run(is_online())
 
 class Client:
     """Base class for running Control Manual."""
