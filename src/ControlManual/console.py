@@ -39,6 +39,7 @@ def make_panel(
 
 
 def make_panel(name: str, force: bool = False) -> Optional[Layout]:
+    """Function for making a panel."""
     c: str = name.capitalize()
     text: str = f"{c} will show here..."
 
@@ -138,27 +139,34 @@ class ConsoleWrapper:
         self.edit_panel("feed", lines)
 
     def error(self, message: Any, *args, **kwargs) -> None:
+        """Function for printing an error message to the feed."""
         self.print(f"[danger]Error:[/danger] {message}", *args, **kwargs)
 
     def success(self, message: Any, *args: Tuple[str],
                 **kwargs: Dict[str, str]) -> None:
+        """Function for printing a success message to the feed."""
         self.print(f"[important]Success:[/important] {message}", *args,
                    **kwargs)
 
     def set_info(self, text: str) -> None:
+        """Function for setting text on the info panel."""
         self.edit_panel("info", text)
 
     def edit_panel(self, panel: str, text: str) -> None:
-        self.screen[panel].update(Panel(text, title=panel.capitalize()))
+        """Function for editing a panels text."""
+        self.screen[panel].update(Panel(text, title = panel.capitalize()))
 
     def show_exc(self, error: Exception):
+        """Function for adding an exception to the exceptions panel."""
         self.edit_panel("exceptions", repr(error))
 
     def key_value(self, key: str, value: str) -> None:
+        """Function for printing a key value pair to the feed."""
         self.print(
             f"[primary]{key}[/primary] - [secondary]{value}[/secondary]")
 
     def set_dir(self, path: Union[os.PathLike, str]) -> None:
+        """Function for setting a directory to the directory panel."""
         final: str = ""
 
         for i in os.listdir(path):
@@ -172,12 +180,15 @@ class ConsoleWrapper:
         self.edit_panel("directory", final)
 
     def clear_panel(self, panel: str) -> None:
+        """Function for clearing a certain panel."""
         self.edit_panel(panel, f"{panel.capitalize()} will show here...")
 
     def primary(self, message: str, *args, **kwargs) -> None:
+        """Function for printing a message in primary color."""
         self.print(f"[primary]{message}[/primary]", *args, **kwargs)
 
     def secondary(self, message: str, *args, **kwargs) -> None:
+        """Function for printing a message in secondary color."""
         self.print(f"[secondary]{message}[/secondary]", *args, **kwargs)
 
     @staticmethod
@@ -190,54 +201,68 @@ class ConsoleWrapper:
 
     @staticmethod
     def clear_autocomplete(current: str) -> Literal['']:
+        """Function for clearing the autocomplete text."""
         print(' ' * len(current), end = "")
         print('\b' * len(current), flush = True, end = "")
         return ''
 
     def set_highlight(self, text: str, color: str) -> Literal[True]:
+        """Function for setting the syntax highlight for the input."""
         print("\b" * len(text), flush = True, end = "")
         self.console.print(f"[{color}]{text}[/{color}]", end = "")
         return True
 
     def set_autocomplete(self, current: str, full: str) -> str:
+        """Function for setting the autocompletion text for the input."""
         append: str = full[len(current):]
         self.console.print(f"[grayed]{append}[/grayed]", end = "")
         print("\b" * len(append), flush = True, end = "")
         return full
 
     def get_terminal(self) -> Panel:
+        """Function for getting the terminal panel."""
         return Panel(self.screen, title = "Terminal", height = self.console.height - 1)
 
     def render_screen(self) -> None:
+        """Function for rendering a new screen frame."""
         c = self.console
         self.clear()
         p = self.get_terminal()
         c.print(p)
 
     def clear_highlight(self, text: str) -> tuple:
-        print("\b" * len(text), flush = True, end = "")
+        """Function for clearing the highlighted text."""
+        self.fw("\b" * len(text))
         self.console.print(f"[white]{text}[/white]", end = "")
 
         return False, ''
+
     @staticmethod
     def get_key():
+        """Function for getting a character from the user."""
         first_char = getch()
         if first_char == '\x1b':
             return {'[A': 'up', '[B': 'down', '[C': 'right', '[D': 'left'}[getch() + getch()]
         else:
             return first_char
 
-    @staticmethod
-    def move(string: str):
-        print(' ' * len(string), '\b' * len(string), end = '', flush = True)
+    def move(self, string: str):
+        """Function for moving the text."""
+        fw = self.fw
 
-        print('\b' + string, end = '', flush = True)
-        print('\b' * (len(string) + 0), end = '', flush = True) # ? this only works if you do (len(ap) + 0) and not len(ap) wtf python
+        fw(' ' * len(string), '\b' * len(string))
+        fw('\b' + string)
+        fw('\b' * (len(string) + 0)) # ? this only works if you do (len(ap) + 0) and not len(ap) wtf python
+
+    @staticmethod
+    def fw(*args) -> None:
+        print(*args, end = '', flush = True)
 
     def take_input(self, prompt: str, commands: dict, aliases: dict) -> str:
         """Render a new screen frame and take input."""
         c = self.console
         self.render_screen()
+        fw = self.fw
 
         current_command_history: int = 0
         c.print(prompt, end = "")
@@ -327,36 +352,36 @@ class ConsoleWrapper:
             if char == '\x7f':
                 if string:
                     string = string[:index - 1] + string[index:]
-                    print('\b \b', end = '', flush = True)
+                    fw('\b \b')
 
                     if index < (len(string) - 1):
                         self.move(string[index - 1:])
                     index -= 1
             elif char == 'up':
                 if not (current_command_history == len(self._command_history)):
-                    print('\b' * len(string), end = '', flush = True)
+                    fw('\b' * len(string))
                     string = self._command_history[current_command_history]
                     current_command_history += 1
                     current_autocomplete = self.clear_autocomplete(current_autocomplete)
-                    print(string, end = '', flush = True)
+                    fw(string)
                     index = len(string) - 1
                     
             elif char == 'down':
                 if current_command_history:
                     current_command_history -= 1
                     if current_command_history:
-                        print('\b' * len(string), end = '', flush = True)
+                        fw('\b' * len(string))
                         string = self._command_history[current_command_history]
                         current_autocomplete = self.clear_autocomplete(current_autocomplete)
                         print(string, end = '', flush = True)
                         index = len(string) - 1
             elif char == 'left':
                 if index:
-                    print('\b', end = '', flush = True)
+                    fw('\b')
                     index -= 1
             elif char == 'right':
                 if index < (len(string) - 1):
-                    print(string[index], end = '', flush = True)
+                    fw(string[index])
                     index += 1
             else:
                 col = main_color
