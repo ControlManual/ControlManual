@@ -450,7 +450,8 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                     args.extend(ext)  # type: ignore
 
                     executable: str = COMMANDS[cmd]["exe"]  # type: ignore
-                    with Live(console.screen):
+                    console.clear()
+                    with Live(console.get_terminal()):
                         await run_exe(executable, "".join(args))
                     
                     return
@@ -460,7 +461,8 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
 
                 try:
                     await log("running command")
-                    with Live(console.screen):
+                    console.clear()
+                    with Live(console.get_terminal()):
                         await runner(raw_args, args, kwargs, flags, self)
                 except Exception as e:
                     await flush()
