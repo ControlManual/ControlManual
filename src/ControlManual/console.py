@@ -6,6 +6,7 @@ import os
 from .config import Config
 from typing import Literal, Tuple, Any, Optional, Dict, overload, Union
 from getch import getch
+import time
 
 
 primary: str = "rgb(0,179,0) on black"
@@ -72,6 +73,7 @@ class ConsoleWrapper:
         self._screen = layout
         self._feed = []
         self._amount = 0
+        self._command_history = []
 
     def render(self, layout: Layout, typ: Literal["row", "column"],
                *rows: Optional[Layout]):
@@ -101,6 +103,7 @@ class ConsoleWrapper:
         """Raw Rich Layout Object."""
         return self._screen
 
+
     def empty(self) -> None:
         """Empty the feed."""
         self._feed = []
@@ -116,11 +119,11 @@ class ConsoleWrapper:
         suffix: str = ""
         amount_string = lambda a: f" [important]x{a}[/important]\n"
         message = str(message)
+        tmp = message[:-1] if message.endswith("\n") else message
 
-        if message.endswith("\n"):
-            message = message[:-1]
+        last = f[-1] if f else None
 
-        if message == f[-1] if f else None:
+        if (tmp == last) or (message == last):
             if f[-1].endswith('\n'):
                 f[-1] = f[-1][:-1]
             self._amount += 1
@@ -214,13 +217,22 @@ class ConsoleWrapper:
     def clear_highlight(self, text: str) -> tuple:
         print("\b" * len(text), flush = True, end = "")
         self.console.print(f"[white]{text}[/white]", end = "")
-        return False, ''
 
+        return False, ''
+    @staticmethod
+    def get_key():
+        first_char = getch()
+        if first_char == '\x1b':
+            return {'[A': 'up', '[B': 'down', '[C': 'right', '[D': 'left'}[getch() + getch()]
+        else:
+            return first_char
+    
     def take_input(self, prompt: str, commands: dict, aliases: dict) -> str:
         """Render a new screen frame and take input."""
         c = self.console
         self.render_screen()
 
+        current_command_history: int = 0
         c.print(prompt, end = "")
         string: str = ''
         highlighted: bool = False
@@ -230,6 +242,7 @@ class ConsoleWrapper:
         comment = False
         is_flag: bool = False
         highlight_type: str = ''
+        index = 0
 
         while True:
             for i in both:
@@ -297,17 +310,48 @@ class ConsoleWrapper:
                 else:
                     current_autocomplete = self.clear_autocomplete(current_autocomplete)           
 
-            char: str = getch()
+            char: str = self.get_key()
 
             if char == '\n':
+                if not string == (self._command_history + [None])[0]:
+                    self._command_history.insert(0, string)
                 break
-            
+
             if char == '\x7f':
                 if string:
-                    string = string[:-1]
+                    string = string[:index - 1] + string[index:]
                     print('\b \b', end = '', flush = True)
+
+                    if index < (len(string) - 1):
+                        ap = string[index - 1:]
+                        print(' ' * len(ap), '\b' * len(ap), end = '', flush = True)
+
+                        print('\b' + ap, end = '', flush = True)
+                        print('\b' * len(ap), end = '', flush = True)
+                    index -= 1
+            elif char == 'up':
+                if not (current_command_history == len(self._command_history)):
+                    print('\b' * len(string), end = '', flush = True)
+                    string = self._command_history[current_command_history]
+                    current_command_history += 1
+                    current_autocomplete = self.clear_autocomplete(current_autocomplete)
+                    print(string, end = '', flush = True)
+                    index = len(string) - 1
                     
-            elif ord(char) == 27:
+            elif char == 'down':
+                if current_command_history:
+                    current_command_history -= 1
+                    if current_command_history:
+                        print('\b' * len(string), end = '', flush = True)
+                        string = self._command_history[current_command_history]
+                        current_autocomplete = self.clear_autocomplete(current_autocomplete)
+                        print(string, end = '', flush = True)
+                        index = len(string) - 1
+            elif char == 'left':
+                if index:
+                    print('\b', end = '', flush = True)
+                    index -= 1
+            elif char == 'right':
                 pass
             else:
                 col = main_color
@@ -317,8 +361,16 @@ class ConsoleWrapper:
                 if char == ' ':
                     is_flag = False
 
+                if index < (len(string) - 1):
+                        ap = string[index - 1:]
+                        print(' ' * len(ap), '\b' * len(ap), end = '', flush = True)
+
+                        print(ap, end = '', flush = True)
+                        print('\b' * len(ap), end = '', flush = True)
                 c.print(f'[{col}]{char}', end = '')
-                string += char
+
+                string = string[:index] + char + string[index:]
+                index += 1
 
         return string
 
