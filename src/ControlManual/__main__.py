@@ -1,3 +1,3 @@
-from main import main_wrap
+from .main import main_wrap
 
 main_wrap()
