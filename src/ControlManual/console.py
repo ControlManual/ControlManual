@@ -366,7 +366,7 @@ class ConsoleWrapper:
                         print(' ' * len(ap), '\b' * len(ap), end = '', flush = True)
 
                         print(ap, end = '', flush = True)
-                        print('\b' * len(ap), end = '', flush = True)
+                        print('\b' * (len(ap) + 1), end = '', flush = True)
                 c.print(f'[{col}]{char}', end = '')
 
                 string = string[:index] + char + string[index:]
