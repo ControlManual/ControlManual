@@ -1,11 +1,10 @@
 import py7zr
 import aiohttp
 import aiofiles
-from ..console import console
 
 async def download_package(package: str, file: str, target: str) -> bool:
     async with aiohttp.ClientSession() as session:
-        async with session.get('http://localhost:5000/package/get', params = {'package': package}) as resp:
+        async with session.get('https://api.controlmanual.xyz/package/get', params = {'package': package}) as resp:
             if not resp.status == 200:
                 return False
 

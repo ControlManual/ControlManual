@@ -206,6 +206,11 @@ class ConsoleWrapper:
         p = self.get_terminal()
         c.print(p)
 
+    def clear_highlight(self, text: str) -> tuple:
+        print("\b" * len(text), flush = True, end = "")
+        self.console.print(f"[white]{text}[/white]", end = "")
+        return False, ''
+
     def take_input(self, prompt: str, commands: dict, aliases: dict) -> str:
         """Render a new screen frame and take input."""
         c = self.console
@@ -257,6 +262,8 @@ class ConsoleWrapper:
                             is_flag = True
 
                     if cmd in both:
+                        if string[:-1] in both:
+                            highlighted = False
                         if not highlighted:
                             if cmd in commands:
                                 if 'exe' in commands[cmd]:
@@ -270,11 +277,7 @@ class ConsoleWrapper:
                             current_autocomplete = self.clear_autocomplete(current_autocomplete)
                             break
                     elif highlighted:
-                        print("\b" * len(string), flush = True, end = "")
-                        c.print(f"[white]{string}[/white]", end = "")
-                        highlighted = False
-                        highlight_type = ''
-                
+                        highlighted, highlight_type = self.clear_highlight(string)
 
                     if i.startswith(string):
                         if not highlighted:
@@ -298,6 +301,7 @@ class ConsoleWrapper:
                 if string:
                     string = string[:-1]
                     print('\b \b', end = '', flush = True)
+                    
             elif ord(char) == 27:
                 pass
             else:

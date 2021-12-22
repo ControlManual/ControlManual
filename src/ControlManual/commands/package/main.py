@@ -29,7 +29,11 @@ async def run(raw: str, args: List[str], kwargs: Dict[str, str],
     if not args:
         raise errors.NotEnoughArguments('Please specify an operation.')
 
+
     if args[0] == 'add':
+        if not api.is_online():
+            raise errors.APIError('Failed to connect to the API.')
+
         if len(args) < 2:
             raise errors.NotEnoughArguments('Please specify a package name.')
 
