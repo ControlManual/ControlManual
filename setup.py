@@ -27,7 +27,7 @@ setuptools.setup(
     packages=setuptools.find_packages(where="src"),
     install_requires=[
         "colorama",
-        "requests",
+        "aiohttp",
         "click",
         "rethread",
         "psutil",
