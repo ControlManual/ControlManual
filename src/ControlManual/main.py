@@ -41,7 +41,6 @@ with tmp.status("Starting...", spinner="point"):
     import click
     import shutil
     import platform
-    import zipfile
     import rethread
     import psutil
     import rich
@@ -56,6 +55,7 @@ with tmp.status("Starting...", spinner="point"):
     import asyncio
     import aiofiles
     import aiohttp
+    import py7zr
 
     from .client import Client, Reload
     from . import static

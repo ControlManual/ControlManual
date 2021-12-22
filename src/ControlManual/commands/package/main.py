@@ -35,7 +35,7 @@ async def run(raw: str, args: List[str], kwargs: Dict[str, str],
 
         commands_path: str = os.path.join(client.cm_dir, 'commands')
         temp_path: str = os.path.join(commands_path,
-                                      f'temp_package_{args[1]}.zip')
+                                      f'temp_package_{args[1]}.7z')
 
         client.console.print(args[1] + '  ' + temp_path + '  ' + commands_path)
         if not await api.download_package(args[1], temp_path, commands_path):

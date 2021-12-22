@@ -1,4 +1,4 @@
-import zipfile
+import py7zr
 import aiohttp
 import aiofiles
 from ..console import console
@@ -12,7 +12,7 @@ async def download_package(package: str, file: str, target: str) -> bool:
             async with aiofiles.open(file, 'wb') as f:
                 await f.write(await resp.content.read())
 
-    with zipfile.ZipFile(file, "r") as zip_ref:
-        zip_ref.extractall(target)
+    with py7zr.SevenZipFile(file, 'r') as archive:
+        archive.extractall(target)
 
     return True

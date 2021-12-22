@@ -26,7 +26,6 @@ async def log(*args) -> None:
         f"[%H:%M:%S] {frame.f_code.co_name} at {os.path.basename(frame.f_code.co_filename)}:{frame.f_lineno} - {' '.join(args)}\n"
     )
 
-
 async def flush() -> None:
     async with aiofiles.open(log_path, "a") as f:
         await f.write(os.environ["cmlog_buffer"])

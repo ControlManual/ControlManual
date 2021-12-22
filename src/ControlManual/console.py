@@ -197,12 +197,16 @@ class ConsoleWrapper:
         print("\b" * len(append), flush = True, end = "")
         return full
 
-    def take_input(self, prompt: str, commands: dict, aliases: dict) -> str:
-        """Render a new screen frame and take input."""
+    def render_screen(self) -> None:
         c = self.console
         self.clear()
         p = Panel(self.screen, title = "Terminal", height = self.console.height - 1)
         c.print(p)
+
+    def take_input(self, prompt: str, commands: dict, aliases: dict) -> str:
+        """Render a new screen frame and take input."""
+        c = self.console
+        self.render_screen()
 
         c.print(prompt, end = "")
         string: str = ''

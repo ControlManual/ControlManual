@@ -18,9 +18,10 @@ import getpass
 import datetime
 import distro
 import time
-from .logger import log
+from .logger import log, flush
 import aiofiles
 import asyncio
+from rich.live import Live
 
 
 class Reload:
@@ -378,28 +379,6 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
             args, kwargs, flags = await parse(raw_args)
             cmd: str = cmd.lower()
 
-            for index, i in enumerate(args):
-                for key, value in self.actual_functions.items():
-                    while True:
-                        find = "{" + key + "("
-
-                        if find in i:
-
-                            ind = i.index(find)
-                            try:
-                                end: int = i.index(")}")
-                            except ValueError:
-                                end: int = -1
-
-                            text: str = i[ind + len("{" + key) + 1:end]
-
-                            params = await parse(text)[0]  # type: ignore
-                            replace = value(params)
-                            args[index] = i = args[index].replace(
-                                f"{find}{text})" + "}", replace)
-                        else:
-                            break
-
             crfn: Optional[str] = self.current_function
             COMMANDS = self.commands
 
@@ -471,15 +450,20 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                     args.extend(ext)  # type: ignore
 
                     executable: str = COMMANDS[cmd]["exe"]  # type: ignore
-                    return await run_exe(executable, "".join(args))
+                    with Live(console.screen):
+                        await run_exe(executable, "".join(args))
+                    
+                    return
 
                 runner: Callable = COMMANDS[cmd]["entry"]  # type: ignore
                 # i have no clue what this error message is supposed to mean
 
                 try:
                     await log("running command")
-                    await runner(raw_args, args, kwargs, flags, self)
+                    with Live(console.screen):
+                        await runner(raw_args, args, kwargs, flags, self)
                 except Exception as e:
+                    await flush()
                     emap = self.error_map
 
                     if type(e) in emap:
