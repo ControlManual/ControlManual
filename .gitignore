@@ -124,3 +124,5 @@ config.json
 
 # Auto-Generated Files
 commands/
+logs/
+middleware/
