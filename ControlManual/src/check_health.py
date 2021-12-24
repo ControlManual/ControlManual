@@ -1,5 +1,5 @@
 import os
-from .cm_dir import cm_dir
+from .constants import cm_dir
 import aiofiles
 
 config_base = """{

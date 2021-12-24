@@ -1,7 +1,7 @@
 # -------------------------------------------------------------------------------------------
 # MIT License
 
-# Copyright (c) 2021 ZeroIntensity
+# Copyright (c) 2021 ZeroIntensity 2231puppy
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,42 +26,40 @@
 from rich.console import Console
 
 tmp = Console()
-with tmp.status("Starting...", spinner="point"):
-    import os
-    import sys
-    import typing
-    import types
-    import importlib
-    import shlex
-    import pathlib
-    import atexit
-    import colorama
-    import io
-    import subprocess
-    import click
-    import shutil
-    import platform
-    import rethread
-    import psutil
-    import rich
-    import platform
-    import getpass
-    import datetime
-    import distro
-    import time
-    import watchdog
-    import tempfile
-    import inspect
-    import asyncio
-    import aiofiles
-    import aiohttp
-    import py7zr
 
-    from .client import Client, Reload
-    from . import static
-    from .logger import log, flush
+import os
+import sys
+import typing
+import types
+import importlib
+import shlex
+import pathlib
+import atexit
+import colorama
+import io
+import subprocess
+import click
+import shutil
+import platform
+import rethread
+import psutil
+import rich
+import platform
+import getpass
+import datetime
+import distro
+import time
+import watchdog
+import tempfile
+import inspect
+import asyncio
+import aiofiles
+import aiohttp
+import py7zr
 
-VERSION: dict = {"string": "Alpha 0.0.2", "stable": False}
+from .client import Client, Reload
+from . import static, info
+from .logger import log, flush
 
 @atexit.register
 def shutdown():
@@ -75,7 +73,7 @@ async def main(filename: str) -> None:
 
     while True:
 
-        client = await Client(VERSION)
+        client = await Client('')
         await log("entering main loop")
         try:
             resp = await client.start(filename)
@@ -103,13 +101,17 @@ async def main(filename: str) -> None:
 
 
 @click.command()
-@click.argument("filename", default = '')
-def main_sync(filename: str):
-    asyncio.run(main(filename))
+@click.option("--file", "-f", help="Run app starting with a file.", default = '')
+@click.option("--version", "-v", is_flag=True, help="Get the app version.")
+def main_sync(file: str, version: bool):
+    if version:
+        return print(f'ControlManual V{info.__version__}')
+
+    asyncio.run(main(file))
 
 def main_wrap():
     try:
-        main_sync()  # type: ignore
+        main_sync() # type: ignore
     except KeyboardInterrupt:
         sys.exit(0)
 

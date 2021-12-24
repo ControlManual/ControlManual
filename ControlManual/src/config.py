@@ -1,6 +1,6 @@
 import os
 from .static import JSONFile
-from .cm_dir import cm_dir
+from .constants import cm_dir
 
 config_path: str = os.path.join(cm_dir, "config.json")
 

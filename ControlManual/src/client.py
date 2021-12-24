@@ -35,15 +35,15 @@ def threaded(client: "Client") -> None:
 
 class Client:
     """Base class for running Control Manual."""
-    async def __new__(cls, version: dict):
+    async def __new__(cls, version: str):
         self = super().__new__(cls)
         await cls.init(self, version)
         return self
 
-    async def init(self, version: dict) -> None:
+    async def init(self, version: str) -> None:
         self._config = Config()
         self._reset: bool = False
-        self._version: str = version["string"]
+        self._version: str = version
         self._path: Path = Path().home()
         self._functions: dict = {}
         self._current_function: Optional[str] = None

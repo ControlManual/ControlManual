@@ -1,6 +1,6 @@
 from datetime import datetime
 from types import FrameType
-from .cm_dir import cm_dir
+from .constants import cm_dir
 from .check_health import check_health
 import os
 import inspect
