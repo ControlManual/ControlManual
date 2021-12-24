@@ -11,7 +11,6 @@ import os
 
 END: bool = False
 
-
 class Handler(FileSystemEventHandler):
     @classmethod
     def on_any_event(cls, event):

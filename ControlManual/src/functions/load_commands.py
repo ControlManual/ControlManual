@@ -39,6 +39,7 @@ async def load_commands(
             args: dict = get(command, "ARGS", {})
             flags: dict = get(command, "FLAGS", {})
             args_help: dict = get(command, "ARGS_HELP", {})
+            live: bool = get(command, "LIVE", False)
 
             resp[i] = {
                 "entry": command.run,
@@ -49,6 +50,7 @@ async def load_commands(
                 "flags": flags,
                 "package": package,
                 "args_help": args_help,
+                "live": live,
             }
 
     if config.raw["use_path_env"]:

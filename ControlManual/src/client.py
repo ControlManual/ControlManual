@@ -437,25 +437,29 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                 continue
 
             if cmd in COMMANDS:
-                if "exe" in COMMANDS[cmd]:
+                current_command = COMMANDS[cmd]
+                if "exe" in current_command:
                     await log("command is an executable")
                     await log("handling argument parsing")
 
-                    executable: str = COMMANDS[cmd]["exe"] # type: ignore
+                    executable: str = current_command["exe"] # type: ignore
                     console.clear()
                     with Live(console.get_terminal()):
                         await run_exe(executable, " ".join(args))
                     
                     return
 
-                runner: Callable = COMMANDS[cmd]["entry"] # type: ignore
+                runner: Callable = current_command["entry"] # type: ignore
                 # i have no clue what this error message is supposed to mean
 
                 try:
                     await log("running command")
                     console.clear()
 
-                    with Live(console.get_terminal()):
+                    if current_command["live"]: # type: ignore
+                        with Live(console.get_terminal()):
+                            await runner(raw_args, args, kwargs, flags, self)
+                    else:
                         await runner(raw_args, args, kwargs, flags, self)
                 except Exception as e:
                     emap = self.error_map

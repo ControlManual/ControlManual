@@ -73,7 +73,7 @@ async def main(filename: str) -> None:
 
     while True:
 
-        client = await Client('')
+        client = await Client(info.__version__)
         await log("entering main loop")
         try:
             resp = await client.start(filename)

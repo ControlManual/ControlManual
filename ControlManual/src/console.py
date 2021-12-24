@@ -75,6 +75,7 @@ class ConsoleWrapper:
         self._feed = []
         self._amount = 0
         self._command_history = []
+        self._feed_height = self.console.height - 5
 
     def render(self, layout: Layout, typ: Literal["row", "column"],
                *rows: Optional[Layout]):
@@ -104,6 +105,10 @@ class ConsoleWrapper:
         """Raw Rich Layout Object."""
         return self._screen
 
+    @property
+    def feed_height(self) -> int:
+        """Height of the feed panel."""
+        return self._feed_height
 
     def empty(self) -> None:
         """Empty the feed."""
@@ -116,7 +121,13 @@ class ConsoleWrapper:
 
     def write(self, message: Any):
         """Function for writing to the feed."""
+        self._feed_height = self.console.height - 5
         f = self._feed
+
+        if len(f) == self.feed_height:
+            if f: # edge case
+                f.pop(0)
+
         suffix: str = ""
         amount_string = lambda a: f" [important]x{a}[/important]\n"
         message = str(message)
