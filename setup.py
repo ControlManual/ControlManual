@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="ControlManual",
-    version="0.0.3.4",
+    version="0.0.3.5",
     author="ZeroIntensity",
     author_email="admin@controlmanual.xyz",
     description="A universal console-like interface",
@@ -23,8 +23,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    package_dir={"": "ControlManual"},
-    packages=setuptools.find_packages(where="ControlManual"),
+    packages=setuptools.find_packages(),
     install_requires=[
         "colorama",
         "aiohttp",
