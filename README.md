@@ -1,15 +1,37 @@
 # Control Manual
 
+![https://pypi.org/project/ControlManual/](https://img.shields.io/pypi/v/ControlManual)
+![https://pypi.org/project/ControlManual/](https://img.shields.io/pypi/dm/ControlManual)
 ![https://github.com/ZeroIntensity/ControlManual/blob/main/LICENSE](https://img.shields.io/github/license/ZeroIntensity/ControlManual)
+![https://github.com/ZeroIntensity/ControlManual](https://img.shields.io/github/last-commit/ZeroIntensity/ControlManual)
+![https://github.com/ZeroIntensity/ControlManual](https://img.shields.io/github/issues/ZeroIntensity/ControlManual)
+![https://libraries.io/pypi/ControlManual](https://img.shields.io/librariesio/release/pypi/ControlManual)
 
 ## Under development, **no support provided!**
 
 ### Running
 
-There are 3 ways to run:
+#### From Source
 
-1. Download the source, install requirements, and run `run.py`
+To run via downloading the source, use the following commands.
 
-2. Run `pip3 install ControlManual` and then `python3 -m ControlManual`
+```
+$ git clone https://github.com/ZeroIntensity/ControlManual && cd ControlManual
+$ python3 -m pip install -r requirements.txt
+$ python3 run.py
+```
 
-3. Assuming `pipx` is installed, run `pipx run ControlManual`
+#### From PyPI (Recommended)
+
+```
+$ pip3 install ControlManual
+$ python3 -m ControlManual
+```
+
+#### Using Pipx
+
+If you have [pipx](https://pypa.github.io/pipx/) installed, you can easily run using the following command:
+
+```
+$ pipx run ControlManual
+```
