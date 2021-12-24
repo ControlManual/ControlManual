@@ -1,10 +1,10 @@
 import sys
 
-sys.path.insert(0, './src/')
+sys.path.insert(0, './ControlManual/')
 
-import ControlManual
+import src
 
 try:
-    ControlManual.main_sync()  # type: ignore
+    src.main_sync()  # type: ignore
 except KeyboardInterrupt:
     sys.exit(0)

@@ -121,3 +121,6 @@ logs/
 
 # Configuration
 config.json
+
+# Auto-Generated Files
+commands/
