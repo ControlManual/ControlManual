@@ -6,10 +6,8 @@ config_base = """{
 	"input_sep": ">>",
 	"flag_prefix": "--",
 	"colorize": true,
-	"check_latest": true,
 	"use_path_env": true,
 	"hide_exe_from_help": true,
-	"theme": "default",
 	"aliases": {
 		"echo": "print",
 		"ls": "listdir",
@@ -35,18 +33,22 @@ config_base = """{
 		"function_open": "Function is already open.",
 		"function_not_open": "Function is not open.",
 		"function_undefined": "No function currently defined.",
-		"permission_error": "Control Manual does not have permission to do this."
+		"permission_error": "Permission denied."
 	},
-	"cm_dir": "/mnt/e/projects/python/Control Manual/app",
 	"columns": ["info", "log", "directory", "exceptions"],
 	"truecolor": true
 }"""
+
+lock_toml: str = """# Auto generated, do not edit manually!
+
+[environment]
+installed = false"""
 
 
 async def check_health() -> None:
     """Function for checking if required files and folders exist."""
     dirs = ["commands", "middleware", "logs"]
-    files = {"config.json": config_base}
+    files = {"config.json": config_base, "config-lock.toml": lock_toml}
 
     for i in dirs:
         path = os.path.join(cm_dir, i)

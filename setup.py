@@ -35,6 +35,7 @@ setuptools.setup(
         "aiofiles",
         "getch",
         "watchdog",
+        "toml"
     ],
     python_requires=">=3.8",
 )

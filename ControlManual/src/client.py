@@ -18,11 +18,11 @@ import getpass
 import datetime
 import distro
 import time
-from .logger import log, flush
+from .logger import log
 import aiofiles
 import asyncio
 from rich.live import Live
-
+import toml
 
 class Reload:
     """Blank object used to reload the instance."""
@@ -65,13 +65,33 @@ class Client:
             self._aliases[i] = await self.load_variables(
                 self._config.aliases[i])
 
-        colorama.init(convert=os.name == "nt")  # enables ascii stuff
+        colorama.init(convert = os.name == "nt") # enables ansi stuff
         console.clear(), title("Control Manual")
 
         self._connected = False
         self._thread_running = True
         rethread.thread(threaded, self)
         self._history: List[str] = []
+
+        lockfile = os.path.join(cm_dir, 'config-lock.toml')
+
+        with open(lockfile) as f: # cant use aiofiles here since toml doesnt support it
+            load = toml.load(f)
+        
+        environ = load["environment"]
+        
+        if not environ["installed"]:
+            with console.console.status("Installing...", spinner="shark"):
+                resp = await api.download_package('builtin') if self.connected else False
+                
+            if not resp:
+                print('Failed to install builtins!')
+            else:
+                environ["installed"] = True
+
+                with open(lockfile, 'w') as f:
+                    toml.dump(load, f)
+
         with console.console.status("Loading commands...", spinner="material"):
             await self.reload()
 
@@ -172,7 +192,7 @@ class Client:
     @property
     def commands(
         self,
-    ) -> Dict[str, Union[str, Dict[str, Union[str, Union[Callable, dict]]]]]:
+    ) -> Dict[str, Dict[str, Union[str, Callable]]]:
         """Dictionary representation of commands."""
         return self._commands
 
@@ -376,7 +396,13 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                 else:
                     break
 
-            args, kwargs, flags = await parse(raw_args)
+            p = await parse(raw_args)
+
+            if not p:
+                return error('Invalid argument string.')
+
+            args, kwargs, flags = p
+
             cmd: str = cmd.lower()
 
             crfn: Optional[str] = self.current_function
@@ -456,7 +482,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                     await log("running command")
                     console.clear()
 
-                    if current_command["live"]: # type: ignore
+                    if current_command["live"]:
                         with Live(console.get_terminal()):
                             await runner(raw_args, args, kwargs, flags, self)
                     else:

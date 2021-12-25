@@ -5,9 +5,7 @@ from .check_health import check_health
 import os
 import inspect
 import aiofiles
-import asyncio
 
-asyncio.run(check_health())
 now = datetime.now()
 
 log_path: str = os.path.join(cm_dir, "logs",

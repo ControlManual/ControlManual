@@ -121,6 +121,7 @@ logs/
 
 # Configuration
 config.json
+config-lock.toml
 
 # Auto-Generated Files
 commands/

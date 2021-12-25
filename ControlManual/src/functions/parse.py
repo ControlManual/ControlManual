@@ -1,11 +1,11 @@
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, Optional
 import shlex
 from ..utils import *
 from ..config import Config
 from ..logger import log
 
 
-async def parse(raw: str) -> Tuple[List[str], Dict[str, str], List[str]]:
+async def parse(raw: str) -> Optional[Tuple[List[str], Dict[str, str], List[str]]]:
     """Function for parsing the input into different items."""
 
     try:
@@ -14,7 +14,7 @@ async def parse(raw: str) -> Tuple[List[str], Dict[str, str], List[str]]:
         await log("split failed, returning blank for all items")
         error("Invalid quotation in arguments.")
 
-        return [], {}, []
+        return None
 
     kwargs: Dict[str, str] = {}
     flags: List[str] = []

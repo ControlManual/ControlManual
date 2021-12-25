@@ -25,6 +25,8 @@
 # Dependencies
 from rich.console import Console
 
+from ControlManual.src.check_health import check_health
+
 tmp = Console()
 
 import os
@@ -56,6 +58,7 @@ import asyncio
 import aiofiles
 import aiohttp
 import py7zr
+import toml
 
 from .client import Client, Reload
 from . import static, info
@@ -104,6 +107,8 @@ async def main(filename: str) -> None:
 @click.option("--file", "-f", help="Run app starting with a file.", default = '')
 @click.option("--version", "-v", is_flag=True, help="Get the app version.")
 def main_sync(file: str, version: bool):
+    asyncio.run(check_health())
+
     if version:
         return print(f'ControlManual V{info.__version__}')
 

@@ -34,7 +34,6 @@ class Config(JSONFile):
                 "input_sep",
                 "flag_prefix",
                 "colorize",
-                "check_latest",
                 "use_path_env",
                 "hide_exe_from_help",
                 "aliases",
