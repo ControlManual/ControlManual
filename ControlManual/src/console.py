@@ -81,7 +81,7 @@ class ConsoleWrapper:
 
         if typ not in ["row", "column"]:
             raise ValueError(
-                "typ must be row or column")  # mainly for safety purposes
+                "typ must be row or column") # mainly for safety purposes
 
         target = layout.split_row if typ == "row" else layout.split_column
 

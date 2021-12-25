@@ -1,7 +1,6 @@
 import os
 from .constants import cm_dir
 import aiofiles
-import sys
 
 config_base = """{
 	"input_sep": ">>",

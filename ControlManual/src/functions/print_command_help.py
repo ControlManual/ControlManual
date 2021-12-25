@@ -12,7 +12,7 @@ def make_str(commands: dict,
     if item:
         return prefix + item + "\n"
     else:
-        return default or f"[danger]No {key}.\n"
+        return default or f"[danger]No {key}.[/danger]\n"
 
 
 async def print_command_help(commands: dict, command: str) -> None:
@@ -36,7 +36,7 @@ async def print_command_help(commands: dict, command: str) -> None:
     args = flags = ""
 
     if (args_dict is None) or (args_dict == {}):  # TODO: optimize
-        args += f"[danger]No arguments.\n"
+        args += f"[danger]No arguments.[/danger]\n"
     else:
         if args_dict == {}:
             args += make_str(commands, command, "args")
@@ -45,7 +45,7 @@ async def print_command_help(commands: dict, command: str) -> None:
                 args += f"[primary]{i}[/primary] - [secondary]{args_dict[i]}[/secondary]\n"
 
     if (flags_dict is None) or (flags_dict == {}):
-        flags += f"[danger]No flags.\n"
+        flags += f"[danger]No flags.[/danger]\n"
     else:
         if flags_dict == {}:
             flags += make_str(commands, command, "flags")
@@ -58,4 +58,4 @@ async def print_command_help(commands: dict, command: str) -> None:
 [important]Usage: [primary]{usage}[/primary]
 [important]Args: \n[primary]{args}[/primary]
 [important]Flags: \n[primary]{flags}[/primary]
-[important]For more information on a certain argument, use [primary]"help {command} <argument>"[/primary]""")
+[important]For more information on a certain argument, use [/important][primary]"help {command} <argument>"[/primary]""")

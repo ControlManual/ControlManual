@@ -96,7 +96,7 @@ class Client:
                 environ["installed"] = True
 
                 with open(lockfile, 'w') as f:
-                    toml.dump(load, f)
+                    f.write(f'# Auto generated, do not edit manually!\n\n{toml.dumps(load)}')
 
         with console.console.status("Loading commands...", spinner="material"):
             await self.reload()
