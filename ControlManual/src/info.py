@@ -1,7 +1,7 @@
 __title__ = "ControlManual"
 __authors__ = __author__ = "ZeroIntensity and 2231puppy"
 __license__ = "MIT"
-__version__ = "0.0.3.6"
+__version__ = "0.0.3.7"
 
 if __name__ == "__main__":
     print(f"""Title: {__title__}

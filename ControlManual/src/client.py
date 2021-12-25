@@ -53,10 +53,16 @@ class Client:
         self._actual_functions: Dict[str, Callable] = {
             "resp": self.get_command_response
         }
+
+        get = lambda x: os.path.join(cm_dir, x)
+
         self._variables: Dict[str, str] = {
             "path": str(self._path),
             "config": self.config_path,
-            "cmdir": self.cm_dir,
+            "cmdir": cm_dir,
+            "logs": get('logs'),
+            "commands": get('commands'),
+            "middleware": get('middleware')
         }
         self._aliases: Dict[str, str] = {}
         self._vals: Dict[Any, Any] = {}
@@ -338,6 +344,10 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
             command: str = console.take_input(inp, self.commands, self.aliases)
 
             console.clear_panel("exceptions")
+            try:
+                console.screen["tmp"].visible = False
+            except:
+                pass
             command = command.replace(r"\n", "\n")
 
             await self.run_command(command)

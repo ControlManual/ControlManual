@@ -25,8 +25,6 @@
 # Dependencies
 from rich.console import Console
 
-from ControlManual.src.check_health import check_health
-
 tmp = Console()
 
 import os
@@ -62,6 +60,7 @@ import toml
 
 from .client import Client, Reload
 from . import static, info
+from .check_health import check_health
 from .logger import log, flush
 
 @atexit.register

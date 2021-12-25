@@ -17,5 +17,5 @@ async def print_help(commands: dict) -> None:
 
         console.print(f"[primary]{i.lower()}[/primary] - {hlp}")
     console.print(
-        f'\n[important]For more info on a command, use [/important][primary]"help <command>"[/primary]\n'
+        f'[important]For more info on a command, use [/important][primary]"help <command>"[/primary]'
     )

@@ -18,5 +18,6 @@ async def download_package(package: str) -> bool:
 
     with py7zr.SevenZipFile(file, 'r') as archive:
         archive.extractall(target)
-
+    
+    os.remove(file)
     return True

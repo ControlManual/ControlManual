@@ -58,5 +58,4 @@ async def print_command_help(commands: dict, command: str) -> None:
 [important]Usage: [primary]{usage}[/primary]
 [important]Args: \n[primary]{args}[/primary]
 [important]Flags: \n[primary]{flags}[/primary]
-[important]For more information on a certain argument, use [primary]"help {command} <argument>"
-""")
+[important]For more information on a certain argument, use [primary]"help {command} <argument>"[/primary]""")

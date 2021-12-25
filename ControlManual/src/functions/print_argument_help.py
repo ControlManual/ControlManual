@@ -10,7 +10,7 @@ def extract(col: dict, key: str, default: Any = "") -> Any:
 def rq(key: str, col: dict) -> str:
     raw: str = extract(col, key.lower())
     return (
-        f'\n\n[important]{key.replace("_", " ")}:[/important] [primary]{raw}[/primary]'
+        f'\n[important]{key.replace("_", " ")}:[/important] [secondary]{raw}[/secondary]'
         if raw else "")
 
 
@@ -35,9 +35,9 @@ async def print_argument_help(commands: dict, command: str,
 
     description = extract(h, "description", args[argument])
     valid_raw = extract(h, "valid_values")
-    arg_type = f"\n\n[important]Type: [/important][primary]{extract(h, 'type', 'String')}[/primary]"
+    arg_type = f"\n[important]Type: [/important][secondary]{extract(h, 'type', 'String')}[/secondary]"
     valid = (
-        f'\n\n[important]Valid Values: [/important][primary]{f"[/primary], [primary]".join(valid_raw)}[/primary]'
+        f'\n[important]Valid Values: [/important][secondary]{f"[/secondary], [secondary]".join(valid_raw)}[/secondary]'
         if valid_raw else "")
 
     not_required_when: str = rq("Not_Required_When", h)
@@ -51,9 +51,9 @@ async def print_argument_help(commands: dict, command: str,
 
     for key, value in effect_when_equals_raw.items():
         k = key if not isinstance(
-            key, tuple) else f"[/primary], [primary]".join(key)
+            key, tuple) else f"[/secondary], [secondary]".join(key)
         effect_when_equals += (
-            f"\n  - [primary]{k} [/primary]then [important]{mfl(value)}[/important]"
+            f"\n  - [secondary]{k} [/secondary]then [important]{mfl(value)}[/important]"
         )
 
     when_flag_is_passed_raw: list = extract(h, "when_flag_is_passed", [])
@@ -67,5 +67,5 @@ async def print_argument_help(commands: dict, command: str,
         when_flag_is_passed += f"\n  - [primary]{i[0]}[/primary][important], [/important][secondary]{mfl(i[1])}[/secondary]"
 
     console.print(
-        f"[primary]{description}[/primary]{arg_type}{valid}{effect_when_equals}{when_flag_is_passed}{required_when}{not_required_when}{ignored_when}{when_unspecified}"
+        f"[secondary]{description}[/secondary]{arg_type}{valid}{effect_when_equals}{when_flag_is_passed}{required_when}{not_required_when}{ignored_when}{when_unspecified}"
     )

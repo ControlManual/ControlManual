@@ -6,8 +6,6 @@ import os
 from .config import Config
 from typing import Literal, Tuple, Any, Optional, Dict, overload, Union
 from getch import getch
-import time
-
 
 primary: str = "rgb(0,179,0) on black"
 config = Config()
@@ -124,9 +122,6 @@ class ConsoleWrapper:
         self._feed_height = self.console.height - 5
         f = self._feed
 
-        if len(f) == self.feed_height:
-            if f: # edge case
-                f.pop(0)
 
         suffix: str = ""
         amount_string = lambda a: f" [important]x{a}[/important]\n"
@@ -145,6 +140,12 @@ class ConsoleWrapper:
                 f[-1] = f[-1] + amount_string(self._amount)
                 self._amount = 0
             self._feed.append(message)
+
+            count = sum(i.count('\n') for i in f)
+            if count >= self.feed_height:
+                if f: # edge case
+                    for i in range(count - self.feed_height + 2):
+                        f.pop(0)
 
         lines = "".join(f) + suffix
         self.edit_panel("feed", lines)

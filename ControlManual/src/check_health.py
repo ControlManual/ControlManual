@@ -1,6 +1,7 @@
 import os
 from .constants import cm_dir
 import aiofiles
+import sys
 
 config_base = """{
 	"input_sep": ">>",
@@ -47,6 +48,7 @@ installed = false"""
 
 async def check_health() -> None:
     """Function for checking if required files and folders exist."""
+
     dirs = ["commands", "middleware", "logs"]
     files = {"config.json": config_base, "config-lock.toml": lock_toml}
 
