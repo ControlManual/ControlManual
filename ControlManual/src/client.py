@@ -88,7 +88,7 @@ class Client:
         
         if not environ["installed"]:
             with console.console.status("Installing...", spinner="shark"):
-                resp = await api.download_package('builtin') if self.connected else False
+                resp = await api.download_package('builtin')
                 
             if not resp:
                 print('Failed to install builtins!')

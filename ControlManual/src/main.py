@@ -58,18 +58,20 @@ import aiohttp
 import py7zr
 import toml
 
-from .client import Client, Reload
 from . import static, info
 from .check_health import check_health
-from .logger import log, flush
 
 @atexit.register
 def shutdown():
+    from .logger import flush
     print()
     asyncio.run(flush())
 
 async def main(filename: str) -> None:
     """Main file for running Control Manual."""
+    from .logger import log, flush
+    from .client import Client, Reload
+
     if float(platform.python_version()[:3]) < 3.8:
         static.static_error("invalid python version - at least 3.8 is required")
 

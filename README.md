@@ -6,6 +6,7 @@
 ![https://github.com/ZeroIntensity/ControlManual](https://img.shields.io/github/last-commit/ZeroIntensity/ControlManual)
 ![https://github.com/ZeroIntensity/ControlManual](https://img.shields.io/github/issues/ZeroIntensity/ControlManual)
 ![https://libraries.io/pypi/ControlManual](https://img.shields.io/librariesio/release/pypi/ControlManual)
+![https://python.org](https://img.shields.io/pypi/pyversions/ControlManual)
 
 ## Under development, **no support provided!**
 

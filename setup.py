@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="ControlManual",
-    version="0.0.3.7",
+    version="0.0.3.8",
     author="ZeroIntensity",
     author_email="admin@controlmanual.xyz",
     description="A universal console-like interface",
@@ -37,7 +37,8 @@ setuptools.setup(
         "aiofiles",
         "getch",
         "watchdog",
-        "toml"
+        "toml",
+        "py7zr"
     ],
     python_requires=">=3.8",
 )
