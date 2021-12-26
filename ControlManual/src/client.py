@@ -490,9 +490,11 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
 
                 try:
                     await log("running command")
-                    console.clear()
 
-                    if current_command["live"]:
+                    if not config.basic:
+                        console.clear()
+
+                    if (current_command["live"]) and (not config.basic):
                         with Live(console.get_terminal()):
                             await runner(raw_args, args, kwargs, flags, self)
                     else:

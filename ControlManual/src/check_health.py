@@ -36,7 +36,10 @@ config_base = """{
 		"permission_error": "Permission denied."
 	},
 	"columns": ["info", "log", "directory", "exceptions"],
-	"truecolor": true
+	"truecolor": true,
+	"cm_dir": "/mnt/e/projects/python/controlmanual/ControlManual",
+	"basic": false,
+	"basic_input": false
 }"""
 
 lock_toml: str = """# Auto generated, do not edit manually!

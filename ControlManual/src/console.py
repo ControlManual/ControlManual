@@ -44,6 +44,7 @@ def make_panel(name: str, force: bool = False) -> Optional[Layout]:
     if (name in config.columns) or (force):
         return Layout(Panel(text, title=c), name=name)
 
+basic = config.basic
 
 class ConsoleWrapper:
     """Class wrapping around the Rich Console API."""
@@ -119,6 +120,9 @@ class ConsoleWrapper:
 
     def write(self, message: Any):
         """Function for writing to the feed."""
+        if basic:
+            return self.console.print(message, end = "")
+        
         self._feed_height = self.console.height - 5
         f = self._feed
 
@@ -273,7 +277,12 @@ class ConsoleWrapper:
     def take_input(self, prompt: str, commands: dict, aliases: dict) -> str:
         """Render a new screen frame and take input."""
         c = self.console
-        self.render_screen()
+        if not basic:
+            self.render_screen()
+
+        if config.basic_input:
+            return self.console.input(prompt)
+        
         fw = self.fw
 
         current_command_history: int = 0
@@ -409,7 +418,8 @@ class ConsoleWrapper:
 
                 string = string[:index] + char + string[index:]
                 index += 1
-
+        if basic:
+            print()
         return string
 
 console = ConsoleWrapper()

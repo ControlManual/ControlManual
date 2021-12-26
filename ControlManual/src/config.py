@@ -27,6 +27,7 @@ class Config(JSONFile):
         self.cm_dir: str = ""
         self.hide_exe_from_help: bool = False
         self.basic: bool = False
+        self.basic_input: bool = False
 
         super().__init__(
             config_path,
@@ -43,6 +44,8 @@ class Config(JSONFile):
                 "seperator",
                 "errors",
                 "columns",
+                "basic",
+                "basic_input"
             ],
             {
                 "errors": [
