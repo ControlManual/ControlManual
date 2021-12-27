@@ -1,5 +1,4 @@
-from .functions import load_commands, parse, print_help, print_command_help, \
-    load_middleware, print_argument_help, run_exe
+from .functions import *
 from typing import Coroutine, Dict, Type, Union, Callable, List, Any, Optional
 from pathlib import Path
 from .config import Config, cm_dir, config_path
@@ -94,7 +93,7 @@ class Client:
         
         if not environ["installed"]:
             with console.console.status("Installing...", spinner="shark"):
-                resp = await api.download_package('builtin')
+                resp = await download_repo('ControlManual/ControlManual-Builtin')
                 
             if not resp:
                 print('Failed to install builtins!')

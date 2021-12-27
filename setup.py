@@ -38,7 +38,8 @@ setuptools.setup(
         "getch",
         "watchdog",
         "toml",
-        "py7zr"
+        "py7zr",
+        "pygithub"
     ],
     python_requires=">=3.8",
 )
