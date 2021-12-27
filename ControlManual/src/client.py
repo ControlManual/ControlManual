@@ -23,11 +23,16 @@ import aiofiles
 import asyncio
 from rich.live import Live
 import toml
+from contextlib import nullcontext
+from types import AsyncGeneratorType
+
+class Iterator: # probably should use a dataclass for this but i dont want to add more loading time
+    def __init__(self, gen: AsyncGeneratorType):
+        self.gen = gen
 
 class Reload:
     """Blank object used to reload the instance."""
     pass
-
 
 def threaded(client: "Client") -> None:
     """Function ran on seperate thread when initalized."""
@@ -287,13 +292,8 @@ class Client:
         ]
 
     @property
-    def command_response(self) -> Any:
-        """Return value of the last command."""
-        return self._command_response
-
-    @command_response.setter
-    def command_response(self, value: Any):
-        self._command_response = value
+    def iterator(self) -> Type[Iterator]:
+        return Iterator
 
     async def get_command_response(self, args: List[str]) -> None:
         pass
@@ -371,7 +371,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
 
             filename = False
 
-    async def run_command(self, command: str) -> None:
+    async def run_command(self, command: str) -> Any:
         """Function for running a command."""
         await log(f"preparing to run command: {command}")
         if command not in [str(i) for i in range(1, 11)]:
@@ -506,13 +506,14 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                     if not config.basic:
                         console.clear()
 
-                    if (current_command["live"]) and (not config.basic):
-                        with Live(console.get_terminal()):
-                            res = await runner(raw_args, args, kwargs, flags, self)
-                    else:
-                        res = await runner(raw_args, args, kwargs, flags, self)
+                    ctx = Live if (current_command["live"]) and (not config.basic) else nullcontext
+                    coro = runner(raw_args, args, kwargs, flags, self) # even though its named coro, it can be a generator
 
-                    self.command_response = res
+                    with ctx(console.get_terminal()):
+                        is_iter = isinstance(coro, AsyncGeneratorType)
+                        res = coro if is_iter else await coro
+
+                    return Iterator(res) if is_iter else res # so there arent any generator errors
                 except Exception as e:
                     emap = self.error_map
 

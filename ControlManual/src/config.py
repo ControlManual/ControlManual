@@ -2,6 +2,7 @@ import os
 from .static import JSONFile
 from .constants import cm_dir
 
+os.environ["cm_dir"] = cm_dir
 config_path: str = os.path.join(cm_dir, "config.json")
 
 
@@ -57,5 +58,3 @@ class Config(JSONFile):
                 ]
             },
         )
-        self.set_value("cm_dir", cm_dir)
-        os.environ["cm_dir"] = cm_dir

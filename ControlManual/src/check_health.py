@@ -21,7 +21,8 @@ config_base = """{
 		"cls": "clear",
 		"touch": "create file",
 		"config": "json '{config}'",
-		"end": "exit"
+		"end": "exit",
+		"for": "iterate"
 	},
 	"comments": ["//", "#"],
 	"functions": ["{", "}"],
