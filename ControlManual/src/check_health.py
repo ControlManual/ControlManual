@@ -37,7 +37,6 @@ config_base = """{
 	},
 	"columns": ["info", "log", "directory", "exceptions"],
 	"truecolor": true,
-	"cm_dir": "/mnt/e/projects/python/controlmanual/ControlManual",
 	"basic": false,
 	"basic_input": false
 }"""

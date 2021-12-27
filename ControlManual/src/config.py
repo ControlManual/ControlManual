@@ -24,7 +24,6 @@ class Config(JSONFile):
         self.seperator: str = ""
         self.errors: dict = {}
         self.columns: list = []
-        self.cm_dir: str = ""
         self.hide_exe_from_help: bool = False
         self.basic: bool = False
         self.basic_input: bool = False

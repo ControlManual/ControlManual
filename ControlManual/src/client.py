@@ -95,8 +95,10 @@ class Client:
             else:
                 environ["installed"] = True
 
-                with open(lockfile, 'w') as f:
-                    f.write(f'# Auto generated, do not edit manually!\n\n{toml.dumps(load)}')
+        environ["cm_dir"] = cm_dir
+
+        with open(lockfile, 'w') as f:
+            f.write(f'# Auto generated, do not edit manually!\n\n{toml.dumps(load)}')
 
         with console.console.status("Loading commands...", spinner="material"):
             await self.reload()
@@ -105,9 +107,9 @@ class Client:
         """Function for reloading commands and middleware."""
         self._middleware: List[
             Coroutine] = await load_middleware(
-                os.path.join(self._config.cm_dir, "middleware"))
+                os.path.join(cm_dir, "middleware"))
         self._commands: dict = await load_commands(
-            os.path.join(self._config.cm_dir, "commands"))
+            os.path.join(cm_dir, "commands"))
 
     @property
     def cm_dir(self) -> str:
