@@ -53,6 +53,7 @@ class Client:
         self._actual_functions: Dict[str, Callable] = {
             "resp": self.get_command_response
         }
+        self._command_response: Any = None
 
         get = lambda x: os.path.join(cm_dir, x)
 
@@ -285,6 +286,15 @@ class Client:
             Collision,
         ]
 
+    @property
+    def command_response(self) -> Any:
+        """Return value of the last command."""
+        return self._command_response
+
+    @command_response.setter
+    def command_response(self, value: Any):
+        self._command_response = value
+
     async def get_command_response(self, args: List[str]) -> None:
         pass
         # return get_resp(self.run_command, ' '.join(args))
@@ -498,9 +508,11 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
 
                     if (current_command["live"]) and (not config.basic):
                         with Live(console.get_terminal()):
-                            await runner(raw_args, args, kwargs, flags, self)
+                            res = await runner(raw_args, args, kwargs, flags, self)
                     else:
-                        await runner(raw_args, args, kwargs, flags, self)
+                        res = await runner(raw_args, args, kwargs, flags, self)
+
+                    self.command_response = res
                 except Exception as e:
                     emap = self.error_map
 
