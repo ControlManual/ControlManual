@@ -15,6 +15,7 @@ def get_path(
 ) -> Optional[str]:
     """Function for checking if a path exists globally, or in the current directory. Returns None if not found."""
     merged: str = os.path.join(current_path, path)
+    print(merged)
     
     if not e(merged):
         if not e(path):
@@ -25,11 +26,10 @@ def get_path(
             else:
                 return validate(path) if not file else None
     else:
-        if e(merged):
+        if os.path.isfile(merged):
             return validate(merged) if file else None
         else:
             return validate(merged) if not file else None
-
 
 def get_path_inverted(
     current_path: PathLike, path: PathLike, file: bool = False

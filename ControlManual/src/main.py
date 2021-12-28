@@ -61,7 +61,7 @@ import contextlib
 import github
 
 from . import static, info
-from .check_health import check_health
+from .check_health import check_health, cm_dir
 
 @atexit.register
 def shutdown():
@@ -109,11 +109,19 @@ async def main(filename: str) -> None:
 @click.command()
 @click.option("--file", "-f", help="Run app starting with a file.", default = '')
 @click.option("--version", "-v", is_flag=True, help="Get the app version.")
-def main_sync(file: str, version: bool):
+@click.option("--clean", "-c", is_flag=True, help="Clears all the auto generated files, and allows a clean install (with the exception of source code).")
+def main_sync(file: str, version: bool, clean: bool):
     asyncio.run(check_health())
 
     if version:
         return print(f'ControlManual V{info.__version__}')
+
+    if clean:
+        for i in ['logs', 'middleware', 'commands']:
+            shutil.rmtree(os.path.join(cm_dir, i))
+        
+        for x in ['config.json', 'config-lock.toml']:
+            os.remove(os.path.join(cm_dir, x))
 
     asyncio.run(main(file))
 
