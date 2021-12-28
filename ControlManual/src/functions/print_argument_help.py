@@ -1,6 +1,7 @@
 from ..utils import error
 from ..console import console
 from typing import Any
+from ..typing import Commands
 
 
 def extract(col: dict, key: str, default: Any = "") -> Any:
@@ -18,12 +19,15 @@ def mfl(data: str) -> str:  # i kept adding a capital letter to some values
     return data[0].lower() + data[1:]
 
 
-async def print_argument_help(commands: dict, command: str,
+async def print_argument_help(commands: Commands, command: str,
                               argument: str) -> None:
     cmd = commands.get(command)
 
     if not cmd:
         return error("Command does not exist.")
+
+    if "exe" in cmd:
+        return error("Command is an executable.")
 
     args = cmd["args"]
     args_help = cmd["args_help"]

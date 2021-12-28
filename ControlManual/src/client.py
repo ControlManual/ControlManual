@@ -1,5 +1,5 @@
 from .functions import *
-from typing import Coroutine, Dict, Type, Union, Callable, List, Any, Optional
+from typing import Coroutine, Dict, Type, Union, Callable, List, Any, Optional, AsyncGenerator
 from pathlib import Path
 from .config import Config, cm_dir, config_path
 import os
@@ -113,7 +113,7 @@ class Client:
         self._middleware: List[
             Coroutine] = await load_middleware(
                 os.path.join(cm_dir, "middleware"))
-        self._commands: dict = await load_commands(
+        self._commands = await load_commands(
             os.path.join(cm_dir, "commands"))
 
     @property
@@ -203,9 +203,7 @@ class Client:
         return self._version
 
     @property
-    def commands(
-        self,
-    ) -> Dict[str, Dict[str, Union[str, Callable]]]:
+    def commands(self):
         """Dictionary representation of commands."""
         return self._commands
 
@@ -276,7 +274,7 @@ class Client:
         return command_errors
 
     @property
-    def error_map(self) -> list:
+    def error_map(self) -> List[Type[Exception]]:
         """Map of errors and their corresponding metadata."""
         return [
             InvalidArguments,
@@ -485,6 +483,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
 
             if cmd in COMMANDS:
                 current_command = COMMANDS[cmd]
+
                 if "exe" in current_command:
                     await log("command is an executable")
                     await log("handling argument parsing")
@@ -496,8 +495,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                     
                     return
 
-                runner: Callable = current_command["entry"] # type: ignore
-                # i have no clue what this error message is supposed to mean
+                runner = current_command["entry"]
 
                 try:
                     await log("running command")
@@ -506,7 +504,14 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                         console.clear()
 
                     ctx = Live if (current_command["live"]) and (not config.basic) else nullcontext
-                    coro = runner(raw_args, args, kwargs, flags, self) # even though its named coro, it can be a generator
+
+                    if 'iter' in flags:
+                        runner = current_command["iterator"]
+
+                        if not runner:
+                            raise NothingChanged('Command does not support iterators.')
+
+                    coro = runner(raw_args, args, kwargs, flags, self) # type: ignore
 
                     with ctx(console.get_terminal()):
                         is_iter = isinstance(coro, AsyncGeneratorType)

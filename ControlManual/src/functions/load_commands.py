@@ -1,11 +1,11 @@
 import os
 import sys
 import importlib
-from typing import Coroutine, Dict, Union, List, Any
+from typing import Union, Union, List, Any, Optional, AsyncGenerator
 from types import ModuleType
 from ..config import Config
 from ..logger import log
-
+from ..typing import Commands
 
 def get(command: ModuleType, target: str, default: Any = "") -> Any:
     return getattr(command, target) if hasattr(command, target) else default
@@ -13,7 +13,7 @@ def get(command: ModuleType, target: str, default: Any = "") -> Any:
 
 async def load_commands(
     directory: str,
-) -> Dict[str, Union[str, Dict[str, Union[str, Union[Coroutine, dict]]]]]:
+) -> Commands:
     """Function for creating the commands dict for the client."""
     await log("starting command loading process")
     config = Config()
@@ -40,6 +40,7 @@ async def load_commands(
             flags: dict = get(command, "FLAGS", {})
             args_help: dict = get(command, "ARGS_HELP", {})
             live: bool = get(command, "LIVE", False)
+            iterator: Optional[AsyncGenerator] = get(command, "iterator", None)
 
             resp[i] = {
                 "entry": command.run,
@@ -51,6 +52,7 @@ async def load_commands(
                 "package": package,
                 "args_help": args_help,
                 "live": live,
+                "iterator": iterator
             }
 
     if config.raw["use_path_env"]:

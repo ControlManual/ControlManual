@@ -1,18 +1,17 @@
-from typing import Tuple, Dict, List, Optional
+from typing import Dict, List
 import shlex
 from ..utils import *
 from ..config import Config
 from ..logger import log
+from ..typing import ParsedString
 
-
-async def parse(raw: str) -> Optional[Tuple[List[str], Dict[str, str], List[str]]]:
+async def parse(raw: str) -> ParsedString:
     """Function for parsing the input into different items."""
 
     try:
         split: List[str] = shlex.split(raw)
     except ValueError:
         await log("split failed, returning blank for all items")
-        error("Invalid quotation in arguments.")
 
         return None
 

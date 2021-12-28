@@ -1,8 +1,9 @@
 from github import Github
 import os
 from ..constants import cm_dir
+from typing import List
 
-async def download_repo(repo_name: str, ignored: list = ['.gitignore'], repo_path: str = '.'):
+async def download_repo(repo_name: str, ignored: List[str] = ['.gitignore'], repo_path: str = '.'):
     """Function for downloading a GitHub repository to the commands directory."""
     try:
         github = Github()

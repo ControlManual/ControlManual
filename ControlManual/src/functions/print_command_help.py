@@ -1,5 +1,6 @@
 from ..utils import error
 from ..console import console
+from ..typing import Commands
 
 
 def make_str(commands: dict,
@@ -15,11 +16,13 @@ def make_str(commands: dict,
         return default or f"[danger]No {key}.[/danger]\n"
 
 
-async def print_command_help(commands: dict, command: str) -> None:
+async def print_command_help(commands: Commands, command: str) -> None:
     if not (command in commands):
         return error(f"Command does not exist.")
 
-    if "exe" in commands[command]:
+    current = commands[command]
+
+    if "exe" in current:
         return console.error("Command is an executable.")
 
     usage_str: str = f"[secondary]{command} [primary]"
@@ -31,8 +34,8 @@ async def print_command_help(commands: dict, command: str) -> None:
                           usage_str,
                           default=usage_str + "\n")
     package: str = make_str(commands, command, "package")
-    args_dict: dict = commands[command]["args"]
-    flags_dict: dict = commands[command]["flags"]
+    args_dict: dict = current["args"]
+    flags_dict: dict = current["flags"]
     args = flags = ""
 
     if (args_dict is None) or (args_dict == {}):  # TODO: optimize
