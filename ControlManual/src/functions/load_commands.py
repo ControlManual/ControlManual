@@ -6,6 +6,7 @@ from types import ModuleType
 from ..config import Config
 from ..logger import log
 from ..typing import Commands
+from pathlib import Path
 
 def get(command: ModuleType, target: str, default: Any = "") -> Any:
     return getattr(command, target) if hasattr(command, target) else default
@@ -22,38 +23,48 @@ async def load_commands(
     resp: dict = {}
 
     sys.path.append(directory)
-    for i in os.listdir(directory):
-        if os.path.isfile(os.path.join(directory, i)):
-            await log("file found, adding to executable list")
-            back = -4 if os.name == "nt" else None
-            resp[i[:back]] = {"exe": os.path.join(directory, i)}
-        elif i != "__pycache__":
-            await log("directory found, adding to command list")
-            command: ModuleType = importlib.import_module(
-                f".commands.{i}.main", package="ControlManual")
-            cmd_help: str = get(command, "HELP")
-            usage: str = get(command, "USAGE")
-            package: str = get(command, "PACKAGE")
-            warning: str = f"({command.WARNING})" if hasattr(
-                command, "WARNING") else ""
-            args: dict = get(command, "ARGS", {})
-            flags: dict = get(command, "FLAGS", {})
-            args_help: dict = get(command, "ARGS_HELP", {})
-            live: bool = get(command, "LIVE", False)
-            iterator: Optional[AsyncGenerator] = get(command, "iterator", None)
 
-            resp[i] = {
-                "entry": command.run,
-                "help": cmd_help,
-                "warning": warning,
-                "usage": usage,
-                "args": args,
-                "flags": flags,
-                "package": package,
-                "args_help": args_help,
-                "live": live,
-                "iterator": iterator
-            }
+    for i in os.listdir(directory):
+        if i in ["__pycache__", ".gitignore"]:
+            continue
+        p = os.path.join(directory, i) # path
+
+        if os.path.isfile(p):
+            if not p.endswith('.py'):
+                back = -4 if os.name == "nt" else None
+                resp[i[:back]] = {"exe": os.path.join(directory, i)}
+
+        filename = Path(p).stem
+        file: str = filename if os.path.isfile(p) and p.endswith('.py') else f'{i}.main'
+        command: ModuleType = importlib.import_module(
+            f".commands.{file}", package="ControlManual")
+
+        if not hasattr(command, "run"):
+            continue
+
+        cmd_help: str = get(command, "HELP")
+        usage: str = get(command, "USAGE")
+        package: str = get(command, "PACKAGE")
+        warning: str = f"({command.WARNING})" if hasattr(
+            command, "WARNING") else ""
+        args: dict = get(command, "ARGS", {})
+        flags: dict = get(command, "FLAGS", {})
+        args_help: dict = get(command, "ARGS_HELP", {})
+        live: bool = get(command, "LIVE", False)
+        iterator: Optional[AsyncGenerator] = get(command, "iterator", None)
+
+        resp[filename] = {
+            "entry": command.run,
+            "help": cmd_help,
+            "warning": warning,
+            "usage": usage,
+            "args": args,
+            "flags": flags,
+            "package": package,
+            "args_help": args_help,
+            "live": live,
+            "iterator": iterator
+        }
 
     if config.raw["use_path_env"]:
         await log("reading PATH for binaries")
@@ -71,5 +82,4 @@ async def load_commands(
                             no_ext: str = x[:-len(extension)]
                             if not no_ext in resp:
                                 resp[x] = {"exe": os.path.join(i, x)}
-
     return resp

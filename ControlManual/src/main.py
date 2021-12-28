@@ -123,6 +123,8 @@ def main_sync(file: str, version: bool, clean: bool):
         for x in ['config.json', 'config-lock.toml']:
             os.remove(os.path.join(cm_dir, x))
 
+        return
+
     asyncio.run(main(file))
 
 def main_wrap():
