@@ -8,7 +8,7 @@ from .utils import *
 from .api import *
 import colorama
 import rethread
-from .console import console, ConsoleWrapper
+from .console import console
 import platform
 import os
 import psutil
@@ -45,6 +45,7 @@ class Client:
         return self
 
     async def init(self, version: str) -> None:
+
         self._config = Config()
         self._reset: bool = False
         self._version: str = version
@@ -77,7 +78,7 @@ class Client:
                 self._config.aliases[i])
 
         colorama.init(convert = os.name == "nt") # enables ansi stuff
-        console.clear(), title("Control Manual")
+        title("Control Manual")
 
         self._connected = False
         self._thread_running = True
@@ -92,8 +93,8 @@ class Client:
         environ = load["environment"]
         
         if not environ["installed"]:
-            with console.console.status("Installing...", spinner="shark"):
-                resp = await download_repo('ControlManual/ControlManual-Builtin')
+            #with console.console.status("Installing...", spinner="shark"):
+            resp = await download_repo('ControlManual/ControlManual-Builtin')
                 
             if not resp:
                 print('Failed to install builtins!')
@@ -104,9 +105,10 @@ class Client:
 
         with open(lockfile, 'w') as f:
             f.write(f'# Auto generated, do not edit manually!\n\n{toml.dumps(load)}')
-
-        with console.console.status("Loading commands...", spinner="material"):
-            await self.reload()
+        
+        console.attach_client(self)
+        #with console.console.status("Loading commands...", spinner="material"):
+        await self.reload()
 
     async def reload(self) -> None:
         """Function for reloading commands and middleware."""
@@ -322,7 +324,7 @@ class Client:
                 await log("current path not found")
                 static.static_error("path does not exist.")
 
-            console.set_dir(self._path)
+            #console.set_dir(self._path)
 
             memory_raw = psutil.virtual_memory()
             memory = f"{memory_raw.used // 1000000}mB / {memory_raw.total // 1000000}mB"
@@ -337,6 +339,7 @@ class Client:
                 f"{platform.system()} {platform.release()} {platform.version()}"
             )
             uptime: float = time.time() - psutil.boot_time()
+            '''
             console.set_info(
                 f"""User: [important]{getpass.getuser()}[/important]
 OS: [important]{system}[/important]
@@ -349,24 +352,16 @@ Battery: [important]{str(battery.percent)}%[/important]
 Computer Name: [important]{platform.node()}[/important]
 Uptime: [important]{int(uptime) // 60} minutes[/important]
 """)
+            '''
             await log("taking input")
-            command: str = console.take_input(inp, self.commands, self.aliases)
-
-            console.clear_panel("exceptions")
-            try:
-                console.screen["tmp"].visible = False
-            except:
-                pass
-            command = command.replace(r"\n", "\n")
-
-            await self.run_command(command)
-            await log("command finished running")
-
-            if self._reset:
-                await log("reload invoked, sending back to main function")
-                return Reload
-
+            await console.allow_input()
             filename = False
+            
+    async def passenger(self, command: str):
+        command = command.replace(r"\n", "\n")
+
+        await self.run_command(command)
+        await log("command finished running")
 
     async def run_command(self, command: str) -> Any:
         """Function for running a command."""
@@ -391,7 +386,7 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                         comm = self.cmd_history[int(comm) - 1]
                     except IndexError as e:
                         await log("index error with cmd history")
-                        console.show_exc(e)
+                        #console.show_exc(e)
                         return
                 else:
                     break
@@ -489,9 +484,9 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                     await log("handling argument parsing")
 
                     executable: str = current_command["exe"] # type: ignore
-                    console.clear()
-                    with Live(console.get_terminal()):
-                        await run_exe(executable, " ".join(args))
+                    #console.clear()
+                    #with Live(console.get_terminal()):
+                        #await run_exe(executable, " ".join(args))
                     
                     return
 
@@ -500,8 +495,8 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                 try:
                     await log("running command")
 
-                    if not config.basic:
-                        console.clear()
+                    #if not config.basic:
+                        #console.clear()
 
                     ctx = Live if (current_command["live"]) and (not config.basic) else nullcontext
 
@@ -511,13 +506,12 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                         if not runner:
                             raise NothingChanged('Command does not support iterators.')
 
-                    coro = runner(raw_args, args, kwargs, flags, self) # type: ignore
+                    coro = runner(raw_args, args, kwargs, flags, self)
 
-                    with ctx(console.get_terminal()):
-                        is_iter = isinstance(coro, AsyncGeneratorType)
-                        res = coro if is_iter else await coro
+                    #with ctx(console.get_terminal()):
+                        #res = coro if is_iter else await coro
 
-                    return Iterator(res) if is_iter else res # so there arent any generator errors
+                    #return Iterator(res) if is_iter else res # so there arent any generator errors
                 except Exception as e:
                     emap = self.error_map
 
@@ -531,9 +525,9 @@ Uptime: [important]{int(uptime) // 60} minutes[/important]
                     else:
                         failure: str = errors["command_error"].replace(
                             "{cmd}", cmd)
-                        console.error(failure)
+                        await console.error(failure)
 
-                    console.show_exc(e)
+                    #console.show_exc(e)
 
             else:
                 await log("command not found")

@@ -11,3 +11,4 @@ py7zr<=0.17.2
 watchdog<=2.1.6
 toml<=0.10.2
 pygithub<=1.55
+textual<=0.1.12

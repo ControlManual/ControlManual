@@ -25,7 +25,7 @@ async def load_commands(
     sys.path.append(directory)
 
     for i in os.listdir(directory):
-        if i in ["__pycache__", ".gitignore"]:
+        if i in ["__pycache__", ".gitignore", '.git']:
             continue
         p = os.path.join(directory, i) # path
 

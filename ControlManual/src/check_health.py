@@ -38,7 +38,7 @@ config_base = """{
 	},
 	"columns": ["info", "log", "directory", "exceptions"],
 	"truecolor": true,
-	"basic": false,
+	"basic": true,
 	"basic_input": false
 }"""
 

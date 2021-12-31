@@ -1,7 +1,8 @@
-from typing import Coroutine, TypedDict, Any, Optional, AsyncGenerator, Dict, Union, Tuple, List
+from typing import TypedDict, Optional, AsyncIterator, Dict, Union, Tuple, List, Coroutine, Callable, TypeVar
+
 
 class Command(TypedDict):
-    entry: Coroutine[Any, Any, Any]
+    entry: Callable[..., Coroutine]
     cmd_help: str
     usage: str
     package: str
@@ -10,7 +11,7 @@ class Command(TypedDict):
     flags: dict
     args_help: dict
     live: bool
-    iterator: Optional[AsyncGenerator]
+    iterator: Optional[Callable[..., AsyncIterator]]
 
 class BinaryCommand(TypedDict):
     exe: str
