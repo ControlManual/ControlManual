@@ -59,52 +59,21 @@ import py7zr
 import toml
 import contextlib
 import github
+import textual
 
-from . import static, info
+from . import constants, logger
 from .check_health import check_health, cm_dir
+
+import logging
+logging.warning("test")
 
 @atexit.register
 def shutdown():
-    from .logger import flush
     print()
-    asyncio.run(flush())
 
 async def main(filename: str) -> None:
-    """Main file for running Control Manual."""
-    from .logger import log, flush
-    from .client import Client, Reload
-
-    if float(platform.python_version()[:3]) < 3.8:
-        static.static_error("invalid python version - at least 3.8 is required")
-
-    while True:
-
-        client = await Client(info.__version__)
-        await log("entering main loop")
-        try:
-            resp = await client.start(filename)
-        except Exception as e:
-            client._thread_running = False
-            await log(f"exception occured: {e}")
-            raise e
-
-        if resp == Reload:
-            await log("reload invoked, starting process")
-            await flush()
-            try:
-                p = psutil.Process(os.getpid())
-                for handler in p.open_files() + p.connections(
-                ):  # type: ignore
-                    os.close(handler.fd)
-            except:
-                static.static_error("fatal error occured when reloading")
-
-            python = sys.executable
-            await log("restarting app")
-            os.execl(python, python, *sys.argv)
-        else:
-            sys.exit
-
+    """Main function for running Control Manual."""
+    ...
 
 @click.command()
 @click.option("--file", "-f", help="Run app starting with a file.", default = '')
@@ -114,14 +83,16 @@ def main_sync(file: str, version: bool, clean: bool):
     asyncio.run(check_health())
 
     if version:
-        return print(f'ControlManual V{info.__version__}')
+        return print(f'ControlManual V{constants.__version__}')
 
     if clean:
         for i in ['logs', 'middleware', 'commands']:
             shutil.rmtree(os.path.join(cm_dir, i))
+            print(f'Deleted "{i}"')
         
         for x in ['config.json', 'config-lock.toml']:
             os.remove(os.path.join(cm_dir, x))
+            print(f'Deleted "{x}"')
 
         return
 

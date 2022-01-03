@@ -1,29 +1,14 @@
-from datetime import datetime
-from types import FrameType
+import logging
 from .constants import cm_dir
 import os
-import inspect
-import aiofiles
+from datetime import datetime
+from .files import FileHandler
 
 now = datetime.now()
+log_path: str = os.path.join(cm_dir, "logs", now.strftime("%m.%d.%Y_%H-%M-%S.log"))
+config = FileHandler.get_config()
 
-log_path: str = os.path.join(cm_dir, "logs",
-                             now.strftime("%m.%d.%Y_%H-%M-%S.log"))
-open(log_path, "w").close()
-os.environ["cmlog_buffer"] = ""
+logging.basicConfig(filename = log_path, format = '[%(asctime)s] %(name)s:%(levelname)s - %(message)s', filemode = 'w', level = config["log_level"], datefmt = '%H:%M:%S')
 
-async def log(*args) -> None:
-    """Function for writing to the log file."""
 
-    now = datetime.now()
-    frame: FrameType = inspect.currentframe().f_back  # type: ignore
-
-    os.environ["cmlog_buffer"] += now.strftime(
-        f"[%H:%M:%S] {frame.f_code.co_name} at {os.path.basename(frame.f_code.co_filename)}:{frame.f_lineno} - {' '.join(args)}\n"
-    )
-
-async def flush() -> None:
-    async with aiofiles.open(log_path, "a") as f:
-        await f.write(os.environ["cmlog_buffer"])
-
-    os.environ["cmlog_buffer"] = ""
+logger = logging.getLogger(__name__)
