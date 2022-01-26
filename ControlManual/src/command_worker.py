@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 import os
 from .constants import cm_dir
-from .files import FileHandler
+from .files import get_config
 import importlib
 import shlex
 
@@ -18,7 +18,7 @@ class CommandWorker:
         """Function for creating the commands dict for the client."""
         directory = os.path.join(cm_dir, "commands")
 
-        config = FileHandler.get_config()
+        config = get_config()
         windows: bool = os.name == "nt"
 
         resp: dict = {}
@@ -112,7 +112,7 @@ class CommandWorker:
         flags: List[str] = []
         args: List[str] = []
 
-        config = FileHandler.get_config()
+        config = get_config()
         for i in split:
             if (("=" in i) and (len(i) >= 3) and (not i[i.index("=") - 1] == r"\\")
                     and

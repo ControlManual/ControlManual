@@ -22,46 +22,17 @@
 # SOFTWARE.
 # -------------------------------------------------------------------------------------------
 
-# Dependencies
+import atexit
+import click
+import asyncio
+import shutil
+import os
+import sys
 from rich.console import Console
 
 tmp = Console()
 
-import os
-import sys
-import typing
-import types
-import importlib
-import shlex
-import pathlib
-import atexit
-import colorama
-import io
-import subprocess
-import click
-import shutil
-import platform
-import rethread
-import psutil
-import rich
-import platform
-import getpass
-import datetime
-import distro
-import time
-import watchdog
-import tempfile
-import inspect
-import asyncio
-import aiofiles
-import aiohttp
-import py7zr
-import toml
-import contextlib
-import github
-import textual
-
-from . import constants, logger
+from . import constants
 from .check_health import check_health, cm_dir
 
 import logging
@@ -76,9 +47,9 @@ async def main(filename: str) -> None:
     ...
 
 @click.command()
-@click.option("--file", "-f", help="Run app starting with a file.", default = '')
-@click.option("--version", "-v", is_flag=True, help="Get the app version.")
-@click.option("--clean", "-c", is_flag=True, help="Clears all the auto generated files, and allows a clean install (with the exception of source code).")
+@click.option("--file", "-f", help = "Run app starting with a file.", default = '')
+@click.option("--version", "-v", is_flag = True, help = "Get the app version.")
+@click.option("--clean", "-c", is_flag = True, help = "Clears all the auto generated files, and allows a clean install.")
 def main_sync(file: str, version: bool, clean: bool):
     asyncio.run(check_health())
 

@@ -4,6 +4,11 @@ import os
 import json
 import aiofiles
 
+__all__ = (
+	"check_health",
+	"get_config"
+)
+
 CONFIG_BASE = """{
 	"input_sep": ">>",
 	"flag_prefix": "--",
@@ -49,13 +54,9 @@ LOCK_TOML_BASE: str = """# Auto generated, do not edit manually!
 [environment]
 installed = false"""
 
-class FileHandler:
-    """Class used for reading and handling external files."""
-
-    @staticmethod
-    def get_config() -> Config:
-        with open(os.path.join(cm_dir, "config.json")) as f:
-            return json.loads(f.read())
+def get_config() -> Config:
+	with open(os.path.join(cm_dir, "config.json")) as f:
+		return json.loads(f.read())
 
 async def check_health() -> None:
     """Function for checking if required files and folders exist."""

@@ -1,6 +1,8 @@
 from .typing import Commands
 from typing import Any
-from .files import FileHandler
+from .files import get_config
+
+__all__ = ["HelpCommand"]
 
 error = print
 
@@ -95,7 +97,7 @@ async def print_help(self) -> None:
     commands = self.commands
     console = self.console
 
-    config = FileHandler.get_config()
+    config = get_config()
 
     for i in commands:
         if "exe" in commands[i]:
