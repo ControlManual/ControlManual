@@ -1,4 +1,6 @@
 import os
+from .typing import Config
+import json
 
 cm_dir: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -46,3 +48,6 @@ __author__ = "ZeroIntensity and 2231puppy"
 __license__ = "MIT"
 __version__ = "0.0.4.0"
 
+# Handled at runtime
+with open(os.path.join(cm_dir, "config.json")) as f:
+    config: Config = json.loads(f.read())

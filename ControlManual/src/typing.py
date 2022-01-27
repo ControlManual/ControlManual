@@ -1,20 +1,23 @@
-from typing import TypedDict, Optional, AsyncIterator, Dict, Union, Tuple, List, Literal, Callable, Protocol
+from typing import TypedDict, Optional, AsyncGenerator, Dict, Union, Tuple, List, Literal, Any, Protocol
 
 class CommandCallable(Protocol):
     async def __call__(self, raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client):
         ...
 
+class CommandIterator(Protocol):
+    async def __call__(self, raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client) -> AsyncGenerator[Any, None]:
+        ...
+
 class Command(TypedDict):
     entry: CommandCallable
-    cmd_help: str
-    usage: str
-    package: str
+    help: Optional[str]
+    usage: Optional[str]
+    package: Optional[str]
     warning: str
-    args: dict
-    flags: dict
-    args_help: dict
-    live: bool
-    iterator: Optional[Callable[..., AsyncIterator]]
+    args: Optional[dict]
+    flags: Optional[dict]
+    args_help: Optional[dict]
+    iterator: Optional[CommandIterator]
 
 class BinaryCommand(TypedDict):
     exe: str

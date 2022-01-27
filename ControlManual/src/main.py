@@ -42,10 +42,6 @@ logging.warning("test")
 def shutdown():
     print()
 
-async def main(filename: str) -> None:
-    """Main function for running Control Manual."""
-    ...
-
 @click.command()
 @click.option("--file", "-f", help = "Run app starting with a file.", default = '')
 @click.option("--version", "-v", is_flag = True, help = "Get the app version.")
@@ -67,7 +63,7 @@ def main_sync(file: str, version: bool, clean: bool):
 
         return
 
-    asyncio.run(main(file))
+    #asyncio.run(main(file))
 
 def main_wrap():
     try:

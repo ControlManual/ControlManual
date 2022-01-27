@@ -1,13 +1,11 @@
-from .typing import Config
-from .constants import cm_dir
+from ..typing import Config
+from ..constants import cm_dir
 import os
-import json
 import aiofiles
 
-__all__ = (
-	"check_health",
-	"get_config"
-)
+__all__ = [
+	"check_health"
+]
 
 CONFIG_BASE = """{
 	"input_sep": ">>",
@@ -53,10 +51,6 @@ LOCK_TOML_BASE: str = """# Auto generated, do not edit manually!
 
 [environment]
 installed = false"""
-
-def get_config() -> Config:
-	with open(os.path.join(cm_dir, "config.json")) as f:
-		return json.loads(f.read())
 
 async def check_health() -> None:
     """Function for checking if required files and folders exist."""

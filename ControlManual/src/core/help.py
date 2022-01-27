@@ -1,6 +1,6 @@
-from .typing import Commands
+from ..typing import Commands
 from typing import Any
-from .files import get_config
+from ..constants import config
 
 __all__ = ["HelpCommand"]
 
@@ -17,7 +17,6 @@ def make_str(commands: dict, command: str, key: str, prefix: str = "", default =
 def extract(col: dict, key: str, default: Any = "") -> Any:
     return col.get(key) or default
 
-
 def rq(key: str, col: dict) -> str:
     raw: str = extract(col, key.lower())
     return (
@@ -29,6 +28,7 @@ def mfl(data: str) -> str:  # i kept adding a capital letter to some values
     return data[0].lower() + data[1:]
 
 class HelpCommand:
+    """Class for running help command operations."""
     def __init__(self, commands: Commands, console):
         self._console = console
         self._commands = commands
@@ -47,8 +47,8 @@ class HelpCommand:
         commands = self.commands
         console = self.console
 
-        if not (command in commands):
-            return error(f"Command does not exist.")
+        if command not in commands:
+            return error('Command does not exist.')
 
         current = commands[command]
 
@@ -69,22 +69,16 @@ class HelpCommand:
         args = flags = ""
 
         if (args_dict is None) or (args_dict == {}):  # TODO: optimize
-            args += f"[danger]No arguments.[/danger]\n"
+            args += '[danger]No arguments.[/danger]\n'
         else:
-            if args_dict == {}:
-                args += make_str(commands, command, "args")
-            else:
-                for i in args_dict:
-                    args += f"[primary]{i}[/primary] - [secondary]{args_dict[i]}[/secondary]\n"
+            for i, value in args_dict.items():
+                args += f'[primary]{i}[/primary] - [secondary]{value}[/secondary]\n'
 
         if (flags_dict is None) or (flags_dict == {}):
-            flags += f"[danger]No flags.[/danger]\n"
+            flags += '[danger]No flags.[/danger]\n'
         else:
-            if flags_dict == {}:
-                flags += make_str(commands, command, "flags")
-            else:
-                for i in flags_dict:
-                    flags += f"[primary]{i}[/primary] - [secondary]{flags_dict[i]}[/secondary]\n"
+            for i, value_ in flags_dict.items():
+                flags += f'[primary]{i}[/primary] - [secondary]{value_}[/secondary]\n'
 
         await console.print(f"""[primary]{cmd_help}[/primary]
     [important]Package: [secondary]{package}[/secondary]
@@ -97,19 +91,17 @@ async def print_help(self) -> None:
     commands = self.commands
     console = self.console
 
-    config = get_config()
-
     for i in commands:
         if "exe" in commands[i]:
             if config["hide_exe_from_help"]:
                 continue
-            hlp = f"[danger]Executable File.[/danger]"
+            hlp = "[danger]Executable File.[/danger]"
         else:
-            hlp = f'[secondary]{commands[i]["help"]}[/secondary] [danger]{commands[i]["warning"]}[/danger]'
+            hlp = '[secondary]{commands[i]["help"]}[/secondary] [danger]{commands[i]["warning"]}[/danger]'
 
         await console.print(f"[primary]{i.lower()}[/primary] - {hlp}")
     await console.print(
-        f'[important]For more info on a command, use [/important][primary]"help <command>"[/primary]'
+        '[important]For more info on a command, use [/important][primary]"help <command>"[/primary]'
     )
 
 async def print_argument_help(self, command: str, argument: str) -> None:
@@ -136,8 +128,11 @@ async def print_argument_help(self, command: str, argument: str) -> None:
     valid_raw = extract(h, "valid_values")
     arg_type = f"\n[important]Type: [/important][secondary]{extract(h, 'type', 'String')}[/secondary]"
     valid = (
-        f'\n[important]Valid Values: [/important][secondary]{f"[/secondary], [secondary]".join(valid_raw)}[/secondary]'
-        if valid_raw else "")
+        f'\n[important]Valid Values: [/important][secondary]{"[/secondary], [secondary]".join(valid_raw)}[/secondary]'
+        if valid_raw
+        else ""
+    )
+
 
     not_required_when: str = rq("Not_Required_When", h)
     required_when: str = rq("Required_When", h)
@@ -145,8 +140,12 @@ async def print_argument_help(self, command: str, argument: str) -> None:
     ignored_when: str = rq("Ignored_When", h)
 
     effect_when_equals_raw: dict = extract(h, "effect_when_equals", {})
-    effect_when_equals: str = (f"\n\n[important]If this argument equals "
-                               if effect_when_equals_raw else "")
+    effect_when_equals: str = (
+        '\n\n[important]If this argument equals '
+        if effect_when_equals_raw
+        else ""
+    )
+
 
     for key, value in effect_when_equals_raw.items():
         k = key if not isinstance(
