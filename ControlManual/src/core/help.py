@@ -58,17 +58,13 @@ class HelpCommand:
         usage_str: str = f"[secondary]{command} [primary]"
 
         cmd_help: str = make_str(commands, command, "help")
-        usage: str = make_str(commands,
-                            command,
-                            "usage",
-                            usage_str,
-                            default=usage_str + "\n")
+        usage: str = make_str(commands, command, "usage", usage_str, default=usage_str + "\n")
         package: str = make_str(commands, command, "package")
         args_dict: dict = current["args"]
         flags_dict: dict = current["flags"]
         args = flags = ""
 
-        if (args_dict is None) or (args_dict == {}):  # TODO: optimize
+        if (args_dict is None) or (args_dict == {}):
             args += '[danger]No arguments.[/danger]\n'
         else:
             for i, value in args_dict.items():

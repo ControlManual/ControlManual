@@ -1,10 +1,5 @@
-import os
-from .typing import Config
-import json
 
-cm_dir: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Errors
 class InvalidArguments(Exception):
     """Raised when arguments passed to the command are invalid."""
     pass
@@ -40,14 +35,3 @@ class NothingChanged(Exception):
 class Collision(Exception):
     """Raised when a collision between items occurs."""
     pass
-
-
-# Info
-__title__ = "ControlManual"
-__author__ = "ZeroIntensity and 2231puppy"
-__license__ = "MIT"
-__version__ = "0.0.4.0"
-
-# Handled at runtime
-with open(os.path.join(cm_dir, "config.json")) as f:
-    config: Config = json.loads(f.read())

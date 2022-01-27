@@ -33,7 +33,7 @@ from rich.console import Console
 tmp = Console()
 
 from . import constants
-from .check_health import check_health, cm_dir
+from core.health import check_health
 
 import logging
 logging.warning("test")
@@ -53,12 +53,12 @@ def main_sync(file: str, version: bool, clean: bool):
         return print(f'ControlManual V{constants.__version__}')
 
     if clean:
-        for i in ['logs', 'middleware', 'commands']:
-            shutil.rmtree(os.path.join(cm_dir, i))
+        for i in {'logs', 'middleware', 'commands'}:
+            shutil.rmtree(os.path.join(constants.cm_dir, i))
             print(f'Deleted "{i}"')
         
-        for x in ['config.json', 'config-lock.toml']:
-            os.remove(os.path.join(cm_dir, x))
+        for x in {'config.json', 'config-lock.toml'}:
+            os.remove(os.path.join(constants.cm_dir, x))
             print(f'Deleted "{x}"')
 
         return

@@ -21,6 +21,7 @@ class Application(App):
 
     async def on_mount(self) -> None:
         c = Console()
+
         await c.focus()
         await self.view.dock(c, edge = "right")
 

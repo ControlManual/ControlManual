@@ -8,6 +8,8 @@ from ..constants import cm_dir
 import importlib
 from ..utils import not_null
 
+__all__ = ["load_commands"]
+
 def get(command: ModuleType, target: str, default: Any = "") -> Any:
     return getattr(command, target) if hasattr(command, target) else default
 
@@ -34,7 +36,8 @@ async def load_commands() -> Commands:
     async for command in load_directory("commands"):
         if not hasattr(command, "run"):
             continue
-
+        
+        # TODO: optimize this
         cmd_help: Optional[str] = get(command, "HELP")
         usage: Optional[str] = get(command, "USAGE")
         package: Optional[str] = get(command, "PACKAGE")
@@ -58,3 +61,4 @@ async def load_commands() -> Commands:
 
     return resp
 
+# TODO: implement middleware loading
