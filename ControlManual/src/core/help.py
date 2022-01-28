@@ -1,6 +1,6 @@
-from ..typing import Commands
+from ..typings import Commands
 from typing import Any, List
-from ..constants import config
+from .config import config
 from ..utils import not_null
 
 __all__ = ["HelpCommand"]

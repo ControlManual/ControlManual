@@ -5,6 +5,8 @@ from rich.panel import Panel
 from textual.events import Key, Load
 from textual.keys import Keys
 from .client import Client
+import asyncio
+from .utils import run
 
 """
 class Console(Widget):
@@ -35,11 +37,17 @@ Application.run()
 """
 
 class Application:
-    def __init__(self) -> None:
-        self._client = Client()
+    client: Client
 
-    def run(self) -> None:
+    async def __new__(cls):
+        cls.client = await Client()
+        return super().__new__(cls)
+
+    async def start(self) -> None:
         while True:
             inp = input('>> ')
 
-            self._client.run_command(inp)
+            await self.client.run_command(inp)
+
+    def run(self):
+        run(self.start())

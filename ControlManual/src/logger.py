@@ -1,5 +1,6 @@
 import logging
-from .constants import cm_dir, config
+from .constants import cm_dir
+from .core.config import config
 import os
 from datetime import datetime
 

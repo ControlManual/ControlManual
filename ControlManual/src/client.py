@@ -1,16 +1,16 @@
 from pathlib import Path
 import os
-from constants import cm_dir, config
-from constants.errors import *
+from .constants import cm_dir
+from .core.config import config
+from .constants.errors import *
 from typing import Optional, Dict, List, Any, Type
 import colorama
-from core.loader import load_commands
-from .typing import Config
-import logging
-from core import parse, HelpCommand
+from .core.loader import load_commands
+from .typings import Config
+from .core.handler import CommandHandler
 
 class Client:
-    """Base class used by Control Manual."""
+    """Class for allowing commands to interact with the engine."""
     async def __new__(cls):
         self = super().__new__(cls)
         await cls.init(self)
@@ -138,11 +138,6 @@ class Client:
         return str(self._path)
 
     @property
-    def utils(self):
-        """Utilities for commands."""
-        return utils
-
-    @property
     def variables(self) -> Dict[str, str]:
         """Dictionary representing variables."""
         return self._variables
@@ -174,11 +169,6 @@ class Client:
         return text
 
     @property
-    def errors(self):
-        """Errors to raise in commands."""
-        return command_errors
-
-    @property
     def error_map(self) -> List[Type[Exception]]:
         """Map of errors and their corresponding metadata."""
         return [
@@ -193,3 +183,6 @@ class Client:
             Collision,
         ]
 
+    async def run_command(self, command: str):
+        """Run a command."""
+        await CommandHandler(self).run_string(command)

@@ -1,18 +1,20 @@
-from constants import config
+from .config import config
 from typing import TYPE_CHECKING, List, Optional, Any, Dict
 import logging
-from core import HelpCommand, parse
+from .parser import parse
+from .help import HelpCommand
 
 if TYPE_CHECKING:
-    from .client import Client
+    from ..client import Client
 
+error = print
 
 class CommandHandler:
-    def __init__(self, client: Client) -> None:
+    def __init__(self, client: "Client") -> None:
         self._client = client
 
     @property
-    def client(self) -> Client:
+    def client(self) -> "Client":
         """Client class."""
         return self._client
 
@@ -22,21 +24,24 @@ class CommandHandler:
         crfn: Optional[str] = client.current_function
 
         for i in range(2):
-            if (cmd == config["functions"][i]) and (crfn):
-                if client._function_open:
-                    if i:
-                        error(errors["function_open"])
+            is_syntax: bool = cmd == config["functions"][i]
+
+            if is_syntax:
+                if crfn:
+                    if client._function_open:
+                        if i:
+                            error(errors["function_open"])
+                        else:
+                            client.functions[client.current_function]["defined"] = True
+                            client._function_open = False
+                            client._current_function = None
+                    elif not i:
+                        error(errors["function_not_open"])
                     else:
-                        client.functions[client.current_function]["defined"] = True
-                        client._function_open = False
-                        client._current_function = None
-                elif not i:
-                    error(errors["function_not_open"])
+                        client._function_open = True
                 else:
-                    client._function_open = True
-            else:
-                error(errors["function_undefined"])
-                return True
+                    error(errors["function_undefined"])
+                    return True
 
         if client._function_open:
             client._functions[crfn]["script"].append(raw)

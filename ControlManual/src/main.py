@@ -29,26 +29,31 @@ import shutil
 import os
 import sys
 from rich.console import Console
+from .core.health import check_health
+from .utils import run
+run(check_health())
+
+from .app import Application
 
 tmp = Console()
-
-from . import constants
-from core.health import check_health
+from . import constants, logger as _
 
 import logging
-logging.warning("test")
+logging.error("test")
 
 @atexit.register
 def shutdown():
     print()
 
+async def start():
+    a = await Application()
+    await a.start()
+
 @click.command()
 @click.option("--file", "-f", help = "Run app starting with a file.", default = '')
 @click.option("--version", "-v", is_flag = True, help = "Get the app version.")
 @click.option("--clean", "-c", is_flag = True, help = "Clears all the auto generated files, and allows a clean install.")
-def main_sync(file: str, version: bool, clean: bool):
-    asyncio.run(check_health())
-
+def main(file: str, version: bool, clean: bool):
     if version:
         return print(f'ControlManual V{constants.__version__}')
 
@@ -63,14 +68,14 @@ def main_sync(file: str, version: bool, clean: bool):
 
         return
 
-    #asyncio.run(main(file))
+    asyncio.run(start())
 
 def main_wrap():
     try:
-        main_sync() # type: ignore
+        main() # type: ignore
     except KeyboardInterrupt:
         sys.exit(0)
 
 
 if __name__ == "__main__":
-    main_wrap()
+    raise Exception("must be started from __main__ due to import issues")

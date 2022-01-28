@@ -1,6 +1,6 @@
 from typing import List, AsyncGenerator, Dict
-from ..typing import ParsedString
-from ..constants import config
+from ..typings import ParsedString
+from .config import config
 import re
 
 __all__ = ["parse"]
@@ -37,10 +37,7 @@ async def split_text(text: str) -> AsyncGenerator[str, None]:
 
 async def parse(raw: str) -> ParsedString:
     """Function for parsing the input into different items."""
-    try:
-        split = split_text(raw)
-    except ValueError:
-        return None
+    split = split_text(raw)
 
     kwargs: Dict[str, str] = {}
     flags: List[str] = []

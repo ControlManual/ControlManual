@@ -1,4 +1,4 @@
-from ..typing import Commands, CommandIterator, Command
+from ..typings import Commands, CommandIterator, Command
 from types import ModuleType
 from typing import Any, Optional, AsyncGenerator, Literal, Union
 from pathlib import Path
