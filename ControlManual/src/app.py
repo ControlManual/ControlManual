@@ -6,6 +6,7 @@ from textual.events import Key, Load
 from textual.keys import Keys
 from .client import Client
 
+"""
 class Console(Widget):
     input_text = Reactive('')
 
@@ -30,3 +31,15 @@ class Application(App):
 
 
 Application.run()
+
+"""
+
+class Application:
+    def __init__(self) -> None:
+        self._client = Client()
+
+    def run(self) -> None:
+        while True:
+            inp = input('>> ')
+
+            self._client.run_command(inp)

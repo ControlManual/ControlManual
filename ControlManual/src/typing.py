@@ -1,4 +1,4 @@
-from typing import TypedDict, Optional, AsyncGenerator, Dict, Union, Tuple, List, Literal, Any, Protocol
+from typing import TypedDict, Optional, AsyncGenerator, Dict, Callable, Tuple, List, Literal, Any, Protocol, Union
 
 class CommandCallable(Protocol):
     async def __call__(self, raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client):
@@ -8,8 +8,7 @@ class CommandIterator(Protocol):
     async def __call__(self, raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client) -> AsyncGenerator[Any, None]:
         ...
 
-class Command(TypedDict):
-    entry: CommandCallable
+class BaseCommand(TypedDict):
     help: Optional[str]
     usage: Optional[str]
     package: Optional[str]
@@ -17,10 +16,17 @@ class Command(TypedDict):
     args: Optional[dict]
     flags: Optional[dict]
     args_help: Optional[dict]
-    iterator: Optional[CommandIterator]
+    path: str
 
-class BinaryCommand(TypedDict):
-    exe: str
+class Command(BaseCommand):
+    entry: CommandCallable
+    iterator: Optional[CommandIterator]
+    is_binary: Literal[False]
+
+class BinaryCommand(BaseCommand):
+    entry: Callable
+    iterator: Optional[Callable]
+    is_binary: Literal[True]
 
 class CommandErrors(TypedDict):
     unknown_command: str
@@ -47,5 +53,5 @@ class Config(TypedDict):
     basic_input: bool
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
-Commands = Dict[str, Union[BinaryCommand, Command]]
-ParsedString = Optional[Tuple[List[str], Dict[str, str], List[str]]]
+Commands = Dict[str, Union[Command, BinaryCommand]]
+ParsedString = Tuple[List[str], Dict[str, str], List[str]]
