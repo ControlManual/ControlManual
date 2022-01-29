@@ -3,20 +3,23 @@ import os
 from .constants import cm_dir
 from .core.config import config
 from .constants.errors import *
-from typing import Optional, Dict, List, Any, Type
+from typing import Optional, Dict, List, Any, Type, TYPE_CHECKING
 import colorama
 from .core.loader import load_commands
 from .typings import Config
 from .core.handler import CommandHandler
 
+if TYPE_CHECKING:
+    from .app import Application
+
 class Client:
     """Class for allowing commands to interact with the engine."""
-    async def __new__(cls):
+    async def __new__(cls, app: "Application"):
         self = super().__new__(cls)
-        await cls.init(self)
+        await cls.init(self, app)
         return self
 
-    async def init(self) -> None:
+    async def init(self, app: "Application") -> None:
         self._reset: bool = False
         self._path: Path = Path().home()
         self._functions: dict = {}
@@ -25,6 +28,7 @@ class Client:
         self._toggled_output: bool = True
         self._origin: Path = self._path
         self._command_response: Any = None
+        self._app = app
 
         get = lambda x: os.path.join(cm_dir, x)
 
@@ -50,6 +54,11 @@ class Client:
     async def render(self) -> None:
         """Function for loading commands."""
         self._commands = await load_commands()
+
+    @property
+    def app(self) -> "Application":
+        """Textual app class."""
+        return self._app
 
     @property
     def cm_dir(self) -> str:

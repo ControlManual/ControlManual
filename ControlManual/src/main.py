@@ -38,16 +38,9 @@ from .app import Application
 tmp = Console()
 from . import constants, logger as _
 
-import logging
-logging.error("test")
-
 @atexit.register
 def shutdown():
     print()
-
-async def start():
-    a = await Application()
-    await a.start()
 
 @click.command()
 @click.option("--file", "-f", help = "Run app starting with a file.", default = '')
@@ -68,7 +61,7 @@ def main(file: str, version: bool, clean: bool):
 
         return
 
-    asyncio.run(start())
+    Application.run()
 
 def main_wrap():
     try:
