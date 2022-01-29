@@ -23,6 +23,10 @@ class Console(Widget):
     input_text = Reactive('')
     is_white = Reactive(True)
     cursor_index = Reactive(0)
+    client: Client
+
+    async def register_client(self, client: Client) -> None:
+        self.client = client
 
     def render(self) -> Panel:
         d = {
@@ -40,24 +44,24 @@ class Console(Widget):
 
         return Panel(text, title = "Terminal")
 
-    def on_key(self, event: Key) -> None:
+    async def on_key(self, event: Key) -> None:
         key: str = event.key
 
         if key in [Keys.Enter, Keys.Left, Keys.Right, Keys.Escape, Keys.ControlC, Keys.ControlH]:
             if key == Keys.Enter:
+                await self.client.run_command(self.input_text)
                 self.input_text = ' '
                 self.cursor_index = 0
-            
+
             if key == Keys.Left and self.cursor_index:
                 self.cursor_index -= 1
-            
+
             if key == Keys.Right and (self.cursor_index) != len(self.input_text):
                 self.cursor_index += 1
 
-            if key == Keys.ControlH:
-                if self.cursor_index:
-                    self.cursor_index -= 1
-                    self.input_text = remove(self.input_text, self.cursor_index)
+            if key == Keys.ControlH and self.cursor_index:
+                self.cursor_index -= 1
+                self.input_text = remove(self.input_text, self.cursor_index)
 
             return
 
