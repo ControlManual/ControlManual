@@ -55,7 +55,9 @@ class Console(Widget):
                 self.cursor_index += 1
 
             if key == Keys.ControlH:
-                self.input_text = self.input_text[:-1]
+                if self.cursor_index:
+                    self.cursor_index -= 1
+                    self.input_text = remove(self.input_text, self.cursor_index)
 
             return
 
