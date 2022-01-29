@@ -22,25 +22,21 @@
 # SOFTWARE.
 # -------------------------------------------------------------------------------------------
 
-import atexit
-import click
-import asyncio
 import shutil
 import os
 import sys
-from rich.console import Console
 from .core.health import check_health
 from .utils import run
 run(check_health())
-
+from typing import Type
+from types import TracebackType
 from .app import Application
-
-tmp = Console()
-from . import constants, logger as _
-
-@atexit.register
-def shutdown():
-    print()
+from . import constants, logger
+import logging
+import click
+from rich import print as rich_print
+from pathlib import Path
+from rich.text import Text
 
 @click.command()
 @click.option("--file", "-f", help = "Run app starting with a file.", default = '')
@@ -61,14 +57,26 @@ def main(file: str, version: bool, clean: bool):
 
         return
 
+    logging.info("starting textual app")
     Application.run()
+
+def hook(exctype: Type[BaseException], value: BaseException, tb: TracebackType):
+    rich_print("[red]Internal error!")
+
+    code = tb.tb_frame.f_code
+    logging.critical(f"{exctype.__name__}@{code.co_filename}:{code.co_firstlineno} - {value}")
+    sys.__excepthook__(exctype, value, tb)
+    
+    t = Text(f"\nPlease check the logs for more info ({Path(logger.log_path).name}).", style = "red")
+    rich_print(t)
+
+sys.excepthook = hook
 
 def main_wrap():
     try:
         main() # type: ignore
     except KeyboardInterrupt:
         sys.exit(0)
-
 
 if __name__ == "__main__":
     raise Exception("must be started from __main__ due to import issues")

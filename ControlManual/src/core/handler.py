@@ -7,11 +7,12 @@ from .help import HelpCommand
 if TYPE_CHECKING:
     from ..client import Client
 
-error = print
 
 class CommandHandler:
     def __init__(self, client: "Client") -> None:
         self._client = client
+        global error
+        error = client.app.feed.print
 
     @property
     def client(self) -> "Client":

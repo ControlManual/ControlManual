@@ -4,7 +4,7 @@ from .core.config import config
 import os
 from datetime import datetime
 
-__all__ = []
+__all__ = ["log_path"]
 
 now = datetime.now()
 log_path: str = os.path.join(cm_dir, "logs", now.strftime("%m.%d.%Y_%H-%M-%S.log"))
