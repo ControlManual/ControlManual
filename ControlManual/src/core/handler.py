@@ -11,8 +11,6 @@ if TYPE_CHECKING:
 class CommandHandler:
     def __init__(self, client: "Client") -> None:
         self._client = client
-        global error
-        error = client.app.interface.print
 
     @property
     def client(self) -> "Client":
@@ -31,17 +29,17 @@ class CommandHandler:
                 if crfn:
                     if client._function_open:
                         if i:
-                            error(errors["function_open"])
+                            client.error(errors["function_open"])
                         else:
                             client.functions[client.current_function]["defined"] = True
                             client._function_open = False
                             client._current_function = None
                     elif not i:
-                        error(errors["function_not_open"])
+                        client.error(errors["function_not_open"])
                     else:
                         client._function_open = True
                 else:
-                    error(errors["function_undefined"])
+                    client.error(errors["function_undefined"])
                     return True
 
         if client._function_open:
@@ -105,7 +103,7 @@ class CommandHandler:
             await self.execute(command, raw_args, args, kwargs, flags)
         else:
             logging.info("command not found")
-            error(errors["unknown_command"])
+            client.error(errors["unknown_command"])
     
     async def run_string(self, text: str) -> Any:
         """Function for running a command."""
@@ -142,14 +140,14 @@ class CommandHandler:
             emap = client.error_map
 
             if type(e) in emap:
-                return error(str(e))
+                return client.error(str(e))
 
             logging.error(f"command ran into exception: {e}")
             if isinstance(e, PermissionError):
                 logging.debug("permission error found")
-                error(errors["permission_error"])
+                client.error(errors["permission_error"])
             else:
                 failure: str = errors["command_error"].replace("{cmd}", cmd)
-                error(failure)
+                client.error(failure)
 
                 #console.show_exc(e)

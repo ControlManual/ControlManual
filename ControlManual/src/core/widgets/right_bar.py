@@ -8,6 +8,9 @@ import platform
 import getpass
 import datetime
 from rich.layout import Layout
+from cpuinfo import get_cpu_info
+from rich.table import Table
+from rich import box
 
 __all__ = ["RightBar"]
 
@@ -21,18 +24,36 @@ class RightBar(Widget):
     uptime = Reactive(time.time() - psutil.boot_time())
     sys_time = Reactive(datetime.datetime.now().strftime('%H:%M:%S'))
     user = getpass.getuser()
+    node = platform.node()
+    battery = Reactive(psutil.sensors_battery()) # type: ignore
+    cpu_info = get_cpu_info()
 
     def render(self):
         layout = Layout()
-        layout.split_column(Panel(f"""User: [important]{self.user}[/important]
-OS: [important]{self.system}[/important]
-Architecture: [important]{self.machine}[/important]
-System Time: [important]{self.sys_time}[/important]
-CPU Usage: [important]{self.cpu}%[/important]
-Memory: [important]{f"{self.memory.used // 1000000}mB / {self.memory.total // 1000000}mB"}[/important]
-Disk: [important]{f"{self.disk.used // 1000000000}gB / {self.disk.total // 1000000000}gB"}[/important]
-Computer Name: [important]{platform.node()}[/important]
-Uptime: [important]{int(self.uptime) // 60} minutes[/important]""", title = "System Info"), Panel("something here", title = "Some Window"))
+        table = Table(box = box.SIMPLE)
+
+        table.add_column("Process")
+        table.add_column("PID")
+        table.add_column("Memory")
+        table.add_column("User")
+
+        a = lambda x: f"[important]{x}[/important]"
+
+        for proc in psutil.process_iter():
+            table.add_row(a(proc.name()), a(str(proc.pid)), a(str(round(proc.memory_percent(), 2))), a(proc.username()))
+
+
+        layout.split_column(Panel(f"""[success]{self.user}[/success]@[important]{self.node}[/important]
+
+[important]OS[/important]: {self.system}
+[important]Architecture[/important]: {self.machine}
+[important]System Time[/important]: {self.sys_time}
+[important]CPU[/important]: {self.cpu_info["brand_raw"]}
+[important]Battery[/important]: {round(self.battery.percent, 2)}% ({"not " if not self.battery.power_plugged else ""}plugged in)
+[important]CPU Usage[/important]: {self.cpu}%
+[important]Memory[/important]: {f"{self.memory.used // 1000000}mB / {self.memory.total // 1000000}mB"}
+[important]Disk[/important]: {f"{self.disk.used // 1000000000}gB / {self.disk.total // 1000000000}gB"}
+[important]Uptime[/important]: {int(self.uptime) // 60} minutes""", title = "System Info"), Panel(table, title = "Processes"))
         return layout
 
     def set_vars(self):
@@ -42,6 +63,7 @@ Uptime: [important]{int(self.uptime) // 60} minutes[/important]""", title = "Sys
         self.disk = psutil.disk_usage("/")
         self.uptime = time.time() - psutil.boot_time()
         self.sys_time = datetime.datetime.now().strftime('%H:%M:%S')
+        self.battery = psutil.sensors_battery() # type: ignore
 
     def on_mount(self):
         self.set_interval(0.1, self.set_vars)

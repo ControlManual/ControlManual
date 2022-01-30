@@ -37,6 +37,7 @@ import click
 from rich import print as rich_print
 from pathlib import Path
 from rich.text import Text
+from .core.theme import console_object
 
 @click.command()
 @click.option("--file", "-f", help = "Run app starting with a file.", default = '')
@@ -58,7 +59,7 @@ def main(file: str, version: bool, clean: bool):
         return
 
     logging.info("starting textual app")
-    Application.run()
+    Application.run(console_object)
 
 def hook(exctype: Type[BaseException], value: BaseException, tb: TracebackType):
     rich_print("[red]Internal error!")

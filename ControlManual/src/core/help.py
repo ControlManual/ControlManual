@@ -22,7 +22,8 @@ def rq(key: str, col: dict) -> str:
     raw: str = extract(col, key.lower())
     return (
         f'\n[important]{key.replace("_", " ")}:[/important] [secondary]{raw}[/secondary]'
-        if raw else "")
+        if raw else ""
+    )
 
 
 def mfl(data: str) -> str:  # i kept adding a capital letter to some values

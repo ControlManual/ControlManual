@@ -195,3 +195,15 @@ class Client:
     async def run_command(self, command: str):
         """Run a command."""
         await CommandHandler(self).run_string(command)
+
+    def print(self, *args) -> None:
+        """Print a message to the feed."""
+        self.app.interface.print(*args)
+
+    def error(self, message: str) -> None:
+        """Print an error message to the feed."""
+        self.print(f"[error]{message}[/error]")
+
+    def success(self, message: str) -> None:
+        """Print an success message to the feed."""
+        self.print(f"[success]{message}[/success]")

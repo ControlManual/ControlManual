@@ -6,9 +6,25 @@ from textual.keys import Keys
 import logging
 from typing import Callable, Coroutine
 from rich.layout import Layout
+import psutil
+from rich.table import Table
+from rich import box
+import socket
+from socket import AF_INET, SOCK_DGRAM, SOCK_STREAM
 
+AD = "-"
+AF_INET6 = getattr(socket, 'AF_INET6', object())
+proto_map = {
+    (AF_INET, SOCK_STREAM): 'tcp',
+    (AF_INET6, SOCK_STREAM): 'tcp6',
+    (AF_INET, SOCK_DGRAM): 'udp',
+    (AF_INET6, SOCK_DGRAM): 'udp6',
+}
 
 Callback = Callable[[str], Coroutine[None, None, None]]
+
+__all__ = ["Console"]
+
 
 def insert(base: str, index: int, value: str) -> str:
     """Insert a string to an index."""
@@ -43,6 +59,28 @@ class Console(Widget):
             True: 'white on black'
         }
         text: str = ''
+        table = Table(box = box.SIMPLE)
+
+        table.add_column("Proto")
+        table.add_column("Laddr")
+        table.add_column("Raddr")
+        table.add_column("State")
+        table.add_column("Proc")
+        table.add_column("PID")
+
+        proc_names = {
+            p.pid: p.name
+            for p in psutil.process_iter(['pid', 'name'])
+        }
+
+        imp = lambda x: f"[important]{x}[/important]"
+
+        for conn in psutil.net_connections():
+            name = proc_names.get(conn.pid, '?') or ''
+            laddr = imp("%s:%s") % (conn.laddr)
+            raddr = imp("%s:%s") % (conn.raddr) if conn.raddr else ""
+            table.add_row(imp(proto_map[(conn.family, conn.type)]), laddr, raddr or imp(AD), imp(conn.status), imp(name), imp(conn.pid))
+
 
         for index, value in enumerate(self.input_text + ' '):
             if index == self.cursor_index:
@@ -58,11 +96,15 @@ class Console(Widget):
                 self.feed_text, 
                 title = "Feed"
             ), 
-            Panel
+            Layout(name = "bottom")
+        )
+
+        l["bottom"].split_row(Panel
             (
                 text, 
                 title = "Terminal" # TODO: figure out how to make this panel smaller
-            )
+            ),
+            Panel(table, title = "Connections")
         )
 
         return l
