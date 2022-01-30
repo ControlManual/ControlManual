@@ -12,7 +12,7 @@ class CommandHandler:
     def __init__(self, client: "Client") -> None:
         self._client = client
         global error
-        error = client.app.feed.print
+        error = client.app.interface.print
 
     @property
     def client(self) -> "Client":

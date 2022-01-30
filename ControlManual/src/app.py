@@ -13,7 +13,7 @@ DEBUG_LEN: int = 50
 
 class Application(App):
     client: Client
-    feed: Feed
+    interface: Console
 
     show_bar = Reactive(False)
 
@@ -28,16 +28,16 @@ class Application(App):
 
     async def on_mount(self) -> None:
         self.client = await Client(self)
-        self.feed = Feed()
         self.bar = Debugger()
 
-        c = Input(callback = self.client.run_command, title = "Terminal")
+        c = Console(callback = self.client.run_command)
+        self.interface = c
         await c.focus()
         logging.info("focused console")
         
         await self.view.dock(self.bar, edge = "left", size = DEBUG_LEN, z = 1)
-        await self.view.dock(Info(), edge = "right", size = 35)
-        await self.view.dock(self.feed, c, edge = "top", size = 25)
+        await self.view.dock(RightBar(), edge = "right", size = 35)
+        await self.view.dock(c, edge = "top")
 
         self.bar.layout_offset_x = -DEBUG_LEN
         
