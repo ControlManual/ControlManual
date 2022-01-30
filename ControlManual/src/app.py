@@ -4,7 +4,6 @@ from textual.keys import Keys
 from .client import Client
 import logging
 from .core.widgets import *
-from textual.widgets import Placeholder
 from textual.reactive import Reactive
 
 __all__ = ["Application"]

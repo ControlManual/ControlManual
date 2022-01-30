@@ -27,6 +27,7 @@ def extract(command: Target, path: str) -> Command:
     args_help: Optional[dict] = get(command, "ARGS_HELP", {})
     iterator: Optional[CommandIterator] = get(command, "iterator", None)
 
+    # TODO: fix this type safety issue
     return {
         "entry": command.run,
         "help": cmd_help,

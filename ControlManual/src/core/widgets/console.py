@@ -52,7 +52,18 @@ class Console(Widget):
                 text += value
 
         l = Layout()
-        l.split_column(Panel(self.feed_text, title = "Feed"), Panel(text, title = "Terminal"))
+        l.split_column(
+            Panel
+            (
+                self.feed_text, 
+                title = "Feed"
+            ), 
+            Panel
+            (
+                text, 
+                title = "Terminal" # TODO: figure out how to make this panel smaller
+            )
+        )
 
         return l
 
