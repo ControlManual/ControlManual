@@ -1,13 +1,12 @@
 from textual.widget import Widget
 from textual.reactive import Reactive
 from rich.panel import Panel
-from textual.events import Key, Load
+from textual.events import Key
 from textual.keys import Keys
-from ...client import Client
-from textual.widgets import ScrollView, Placeholder
 import logging
+from typing import Callable, Coroutine
 
-__all__ = ["Console"]
+Callback = Callable[[str], Coroutine[None, None, None]]
 
 def insert(base: str, index: int, value: str) -> str:
     l = list(base)
@@ -19,14 +18,19 @@ def remove(base: str, index: int) -> str:
     l.pop(index)
     return ''.join(l)
 
-class Console(Widget):
+class Input(Widget):
     input_text = Reactive('')
     is_white = Reactive(True)
     cursor_index = Reactive(0)
-    client: Client
+    callback: Callback
+    title: str
 
-    def register_client(self, client: Client) -> None:
-        self.client = client
+    def __init__(self, *args, **kwargs) -> None:
+        self.callback = kwargs.pop('callback')
+        self.title = kwargs.pop('title')
+        
+        super().__init__(*args, **kwargs)
+        
 
     def render(self) -> Panel:
         d = {
@@ -50,7 +54,7 @@ class Console(Widget):
 
         if key in [key.value for key in Keys]:
             if key == Keys.Enter:
-                await self.client.run_command(self.input_text)
+                await self.callback(self.input_text)
                 self.input_text = ' '
                 self.cursor_index = 0
 

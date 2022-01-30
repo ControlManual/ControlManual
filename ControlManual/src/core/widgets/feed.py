@@ -17,5 +17,4 @@ class Feed(Widget):
             self.text += str(i)
 
     def render(self):
-        logging.debug("rendered feed")
-        return Panel(self.text)
+        return Panel(self.text, title = "Feed")
