@@ -39,18 +39,15 @@ class CommandErrors(TypedDict):
 class Config(TypedDict):
     input_sep: str
     flag_prefix: str
-    colorize: str
-    use_path_env: str
-    hide_exe_from_help: str
+    colorize: bool
+    use_path_env: bool
+    hide_exe_from_help: bool
     aliases: Dict[str, str]
     comments: List[str]
     functions: List[str]
     help_command: str
     seperator: str
     errors: CommandErrors
-    truecolor: bool
-    basic: bool
-    basic_input: bool
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 Commands = Dict[str, Union[Command, BinaryCommand]]

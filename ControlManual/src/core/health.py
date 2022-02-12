@@ -6,7 +6,7 @@ __all__ = [
 	"check_health"
 ]
 
-CONFIG_BASE = """{
+CONFIG_BASE = """{{
 	"input_sep": ">>",
 	"flag_prefix": "--",
 	"colorize": true,
@@ -40,10 +40,7 @@ CONFIG_BASE = """{
 		"function_undefined": "No function currently defined.",
 		"permission_error": "Permission denied."
 	},
-	"columns": ["info", "log", "directory", "exceptions"],
-	"truecolor": true,
-	"basic": true,
-	"basic_input": false
+	"log_level": "DEBUG"
 }"""
 
 LOCK_TOML_BASE: str = """# Auto generated, do not edit manually!

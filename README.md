@@ -12,6 +12,8 @@
 
 ### Running
 
+**Note:** This has currently only been tested on Linux (Ubuntu to be exact). Some features may not work property on other operating systems as of now.
+
 #### From Source
 
 To run via downloading the source, use the following commands.
@@ -19,20 +21,12 @@ To run via downloading the source, use the following commands.
 ```
 $ git clone https://github.com/ZeroIntensity/ControlManual && cd ControlManual
 $ python3 -m pip install -r requirements.txt
-$ python3 run.py
+$ python3 -m ControlManual
 ```
 
-#### From PyPI (Recommended)
+#### From PyPI
 
 ```
 $ pip3 install ControlManual
 $ python3 -m ControlManual
-```
-
-#### Using Pipx
-
-If you have [pipx](https://pypa.github.io/pipx/) installed, you can easily run using the following command:
-
-```
-$ pipx run ControlManual
 ```
