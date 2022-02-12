@@ -1,13 +1,16 @@
 from pathlib import Path
 import os
-from .constants import cm_dir
+from .constants import cm_dir, errors
 from .core.config import config
 from .constants.errors import *
 from typing import Optional, Dict, List, Any, Type, TYPE_CHECKING
 import colorama
 from .core.loader import load_commands
-from .typings import Config
+from .typings import CommandCallable, Config, CommandIterator
 from .core.handler import CommandHandler
+from functools import wraps
+from typeguard import typechecked
+from .utils import commands, title
 
 if TYPE_CHECKING:
     from .app import Application
@@ -48,8 +51,13 @@ class Client:
 
         colorama.init(convert = os.name == "nt") # enables ansi stuff
 
+        title("Control Manual")
         self._history: List[str] = []
         await self.render()
+
+    def title(self, t: str) -> None:
+        """Set the terminal title."""
+        title(t)
 
     async def render(self) -> None:
         """Function for loading commands."""
@@ -196,14 +204,45 @@ class Client:
         """Run a command."""
         await CommandHandler(self).run_string(command)
 
-    def print(self, *args) -> None:
-        """Print a message to the feed."""
-        self.app.interface.print(*args)
+    @staticmethod
+    @typechecked
+    def command(func: CommandCallable):
+        """Decorator for making sure a command is valid."""
+        wraps(func)
+        def decorator():
+            pass
+        return decorator
 
-    def error(self, message: str) -> None:
-        """Print an error message to the feed."""
-        self.print(f"[error]{message}[/error]")
+    @staticmethod
+    @typechecked
+    def iterator(func: CommandIterator):
+        """Decorator for making sure an iterator command is valid."""
+        wraps(func)
+        def decorator():
+            pass
+        return decorator
 
-    def success(self, message: str) -> None:
-        """Print an success message to the feed."""
-        self.print(f"[success]{message}[/success]")
+    @property
+    def utils(self):
+        """Utilities for commands to use."""
+        return commands
+
+    @property
+    def errors(self):
+        return errors
+
+    @property
+    def console(self):
+        return self._app.interface.console_client
+
+    def print(self, *args: Any) -> None:
+        """Print a message to the terminal"""
+        self.console.print(*args)
+
+    def error(self, *args: Any) -> None:
+        """Print an error message to the terminal."""
+        self.console.error(*args)
+
+    def success(self, *args: Any) -> None:
+        """Print a success message to the terminal."""
+        self.console.success(*args)

@@ -1,10 +1,8 @@
 from textual.widget import Widget
 from textual.reactive import Reactive
 from rich.panel import Panel
-from textual.events import Key
-from textual.keys import Keys
 import logging
-from typing import Callable, Coroutine
+from typing import Callable, Coroutine, Any
 from rich.layout import Layout
 import psutil
 from rich.table import Table
@@ -28,6 +26,48 @@ Callback = Callable[[str], Coroutine[None, None, None]]
 
 __all__ = ["Console"]
 
+class ConsoleClient:
+    """Class for handling communication with the console widget."""
+    def __init__(self, console: "Console") -> None:
+        self._console = console
+
+    def error(self, *args: Any) -> None:
+        """Print an error message."""
+        self.color('error', *args)
+
+    def success(self, *args: Any) -> None:
+        """Print a success message."""
+        self.color('success', *args)
+
+    def color(self, color: str, *args: Any) -> None:
+        """Print a message using a rich color."""
+        self.print(f'[{color}]{" ".join(args)}[/{color}]')
+
+    def print(self, *args: Any) -> None:
+        """Print a message."""
+        self.write(*args, '\n')
+
+    def write(self, *args: Any) -> None:
+        """Write a message to the screen."""
+        logging.debug(f"write called with args: {args}")
+        for i in args:
+            self._console.feed_text += str(i)
+
+    def _k_v(self, key: Any, value: Any) -> None:
+        self.print(f'[important]{key}[/important] - [success]{value}[/success]')
+
+    def key_value(self, key: Any, value: Any = None):
+        """Print a key value pair."""
+        if isinstance(key, dict):
+            for k, v in key.items():
+                self._k_v(k, v)
+
+        self._k_v(key, value)
+
+    def empty(self):
+        """Clear the console."""
+        self._console.feed_text = ''
+
 class Console(Widget, Input):
     """Widget for representing the console interface."""
     callback: Callback
@@ -35,8 +75,9 @@ class Console(Widget, Input):
     feed_text = Reactive('')
     client: Client
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.client = kwargs.pop('client')
+        self._console_client = ConsoleClient(self)
         self.callback = self.client.run_command
         
         super().__init__(*args, **kwargs)
@@ -80,10 +121,6 @@ class Console(Widget, Input):
 
         return l
 
-    def print(self, *args) -> None:
-        self.write(*args, '\n')
-
-    def write(self, *args) -> None:
-        logging.debug(f"write called with args: {args}")
-        for i in args:
-            self.feed_text += str(i)
+    @property
+    def console_client(self):
+        return self._console_client

@@ -1,5 +1,3 @@
-
-
 class InvalidArguments(Exception):
     """Raised when arguments passed to the command are invalid."""
     pass

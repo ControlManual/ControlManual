@@ -44,6 +44,7 @@ class RightBar(Widget):
 
 
         layout.split_column(Panel(f"""[success]{self.user}[/success]@[important]{self.node}[/important]
+{'-' * len(f'{self.user}@{self.node}')}
 
 [important]OS[/important]: {self.system}
 [important]Architecture[/important]: {self.machine}

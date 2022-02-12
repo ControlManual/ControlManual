@@ -48,6 +48,7 @@ class Config(TypedDict):
     help_command: str
     seperator: str
     errors: CommandErrors
+    truecolor: bool
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 Commands = Dict[str, Union[Command, BinaryCommand]]

@@ -7,6 +7,7 @@ from .core.widgets import *
 from textual.reactive import Reactive
 from textual.widgets import TreeControl, TreeClick
 import os
+from .core.theme import console_object
 
 __all__ = ["Application"]
 
@@ -33,9 +34,11 @@ class Application(App):
         self.filesystem = not self.filesystem
 
     async def on_mount(self) -> None:
+        self.console = console_object
         self.client = await Client(self)
         self.bar = Debugger()
         self.filesystem_widget = TreeControl("Directory", "")
+        logging.debug(f"{self.console}")
 
         for i in os.listdir(self.client.path):
             await self.filesystem_widget.add(self.filesystem_widget.root.id, i, i)
@@ -49,7 +52,7 @@ class Application(App):
         
         await self.view.dock(self.filesystem_widget, edge = "left", size = FS_LEN, z = 1)
         await self.view.dock(self.bar, edge = "left", size = DEBUG_LEN, z = 2)
-        await self.view.dock(RightBar(), edge = "right", size = 40)
+        await self.view.dock(RightBar(), edge = "right", size = 50)
         await self.view.dock(c, edge = "top")
 
         self.bar.layout_offset_x = -DEBUG_LEN
