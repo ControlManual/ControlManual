@@ -8,6 +8,10 @@ class CommandIterator(Protocol):
     async def __call__(self, raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client) -> AsyncGenerator[Any, None]:
         ...
 
+class Colors(TypedDict):
+    red: str
+    green: str
+
 class BaseCommand(TypedDict):
     help: Optional[str]
     usage: Optional[str]
@@ -50,6 +54,7 @@ class Config(TypedDict):
     errors: CommandErrors
     truecolor: bool
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+    colors: Colors
 
 Commands = Dict[str, Union[Command, BinaryCommand]]
 ParsedString = Tuple[List[str], Dict[str, str], List[str]]

@@ -208,19 +208,13 @@ class Client:
     @typechecked
     def command(func: CommandCallable):
         """Decorator for making sure a command is valid."""
-        wraps(func)
-        def decorator():
-            pass
-        return decorator
+        pass
 
     @staticmethod
     @typechecked
     def iterator(func: CommandIterator):
         """Decorator for making sure an iterator command is valid."""
-        wraps(func)
-        def decorator():
-            pass
-        return decorator
+        pass
 
     @property
     def utils(self):
@@ -246,3 +240,7 @@ class Client:
     def success(self, *args: Any) -> None:
         """Print a success message to the terminal."""
         self.console.success(*args)
+
+    async def show_exc(self, exc: Exception) -> None:
+        """Display the exception on the ExcPanel widget."""
+        await self._app.show_exc(exc)

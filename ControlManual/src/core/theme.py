@@ -4,9 +4,12 @@ from .config import config
 
 tc = config['truecolor']
 
+red = config['colors']['red']
+green = config['colors']['green']
+
 theme = Theme({
-    "error": "bold #ef4a4a" if tc else 'bold red',
-    "important": "bold #1a9628" if tc else 'bold green',
-    "success": "#1a9628" if tc else 'green'
+    "error": f"bold {red}" if tc else 'bold red',
+    "important": f"bold {red}" if tc else 'bold green',
+    "success": f"{green}" if tc else 'green'
 })
 console_object = Console(theme = theme, color_system = 'truecolor' if tc else 'standard')

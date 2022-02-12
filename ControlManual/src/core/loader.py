@@ -1,23 +1,21 @@
 from ..typings import Commands, CommandIterator, Command
 from types import ModuleType
-from typing import Any, Optional, AsyncGenerator, Literal, Union
+from typing import Any, Optional, AsyncGenerator, Literal
 from pathlib import Path
 import sys
 import os
 from ..constants import cm_dir
 import importlib
 from ..utils import not_null
-from ctypes import cdll, CDLL
 from contextlib import suppress
+import logging
 
 __all__ = ["load_commands"]
 
-Target = Union[ModuleType, CDLL]
-
-def get(command: Target, target: str, default: Any = "") -> Any:
+def get(command: ModuleType, target: str, default: Any = "") -> Any:
     return getattr(command, target) if hasattr(command, target) else default
 
-def extract(command: Target, path: str) -> Command:
+def extract(command: ModuleType, path: str) -> Command:
     cmd_help: Optional[str] = get(command, "HELP")
     usage: Optional[str] = get(command, "USAGE")
     package: Optional[str] = get(command, "PACKAGE")
@@ -27,7 +25,6 @@ def extract(command: Target, path: str) -> Command:
     args_help: Optional[dict] = get(command, "ARGS_HELP", {})
     iterator: Optional[CommandIterator] = get(command, "iterator", None)
 
-    # TODO: fix this type safety issue
     return {
         "entry": command.run,
         "help": cmd_help,
@@ -38,7 +35,7 @@ def extract(command: Target, path: str) -> Command:
         "package": package,
         "args_help": args_help,
         "iterator": iterator,
-        "is_binary": isinstance(command, CDLL),
+        "is_binary": False,
         "path": path
     }
 
@@ -57,10 +54,9 @@ async def load_directory(target: Literal["commands", "middleware"]) -> AsyncGene
         if p.endswith('.py'):
             file: str = filename if os.path.isfile(p) else f'{i}.main'
 
-            with suppress(ImportError):
-                yield extract(importlib.import_module(f".commands.{file}", package="ControlManual"), p)
+            yield extract(importlib.import_module(f"commands.{file}"), p)
         elif p.endswith('.so'):
-            yield extract(cdll.LoadLibrary(p), p)
+            raise NotImplementedError("shared library commands are not yet supported")
 
         
 

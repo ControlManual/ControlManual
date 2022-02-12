@@ -49,7 +49,6 @@ class CommandHandler:
 
     async def run_command(self, command: str):
         errors = config["errors"]
-        logging.info(f"running command: {command}")
         client = self.client
 
         command = await client.load_variables(command)
@@ -59,9 +58,8 @@ class CommandHandler:
 
             try:
                 command = client.cmd_history[int(command) - 1]
-            except IndexError as e:
+            except IndexError:
                 return logging.error("index error with cmd history")
-                #console.show_exc(e)
         
         split: List[str] = command.split(" ")
 
@@ -99,8 +97,8 @@ class CommandHandler:
 
             return await target()
 
-        if cmd in commands:
-            await self.execute(command, raw_args, args, kwargs, flags)
+        elif cmd in commands:
+            await self.execute(cmd, raw_args, args, kwargs, flags)
         else:
             logging.info("command not found")
             client.error(errors["unknown_command"])
@@ -149,5 +147,4 @@ class CommandHandler:
             else:
                 failure: str = errors["command_error"].replace("{cmd}", cmd)
                 client.error(failure)
-
-                #console.show_exc(e)
+                await client.show_exc(e)

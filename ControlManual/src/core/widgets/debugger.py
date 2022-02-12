@@ -1,6 +1,5 @@
 from textual.widget import Widget
 from rich.panel import Panel
-from platform import python_version
 from rich.layout import Layout
 from .utils import Input
 
@@ -12,4 +11,3 @@ class Debugger(Widget, Input):
         l = Layout()
         l.split_column(Panel("abc"), Panel(Input.make_text(self.input_text, self.is_white, self.cursor_index)))
         return Panel(l, title = "Debugger")
-        #return Panel(f"""Python Version: {python_version()}""", title = "Debugger")
