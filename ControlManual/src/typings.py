@@ -11,6 +11,7 @@ class CommandIterator(Protocol):
 class Colors(TypedDict):
     red: str
     green: str
+    dark_green: str
 
 class BaseCommand(TypedDict):
     help: Optional[str]

@@ -208,13 +208,13 @@ class Client:
     @typechecked
     def command(func: CommandCallable):
         """Decorator for making sure a command is valid."""
-        pass
+        return func
 
     @staticmethod
     @typechecked
     def iterator(func: CommandIterator):
         """Decorator for making sure an iterator command is valid."""
-        pass
+        return func
 
     @property
     def utils(self):

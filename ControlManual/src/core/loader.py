@@ -25,6 +25,8 @@ def extract(command: ModuleType, path: str) -> Command:
     args_help: Optional[dict] = get(command, "ARGS_HELP", {})
     iterator: Optional[CommandIterator] = get(command, "iterator", None)
 
+
+    logging.debug(str(command.run))
     return {
         "entry": command.run,
         "help": cmd_help,

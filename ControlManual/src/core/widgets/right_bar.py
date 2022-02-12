@@ -43,7 +43,7 @@ class RightBar(Widget):
             table.add_row(a(proc.name()), a(str(proc.pid)), a(str(round(proc.memory_percent(), 2))), a(proc.username()))
 
 
-        layout.split_column(Panel(f"""[success]{self.user}[/success]@[important]{self.node}[/important]
+        layout.split_column(Panel(f"""[success]{self.user}[/success]@[secondary]{self.node}[/secondary]
 {'-' * len(f'{self.user}@{self.node}')}
 
 [important]OS[/important]: {self.system}
