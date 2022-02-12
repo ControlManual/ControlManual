@@ -22,117 +22,62 @@
 # SOFTWARE.
 # -------------------------------------------------------------------------------------------
 
-# Dependencies
-from rich.console import Console
-
-tmp = Console()
-
+import shutil
 import os
 import sys
-import typing
-import types
-import importlib
-import shlex
-import pathlib
-import atexit
-import colorama
-import io
-import subprocess
+from .core.health import check_health
+from .utils import run
+run(check_health())
+from typing import Type
+from types import TracebackType
+from .app import Application
+from . import constants, logger
+import logging
 import click
-import shutil
-import platform
-import rethread
-import psutil
-import rich
-import platform
-import getpass
-import datetime
-import distro
-import time
-import watchdog
-import tempfile
-import inspect
-import asyncio
-import aiofiles
-import aiohttp
-import py7zr
-import toml
-import contextlib
-import github
-
-from . import static, info
-from .check_health import check_health, cm_dir
-
-@atexit.register
-def shutdown():
-    from .logger import flush
-    print()
-    asyncio.run(flush())
-
-async def main(filename: str) -> None:
-    """Main file for running Control Manual."""
-    from .logger import log, flush
-    from .client import Client, Reload
-
-    if float(platform.python_version()[:3]) < 3.8:
-        static.static_error("invalid python version - at least 3.8 is required")
-
-    while True:
-
-        client = await Client(info.__version__)
-        await log("entering main loop")
-        try:
-            resp = await client.start(filename)
-        except Exception as e:
-            client._thread_running = False
-            await log(f"exception occured: {e}")
-            raise e
-
-        if resp == Reload:
-            await log("reload invoked, starting process")
-            await flush()
-            try:
-                p = psutil.Process(os.getpid())
-                for handler in p.open_files() + p.connections(
-                ):  # type: ignore
-                    os.close(handler.fd)
-            except:
-                static.static_error("fatal error occured when reloading")
-
-            python = sys.executable
-            await log("restarting app")
-            os.execl(python, python, *sys.argv)
-        else:
-            sys.exit
-
+from rich import print as rich_print
+from pathlib import Path
+from rich.text import Text
 
 @click.command()
-@click.option("--file", "-f", help="Run app starting with a file.", default = '')
-@click.option("--version", "-v", is_flag=True, help="Get the app version.")
-@click.option("--clean", "-c", is_flag=True, help="Clears all the auto generated files, and allows a clean install (with the exception of source code).")
-def main_sync(file: str, version: bool, clean: bool):
-    asyncio.run(check_health())
-
+@click.option("--file", "-f", help = "Run app starting with a file.", default = '')
+@click.option("--version", "-v", is_flag = True, help = "Get the app version.")
+@click.option("--clean", "-c", is_flag = True, help = "Clears all the auto generated files, and allows a clean install.")
+def main(file: str, version: bool, clean: bool):
     if version:
-        return print(f'ControlManual V{info.__version__}')
+        return print(f'ControlManual V{constants.__version__}')
 
     if clean:
-        for i in ['logs', 'middleware', 'commands']:
-            shutil.rmtree(os.path.join(cm_dir, i))
+        for i in {'logs', 'middleware', 'commands'}:
+            shutil.rmtree(os.path.join(constants.cm_dir, i))
+            print(f'Deleted "{i}"')
         
-        for x in ['config.json', 'config-lock.toml']:
-            os.remove(os.path.join(cm_dir, x))
+        for x in {'config.json', 'config-lock.toml'}:
+            os.remove(os.path.join(constants.cm_dir, x))
+            print(f'Deleted "{x}"')
 
         return
 
-    asyncio.run(main(file))
+    logging.info("starting textual app")
+
+    Application.run()
+
+def hook(exctype: Type[BaseException], value: BaseException, tb: TracebackType):
+    rich_print("[red]Internal error!")
+
+    code = tb.tb_frame.f_code
+    logging.critical(f"{exctype.__name__}@{code.co_filename}:{code.co_firstlineno} - {value}")
+    sys.__excepthook__(exctype, value, tb)
+    
+    t = Text(f"\nPlease check the logs for more info ({Path(logger.log_path).name}).", style = "red")
+    rich_print(t)
+
+sys.excepthook = hook
 
 def main_wrap():
     try:
-        main_sync() # type: ignore
+        main() # type: ignore
     except KeyboardInterrupt:
         sys.exit(0)
 
-
 if __name__ == "__main__":
-    main_wrap()
+    raise Exception("must be started from __main__ due to import issues")

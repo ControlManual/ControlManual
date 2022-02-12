@@ -1,63 +1,37 @@
-from .functions import *
-from typing import Coroutine, Dict, Type, Union, Callable, List, Any, Optional, AsyncGenerator
 from pathlib import Path
-from .config import Config, cm_dir, config_path
 import os
-from . import utils, api, static, error as command_errors
-from .utils import *
-from .api import *
+from .constants import cm_dir, errors
+from .core.config import config
+from .constants.errors import *
+from typing import Optional, Dict, List, Any, Type, TYPE_CHECKING
 import colorama
-import rethread
-from .console import console, ConsoleWrapper
-import platform
-import os
-import psutil
-from .error import *
-import getpass
-import datetime
-import distro
-import time
-from .logger import log
-import aiofiles
-import asyncio
-from rich.live import Live
-import toml
-from contextlib import nullcontext
-from types import AsyncGeneratorType
+from .core.loader import load_commands
+from .typings import CommandCallable, Config, CommandIterator
+from .core.handler import CommandHandler
+from functools import wraps
+from typeguard import typechecked
+from .utils import commands, title
 
-class Iterator: # probably should use a dataclass for this but i dont want to add more loading time
-    def __init__(self, gen: AsyncGeneratorType):
-        self.gen = gen
-
-class Reload:
-    """Blank object used to reload the instance."""
-    pass
-
-def threaded(client: "Client") -> None:
-    """Function ran on seperate thread when initalized."""
-    client._connected = asyncio.run(is_online())
+if TYPE_CHECKING:
+    from .app import Application
 
 class Client:
-    """Base class for running Control Manual."""
-    async def __new__(cls, version: str):
+    """Class for allowing commands to interact with the engine."""
+    async def __new__(cls, app: "Application"):
         self = super().__new__(cls)
-        await cls.init(self, version)
+        await cls.init(self, app)
         return self
 
-    async def init(self, version: str) -> None:
-        self._config = Config()
+    async def init(self, app: "Application") -> None:
         self._reset: bool = False
-        self._version: str = version
         self._path: Path = Path().home()
         self._functions: dict = {}
         self._current_function: Optional[str] = None
         self._function_open: bool = False
         self._toggled_output: bool = True
         self._origin: Path = self._path
-        self._actual_functions: Dict[str, Callable] = {
-            "resp": self.get_command_response
-        }
         self._command_response: Any = None
+        self._app = app
 
         get = lambda x: os.path.join(cm_dir, x)
 
@@ -72,49 +46,27 @@ class Client:
         self._aliases: Dict[str, str] = {}
         self._vals: Dict[Any, Any] = {}
 
-        for i in self._config.aliases:
-            self._aliases[i] = await self.load_variables(
-                self._config.aliases[i])
+        for i in config['aliases']:
+            self._aliases[i] = await self.load_variables(config['aliases'][i])
 
         colorama.init(convert = os.name == "nt") # enables ansi stuff
-        console.clear(), title("Control Manual")
 
-        self._connected = False
-        self._thread_running = True
-        rethread.thread(threaded, self)
+        title("Control Manual")
         self._history: List[str] = []
+        await self.render()
 
-        lockfile = os.path.join(cm_dir, 'config-lock.toml')
+    def title(self, t: str) -> None:
+        """Set the terminal title."""
+        title(t)
 
-        with open(lockfile) as f: # cant use aiofiles here since toml doesnt support it
-            load = toml.load(f)
-        
-        environ = load["environment"]
-        
-        if not environ["installed"]:
-            with console.console.status("Installing...", spinner="shark"):
-                resp = await download_repo('ControlManual/ControlManual-Builtin')
-                
-            if not resp:
-                print('Failed to install builtins!')
-            else:
-                environ["installed"] = True
+    async def render(self) -> None:
+        """Function for loading commands."""
+        self._commands = await load_commands()
 
-        environ["cm_dir"] = cm_dir
-
-        with open(lockfile, 'w') as f:
-            f.write(f'# Auto generated, do not edit manually!\n\n{toml.dumps(load)}')
-
-        with console.console.status("Loading commands...", spinner="material"):
-            await self.reload()
-
-    async def reload(self) -> None:
-        """Function for reloading commands and middleware."""
-        self._middleware: List[
-            Coroutine] = await load_middleware(
-                os.path.join(cm_dir, "middleware"))
-        self._commands = await load_commands(
-            os.path.join(cm_dir, "commands"))
+    @property
+    def app(self) -> "Application":
+        """Textual app class."""
+        return self._app
 
     @property
     def cm_dir(self) -> str:
@@ -124,7 +76,7 @@ class Client:
     @property
     def config_path(self) -> str:
         """Location of the config file."""
-        return config_path
+        return os.path.join(cm_dir, "config.json")
 
     @property
     def cmd_history(self) -> List[str]:
@@ -139,11 +91,6 @@ class Client:
     @function_open.setter
     def set_function_open(self, value) -> None:
         self._function_open = value
-
-    @property
-    def static(self):
-        """Module containing standalone objects."""
-        return static
 
     @property
     def functions(self) -> dict:
@@ -167,21 +114,11 @@ class Client:
     @vals.setter
     def vals(self, key: Any, value: Any) -> None:
         self._vals[key] = value
-
-    @property
-    def middleware(self) -> List[Coroutine]:
-        """List of callables ran when a command is executed."""
-        return self._middleware
-
-    @property
-    def connected(self) -> bool:
-        """Whether the instance is connected to the Control Manual API."""
-        return self._connected
-
+    
     @property
     def config(self) -> Config:
         """Class for representing the JSON config."""
-        return self._config
+        return config
 
     @property
     def origin(self) -> Path:
@@ -200,7 +137,7 @@ class Client:
     @property
     def version(self) -> str:
         """Version of Control Manual."""
-        return self._version
+        raise NotImplementedError('version tracking not yet implemented')
 
     @property
     def commands(self):
@@ -218,24 +155,9 @@ class Client:
         return str(self._path)
 
     @property
-    def utils(self):
-        """Utilities for commands."""
-        return utils
-
-    @property
-    def api(self):
-        """Functions regarding the API."""
-        return api
-
-    @property
     def variables(self) -> Dict[str, str]:
         """Dictionary representing variables."""
         return self._variables
-
-    @property
-    def console(self) -> ConsoleWrapper:
-        """Console object."""
-        return console
 
     def add_variable(self, name: str, value: str) -> None:
         """Function for adding a variable to the instance."""
@@ -264,16 +186,6 @@ class Client:
         return text
 
     @property
-    def actual_functions(self) -> Dict[str, Callable]:
-        """Dictionary of functions that can be called in the command line."""
-        return self._actual_functions
-
-    @property
-    def errors(self):
-        """Errors to raise in commands."""
-        return command_errors
-
-    @property
     def error_map(self) -> List[Type[Exception]]:
         """Map of errors and their corresponding metadata."""
         return [
@@ -288,253 +200,47 @@ class Client:
             Collision,
         ]
 
+    async def run_command(self, command: str):
+        """Run a command."""
+        await CommandHandler(self).run_string(command)
+
+    @staticmethod
+    @typechecked
+    def command(func: CommandCallable):
+        """Decorator for making sure a command is valid."""
+        return func
+
+    @staticmethod
+    @typechecked
+    def iterator(func: CommandIterator):
+        """Decorator for making sure an iterator command is valid."""
+        return func
+
     @property
-    def iterator(self) -> Type[Iterator]:
-        return Iterator
+    def utils(self):
+        """Utilities for commands to use."""
+        return commands
 
-    async def get_command_response(self, args: List[str]) -> None:
-        pass
-        # return get_resp(self.run_command, ' '.join(args))
+    @property
+    def errors(self):
+        return errors
 
-    async def start(self, filename: Union[str,
-                                          bool]) -> Union[None, Type[Reload]]:
-        """Start the main loop."""
+    @property
+    def console(self):
+        return self._app.interface.console_client
 
-        while True:
-            await log("new iteration started in main loop")
+    def print(self, *args: Any) -> None:
+        """Print a message to the terminal"""
+        self.console.print(*args)
 
-            if filename:
-                await log("specific file was passed, checking")
-                if not os.path.exists(filename):
-                    await log("failed to find specified file")
-                    error("Could not find file.")
-                else:
-                    async with aiofiles.open(filename) as f:
-                        await log("reading file")
-                        read = await f.read()
+    def error(self, *args: Any) -> None:
+        """Print an error message to the terminal."""
+        self.console.error(*args)
 
-                        for i in read.split("\n"):
-                            await self.run_command(i)
+    def success(self, *args: Any) -> None:
+        """Print a success message to the terminal."""
+        self.console.success(*args)
 
-            inp: str = f"[white on black]{self._path} [primary]>>[/primary] "
-
-            if not os.path.exists(self._path):
-                await log("current path not found")
-                static.static_error("path does not exist.")
-
-            console.set_dir(self._path)
-
-            memory_raw = psutil.virtual_memory()
-            memory = f"{memory_raw.used // 1000000}mB / {memory_raw.total // 1000000}mB"
-
-            disk_raw = psutil.disk_usage("/")
-            disk = f"{disk_raw.used // 1000000000}gB / {disk_raw.total // 1000000000}gB"
-
-            battery = psutil.sensors_battery()  # type: ignore
-            # for some reason its saying sensors_battery() doesn't exist
-            system = (
-                distro.name(pretty=True) if platform.system() == "Linux" else
-                f"{platform.system()} {platform.release()} {platform.version()}"
-            )
-            uptime: float = time.time() - psutil.boot_time()
-            console.set_info(
-                f"""User: [important]{getpass.getuser()}[/important]
-OS: [important]{system}[/important]
-Architecture: [important]{platform.machine()}[/important]
-System Time: [important]{datetime.datetime.now().strftime('%H:%M:%S')}[/important]
-CPU Usage: [important]{psutil.cpu_percent()}%[/important]
-Memory: [important]{memory}[/important]
-Disk: [important]{disk}[/important]
-Battery: [important]{str(battery.percent)}%[/important]
-Computer Name: [important]{platform.node()}[/important]
-Uptime: [important]{int(uptime) // 60} minutes[/important]
-""")
-            await log("taking input")
-            command: str = console.take_input(inp, self.commands, self.aliases)
-
-            console.clear_panel("exceptions")
-            try:
-                console.screen["tmp"].visible = False
-            except:
-                pass
-            command = command.replace(r"\n", "\n")
-
-            await self.run_command(command)
-            await log("command finished running")
-
-            if self._reset:
-                await log("reload invoked, sending back to main function")
-                return Reload
-
-            filename = False
-
-    async def run_command(self, command: str) -> Any:
-        """Function for running a command."""
-        await log(f"preparing to run command: {command}")
-        if command not in [str(i) for i in range(1, 11)]:
-            self.cmd_history.append(command)
-        config = self._config
-        errors = config.errors
-
-        for i in config.comments:
-            if command.startswith(i):
-                await log("comment found, ending")
-                return
-
-        cmds = command.split(config.seperator)
-        for comm in cmds:
-            await log("iterating through found command(s)")
-            comm = await self.load_variables(comm)
-            while True:
-                if comm in [str(i) for i in range(1, 11)]:
-                    try:
-                        comm = self.cmd_history[int(comm) - 1]
-                    except IndexError as e:
-                        await log("index error with cmd history")
-                        console.show_exc(e)
-                        return
-                else:
-                    break
-            split: List[str] = comm.split(" ")
-            if not any(split):
-                continue
-
-            while not split[0]:
-                split.pop(0)
-
-            raw_args = " ".join(split[1:])  # unsplit string of arguments
-            cmd = split[0]
-            while True:
-                if cmd in self.aliases:
-                    await log("alias found")
-                    spl = self.aliases[cmd].split(" ")
-                    cmd = spl[0]
-                    if len(spl) > 1:
-                        excess: str = " ".join(spl[1:])
-                        raw_args = excess + " " + raw_args
-                else:
-                    break
-
-            p = await parse(raw_args)
-
-            if not p:
-                return error('Invalid argument string.')
-
-            args, kwargs, flags = p
-
-            cmd: str = cmd.lower()
-
-            crfn: Optional[str] = self.current_function
-            COMMANDS = self.commands
-
-            for fn in self.middleware:
-                await fn(cmd, raw_args, args, kwargs, flags,
-                         COMMANDS)  # type: ignore
-
-            if cmd == config.functions[0]:
-                await log("command is a function opener")
-                if crfn:
-                    if self._function_open:
-                        await log("function is already open, ending")
-                        utils.error(errors["function_open"])
-                    else:
-                        await log("opened function, closing")
-                        self._function_open = True
-                else:
-                    await log("function is not defined, ending")
-                    utils.error(errors["function_undefined"])
-
-                return
-
-            if cmd == config.functions[1]:
-                await log("command is a function closer")
-                if crfn:
-                    if not self._function_open:
-                        await log("function is not open, ending")
-                        utils.error(errors["function_not_open"])
-                    else:
-                        await log("closed function, ending")
-                        self.functions[self.current_function]["defined"] = True
-                        self._function_open = False
-                        self._current_function = None
-                else:
-                    await log("function is not defined, ending")
-                    utils.error(errors["function_undefined"])
-
-                return
-
-            if self._function_open:
-                await log(
-                    "function is currently open, appending command to script")
-                if not command == config.functions[1]:
-                    return self._functions[crfn]["script"].append(command)
-
-            if cmd == config.help_command:
-                await log("command is the help command")
-                if args:
-                    if len(args) > 1:
-                        await print_argument_help(COMMANDS, args[0], args[1])
-                    else:
-                        await print_command_help(COMMANDS, args[0])
-                else:
-                    await print_help(COMMANDS)
-
-                continue
-
-            if cmd in COMMANDS:
-                current_command = COMMANDS[cmd]
-
-                if "exe" in current_command:
-                    await log("command is an executable")
-                    await log("handling argument parsing")
-
-                    executable: str = current_command["exe"] # type: ignore
-                    console.clear()
-                    with Live(console.get_terminal()):
-                        await run_exe(executable, " ".join(args))
-                    
-                    return
-
-                runner = current_command["entry"]
-
-                try:
-                    await log("running command")
-
-                    if not config.basic:
-                        console.clear()
-
-                    ctx = Live if (current_command["live"]) and (not config.basic) else nullcontext
-
-                    if 'iter' in flags:
-                        runner = current_command["iterator"]
-
-                        if not runner:
-                            raise NothingChanged('Command does not support iterators.')
-
-                    coro = runner(raw_args, args, kwargs, flags, self) # type: ignore
-
-                    with ctx(console.get_terminal()):
-                        is_iter = isinstance(coro, AsyncGeneratorType)
-                        res = coro if is_iter else await coro
-
-                    return Iterator(res) if is_iter else res # so there arent any generator errors
-                except Exception as e:
-                    emap = self.error_map
-
-                    if type(e) in emap:
-                        return console.error(str(e))
-
-                    await log(f"command ran into exception: {e}")
-                    if isinstance(e, PermissionError):
-                        await log("permission error found")
-                        error(errors["permission_error"])
-                    else:
-                        failure: str = errors["command_error"].replace(
-                            "{cmd}", cmd)
-                        console.error(failure)
-
-                    console.show_exc(e)
-
-            else:
-                await log("command not found")
-                error(errors["unknown_command"])
+    async def show_exc(self, exc: Exception) -> None:
+        """Display the exception on the ExcPanel widget."""
+        await self._app.show_exc(exc)

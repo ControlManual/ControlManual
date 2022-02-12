@@ -1,8 +1,12 @@
+from ..constants.base import cm_dir
 import os
-from .constants import cm_dir
 import aiofiles
 
-config_base = """{
+__all__ = [
+	"check_health"
+]
+
+CONFIG_BASE = """{{
 	"input_sep": ">>",
 	"flag_prefix": "--",
 	"colorize": true,
@@ -36,23 +40,18 @@ config_base = """{
 		"function_undefined": "No function currently defined.",
 		"permission_error": "Permission denied."
 	},
-	"columns": ["info", "log", "directory", "exceptions"],
-	"truecolor": true,
-	"basic": false,
-	"basic_input": false
+	"log_level": "DEBUG"
 }"""
 
-lock_toml: str = """# Auto generated, do not edit manually!
+LOCK_TOML_BASE: str = """# Auto generated, do not edit manually!
 
 [environment]
 installed = false"""
 
-
 async def check_health() -> None:
     """Function for checking if required files and folders exist."""
-
     dirs = ["commands", "middleware", "logs"]
-    files = {"config.json": config_base, "config-lock.toml": lock_toml}
+    files = {"config.json": CONFIG_BASE, "config-lock.toml": LOCK_TOML_BASE}
 
     for i in dirs:
         path = os.path.join(cm_dir, i)
@@ -67,3 +66,4 @@ async def check_health() -> None:
 
             async with aiofiles.open(path, "w") as f:
                 await f.write(value)
+

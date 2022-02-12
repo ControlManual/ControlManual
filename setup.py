@@ -39,7 +39,8 @@ setuptools.setup(
         "watchdog",
         "toml",
         "py7zr",
-        "pygithub"
+        "pygithub",
+        "textual"
     ],
     python_requires=">=3.8",
 )

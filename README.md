@@ -8,31 +8,23 @@
 ![https://libraries.io/pypi/ControlManual](https://img.shields.io/librariesio/release/pypi/ControlManual)
 ![https://python.org](https://img.shields.io/pypi/pyversions/ControlManual)
 
-## Under development, **no support provided!**
-
 ### Running
 
-#### From Source
+This has currently only been tested on Linux (Ubuntu to be exact). Some features may not work property on other operating systems as of now.
 
-To run via downloading the source, use the following commands.
+This may also not work correctly on some terminals, due to the complexity of the TUI.
+
+#### From Source
 
 ```
 $ git clone https://github.com/ZeroIntensity/ControlManual && cd ControlManual
 $ python3 -m pip install -r requirements.txt
-$ python3 run.py
+$ python3 ControlManual/__main__.py
 ```
 
-#### From PyPI (Recommended)
+#### From PyPI
 
 ```
 $ pip3 install ControlManual
 $ python3 -m ControlManual
-```
-
-#### Using Pipx
-
-If you have [pipx](https://pypa.github.io/pipx/) installed, you can easily run using the following command:
-
-```
-$ pipx run ControlManual
 ```

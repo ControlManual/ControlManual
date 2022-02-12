@@ -1,6 +1,4 @@
-from .src import main_wrap
+from src import main_wrap
 
 main_wrap()
-
-
 
