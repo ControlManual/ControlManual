@@ -13,6 +13,6 @@ class ExcPanel(Widget):
     locals = Reactive({})
 
     def render(self) -> Panel:
-        full = Group(self.text, Pretty(self.locals))
+        full = Group(self.text, Pretty(self.locals) if self.locals else '')
 
         return Panel(full, title = "Exception")
