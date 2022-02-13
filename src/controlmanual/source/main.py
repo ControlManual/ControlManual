@@ -22,6 +22,9 @@
 # SOFTWARE.
 # -------------------------------------------------------------------------------------------
 
+from .core.health import check_health
+check_health()
+
 import logging
 import os
 import shutil
@@ -39,10 +42,8 @@ from .app import Application
 from .constants import cm_dir
 from .constants.info import \
     __version__  # mypy is saying version is undefined when i import it above idfk
-from .core.health import check_health
-from .utils import run
 
-run(check_health())
+from .utils import run
 
 __all__ = ["main", "main_wrap"]
 
@@ -57,6 +58,8 @@ __all__ = ["main", "main_wrap"]
     help="Clears all the auto generated files, and allows a clean install.",
 )
 def main(file: str, version: bool, clean: bool):
+    check_health()
+    
     if version:
         return print(f"ControlManual V{__version__}")
 

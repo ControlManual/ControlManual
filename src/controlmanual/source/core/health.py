@@ -1,5 +1,4 @@
 import os
-import aiofiles
 from ..constants.base import cm_dir
 
 __all__ = ["check_health"]
@@ -45,7 +44,7 @@ CONFIG_BASE = """{
         "red": "#dd5a56",
         "dark_green": "#298e20"
     }
-    }"""
+}"""
 
 LOCK_TOML_BASE: str = """# Auto generated, do not edit manually!
 
@@ -53,7 +52,7 @@ LOCK_TOML_BASE: str = """# Auto generated, do not edit manually!
 installed = false"""
 
 
-async def check_health() -> None:
+def check_health() -> None:
     """Function for checking if required files and folders exist."""
     dirs = ["commands", "middleware", "logs"]
     files = {
@@ -75,5 +74,5 @@ async def check_health() -> None:
         if not os.path.exists(path):
             print(f'file "{key}" does not exist, creating...')
 
-            async with aiofiles.open(path, "w") as f:
-                await f.write(value)
+            with open(path, "w") as f:
+                f.write(value)

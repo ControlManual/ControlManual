@@ -1,7 +1,7 @@
 import os
 import sys
 
-from .source import main_wrap
+from .source.main import main_wrap
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "source"))
 
