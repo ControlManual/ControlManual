@@ -22,40 +22,50 @@
 # SOFTWARE.
 # -------------------------------------------------------------------------------------------
 
-import shutil
-import os
-import sys
-from .core.health import check_health
-from .utils import run
-run(check_health())
-from typing import Type
-from types import TracebackType
-from .app import Application
-from . import  logger
 import logging
+import os
+import shutil
+import sys
+from pathlib import Path
+from types import TracebackType
+from typing import Type
+
 import click
 from rich import print as rich_print
-from pathlib import Path
 from rich.text import Text
-from .constants import cm_dir
-from .constants.info import __version__ # mypy is saying version is undefined when i import it above idfk
 
-__all__ = ['main', 'main_wrap']
+from . import logger
+from .app import Application
+from .constants import cm_dir
+from .constants.info import \
+    __version__  # mypy is saying version is undefined when i import it above idfk
+from .core.health import check_health
+from .utils import run
+
+run(check_health())
+
+__all__ = ["main", "main_wrap"]
+
 
 @click.command()
-@click.option("--file", "-f", help = "Run app starting with a file.", default = '')
-@click.option("--version", "-v", is_flag = True, help = "Get the app version.")
-@click.option("--clean", "-c", is_flag = True, help = "Clears all the auto generated files, and allows a clean install.")
+@click.option("--file", "-f", help="Run app starting with a file.", default="")
+@click.option("--version", "-v", is_flag=True, help="Get the app version.")
+@click.option(
+    "--clean",
+    "-c",
+    is_flag=True,
+    help="Clears all the auto generated files, and allows a clean install.",
+)
 def main(file: str, version: bool, clean: bool):
     if version:
-        return print(f'ControlManual V{__version__}')
+        return print(f"ControlManual V{__version__}")
 
     if clean:
-        for i in {'logs', 'middleware', 'commands'}:
+        for i in {"logs", "middleware", "commands"}:
             shutil.rmtree(os.path.join(cm_dir, i))
             print(f'Deleted "{i}"')
-        
-        for x in {'config.json', 'config-lock.toml'}:
+
+        for x in {"config.json", "config-lock.toml"}:
             os.remove(os.path.join(cm_dir, x))
             print(f'Deleted "{x}"')
 
@@ -64,24 +74,33 @@ def main(file: str, version: bool, clean: bool):
     logging.info("starting textual app")
     Application.run()
 
+
 def hook(exctype: Type[BaseException], value: BaseException, tb: TracebackType):
     rich_print("[red]Internal error!")
 
     code = tb.tb_frame.f_code
-    logging.critical(f"{exctype.__name__}@{code.co_filename}:{code.co_firstlineno} - {value}")
+    logging.critical(
+        f"{exctype.__name__}@{code.co_filename}:{code.co_firstlineno} - {value}"
+    )
     sys.__excepthook__(exctype, value, tb)
-    
-    t = Text(f"\nPlease check the logs for more info ({Path(logger.log_path).name}).", style = "red")
+
+    t = Text(
+        f"\nPlease check the logs for more info ({Path(logger.log_path).name}).",
+        style="red",
+    )
     rich_print(t)
 
-sys.excepthook = hook # type: ignore
+
+sys.excepthook = hook  # type: ignore
 # mypy has so many false positives wtf
+
 
 def main_wrap():
     try:
-        main() # type: ignore
+        main()  # type: ignore
     except KeyboardInterrupt:
         sys.exit(0)
+
 
 if __name__ == "__main__":
     raise Exception("must be started from __main__ due to import issues")

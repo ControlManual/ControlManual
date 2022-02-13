@@ -1,28 +1,43 @@
-from pathlib import Path
+import logging
 import os
-from .constants import cm_dir, errors
-from .core.config import config as conf
-from .constants.errors import *
-from typing import Optional, Dict, List, Any, Type, TYPE_CHECKING
+import shutil
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type
+
 import colorama
-from .core.loader import load_commands
-from .typings import CommandCallable, Config, CommandIterator
-from .core.handler import CommandHandler
-from typeguard import typechecked
-from .utils import commands, title as titl
 import dload
 import toml
 from rich.console import Console
-import logging
-import shutil
+from typeguard import typechecked
+
+from .constants import cm_dir, errors
+from .constants.errors import (
+    InvalidArguments,
+    Other,
+    NotEnoughArguments,
+    Exists,
+    NotExists,
+    InvalidArgument,
+    APIError,
+    NothingChanged,
+    Collision,
+)
+from .core.config import config as conf
+from .core.handler import CommandHandler
+from .core.loader import load_commands
+from .typings import CommandCallable, CommandIterator, Config
+from .utils import commands
+from .utils import title as titl
 
 if TYPE_CHECKING:
     from .app import Application
 
 __all__ = ["Client"]
 
+
 class Client:
     """Class for allowing commands to interact with the engine."""
+
     async def init(self, app: "Application") -> None:
         self._reset: bool = False
         self._path: Path = Path().home()
@@ -34,23 +49,24 @@ class Client:
         self._command_response: Any = None
         self._app = app
 
-        get = lambda x: os.path.join(cm_dir, x)
+        def get(x):
+            return os.path.join(cm_dir, x)
 
         self._variables: Dict[str, str] = {
             "path": str(self._path),
             "config": self.config_path,
             "cmdir": cm_dir,
-            "logs": get('logs'),
-            "commands": get('commands'),
-            "middleware": get('middleware')
+            "logs": get("logs"),
+            "commands": get("commands"),
+            "middleware": get("middleware"),
         }
         self._aliases: Dict[str, str] = {}
         self._vals: Dict[Any, Any] = {}
 
-        for i in conf['aliases']:
-            self._aliases[i] = await self.load_variables(conf['aliases'][i])
+        for i in conf["aliases"]:
+            self._aliases[i] = await self.load_variables(conf["aliases"][i])
 
-        colorama.init(convert = os.name == "nt") # enables ansi stuff
+        colorama.init(convert=os.name == "nt")  # enables ansi stuff
 
         titl("Control Manual")
         self._history: List[str] = []
@@ -62,28 +78,32 @@ class Client:
         with open(os.path.join(cm_dir, "config-lock.toml")) as f:
             lock = toml.load(f)
 
-        if not lock['environment']['installed']:
-            with Console().status('Installing...', spinner = 'material'):
+        if not lock["environment"]["installed"]:
+            with Console().status("Installing...", spinner="material"):
                 try:
-                    target: str = os.path.join(cm_dir, 'commands')
-                    dload.git_clone('https://github.com/ControlManual/ControlManual-builtin.git', target)
-                    source: str = os.path.join(target, 'ControlManual-Builtin-master')
+                    target: str = os.path.join(cm_dir, "commands")
+                    dload.git_clone(
+                        "https://github.com/ControlManual/ControlManual-builtin.git",
+                        target,
+                    )
+                    source: str = os.path.join(target, "ControlManual-Builtin-master")
 
                     file_names = os.listdir(source)
-    
+
                     for file_name in file_names:
                         shutil.move(os.path.join(source, file_name), target)
 
                     os.rmdir(source)
-                    lock['environment']['installed'] = True
+                    lock["environment"]["installed"] = True
                 except Exception as e:
-                    logging.error(f'failed to install builtins: {e}')
-                    self.error("Could not install builtins. Check the logs for more info.")
-
+                    logging.error(f"failed to install builtins: {e}")
+                    self.error(
+                        "Could not install builtins. Check the logs for more info."
+                    )
 
         with open(os.path.join(cm_dir, "config-lock.toml"), "w") as f:
             toml.dump(lock, f)
-    
+
     @staticmethod
     def title(t: str) -> None:
         """Set the terminal title."""
@@ -144,7 +164,7 @@ class Client:
     @vals.setter
     def vals(self, key: Any, value: Any) -> None:
         self._vals[key] = value
-    
+
     @property
     def config(self) -> Config:
         """Class for representing the JSON config."""
@@ -167,7 +187,7 @@ class Client:
     @property
     def version(self) -> str:
         """Version of Control Manual."""
-        raise NotImplementedError('version tracking not yet implemented')
+        raise NotImplementedError("version tracking not yet implemented")
 
     @property
     def commands(self):

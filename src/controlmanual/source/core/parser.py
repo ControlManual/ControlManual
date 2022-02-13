@@ -1,15 +1,17 @@
-from typing import List, AsyncGenerator, Dict
+import re
+from typing import AsyncGenerator, Dict, List
+
 from ..typings import ParsedString
 from .config import config
-import re
 
 __all__ = ["parse"]
+
 
 async def split_text(text: str) -> AsyncGenerator[str, None]:
     single_quote: bool = False
     double_quote: bool = False
     backslash: bool = False
-    current: str = ''
+    current: str = ""
 
     for i in text:
         if (i == "'") and (not backslash):
@@ -24,16 +26,16 @@ async def split_text(text: str) -> AsyncGenerator[str, None]:
         elif i == " ":
             if not single_quote or double_quote:
                 yield current
-                current = ''
+                current = ""
             else:
                 current += i
 
         else:
             current += i
 
-        
         backslash = False
     yield current
+
 
 async def parse(raw: str) -> ParsedString:
     """Function for parsing the input into different items."""
@@ -44,8 +46,10 @@ async def parse(raw: str) -> ParsedString:
     args: List[str] = []
 
     async for i in split:
-        if re.match(".+=.+", i): # im bad at regex so this might not be the best way to do it
-            temp: list = i.split("=", maxsplit = 1)
+        if re.match(
+            ".+=.+", i
+        ):  # im bad at regex so this might not be the best way to do it
+            temp: list = i.split("=", maxsplit=1)
             kwargs[temp[0]] = temp[1]
         elif i.startswith(config["flag_prefix"]):
             flags.append(i[2:])

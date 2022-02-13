@@ -1,8 +1,9 @@
-from .config import config
-from typing import TYPE_CHECKING, List, Optional, Any, Dict
 import logging
-from .parser import parse
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+from .config import config
 from .help import HelpCommand
+from .parser import parse
 
 if TYPE_CHECKING:
     from source.client import Client
@@ -60,7 +61,7 @@ class CommandHandler:
                 command = client.cmd_history[int(command) - 1]
             except IndexError:
                 return logging.error("index error with cmd history")
-        
+
         split: List[str] = command.split(" ")
 
         if not any(split):
@@ -82,7 +83,7 @@ class CommandHandler:
             if len(spl) > 1:
                 excess: str = " ".join(spl[1:])
                 raw_args = excess + " " + raw_args
-    
+
         args, kwargs, flags = await parse(raw_args)
         cmd: str = cmd.lower()
 
@@ -93,7 +94,13 @@ class CommandHandler:
 
         if cmd == config["help_command"]:
             hlp = HelpCommand(commands, args)
-            target = hlp.print_help if args else hlp.print_argument_help if len(args) > 1 else hlp.print_command_help
+            target = (
+                hlp.print_help
+                if args
+                else hlp.print_argument_help
+                if len(args) > 1
+                else hlp.print_command_help
+            )
 
             return await target()
 
@@ -102,12 +109,12 @@ class CommandHandler:
         else:
             logging.info("command not found")
             client.error(errors["unknown_command"])
-    
+
     async def run_string(self, text: str) -> Any:
         """Function for running a command."""
         client = self.client
         logging.info(f"handling string: {text}")
-    
+
         if text not in [str(i) for i in range(1, 11)]:
             client.cmd_history.append(text)
 
@@ -121,14 +128,21 @@ class CommandHandler:
         for comm in cmds:
             await self.run_command(comm)
 
-    async def execute(self, cmd: str, raw_args: str, args: List[str], kwargs: Dict[str, str], flags: List[str]):
+    async def execute(
+        self,
+        cmd: str,
+        raw_args: str,
+        args: List[str],
+        kwargs: Dict[str, str],
+        flags: List[str],
+    ):
         """Function for executing a command."""
         errors = config["errors"]
         client = self.client
         current_command = client.commands[cmd]
 
         if "exe" in current_command:
-            raise NotImplementedError('binary execution not implemented')
+            raise NotImplementedError("binary execution not implemented")
 
         runner = current_command["entry"]
 

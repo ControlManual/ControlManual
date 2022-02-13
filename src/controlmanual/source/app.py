@@ -1,14 +1,16 @@
-from textual.app import App
-import traceback
-from textual.keys import Keys
-from .client import Client
-import logging
-from .core.widgets import ExcPanel, Console, Debugger, RightBar
-from textual.reactive import Reactive
-from textual.widgets import TreeControl, TreeClick
-import os
-from .core.theme import console_object
 import asyncio
+import logging
+import os
+import traceback
+
+from textual.app import App
+from textual.keys import Keys
+from textual.reactive import Reactive
+from textual.widgets import TreeClick, TreeControl
+
+from .client import Client
+from .core.theme import console_object
+from .core.widgets import Console, Debugger, ExcPanel, RightBar
 from .utils import not_null
 
 __all__ = ["Application"]
@@ -16,6 +18,7 @@ __all__ = ["Application"]
 DEBUG_LEN: int = 50
 FS_LEN: int = 40
 EXC_LEN: int = 100
+
 
 class Application(App):
     client: Client
@@ -46,7 +49,7 @@ class Application(App):
     async def on_mount(self) -> None:
         self.console = console_object
         self.client = Client()
-        await self.client.init(self) # because mypy was angry
+        await self.client.init(self)  # because mypy was angry
 
         self.bar = Debugger()
         self.filesystem_widget = TreeControl("Directory", "")
@@ -58,21 +61,21 @@ class Application(App):
 
         await self.filesystem_widget.root.expand()
 
-        c = Console(client = self.client)
+        c = Console(client=self.client)
         self.interface = c
         await c.focus()
         logging.info("focused console")
-        
-        await self.view.dock(self.filesystem_widget, edge = "left", size = FS_LEN, z = 1)
-        await self.view.dock(self.exc_panel, edge = "right", size = EXC_LEN, z = 1)
-        await self.view.dock(self.bar, edge = "left", size = DEBUG_LEN, z = 2)
-        await self.view.dock(RightBar(), edge = "right", size = 50)
-        await self.view.dock(c, edge = "top")
+
+        await self.view.dock(self.filesystem_widget, edge="left", size=FS_LEN, z=1)
+        await self.view.dock(self.exc_panel, edge="right", size=EXC_LEN, z=1)
+        await self.view.dock(self.bar, edge="left", size=DEBUG_LEN, z=2)
+        await self.view.dock(RightBar(), edge="right", size=50)
+        await self.view.dock(c, edge="top")
 
         self.bar.layout_offset_x = -DEBUG_LEN
         self.filesystem_widget.layout_offset_x = -FS_LEN
         self.exc_panel.layout_offset_x = EXC_LEN
-        
+
         logging.info("docked widgets")
 
     async def on_load(self):
@@ -85,14 +88,21 @@ class Application(App):
         await self.client.run_command(f"path {message.node.data}")
 
     async def show_exc(self, exc: Exception):
-        self.exc_panel.text = '[error]' + ''.join(traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)) + '\n[/error]'
+        self.exc_panel.text = (
+            "[error]"
+            + "".join(
+                traceback.format_exception(
+                    etype=type(exc), value=exc, tb=exc.__traceback__
+                )
+            )
+            + "\n[/error]"
+        )
         frame = not_null(exc.__traceback__).tb_frame
 
         self.exc_panel.locals = frame.f_locals
 
         self.action_toggle_excpanel()
         asyncio.create_task(self.auto_close_excpanel())
-
 
     async def auto_close_excpanel(self):
         await asyncio.sleep(5)

@@ -1,23 +1,27 @@
-from abc import ABC
-from textual.reactive import Reactive
 import logging
-from textual.keys import Keys
+from abc import ABC
+
 from textual.events import Key
+from textual.keys import Keys
+from textual.reactive import Reactive
+
 
 def insert(base: str, index: int, value: str) -> str:
     """Insert a string to an index."""
-    l = list(base)
-    l.insert(index, value)
-    return ''.join(l)
+    lis = list(base)
+    lis.insert(index, value)
+    return "".join(lis)
+
 
 def remove(base: str, index: int) -> str:
     """Remove a character at an index."""
-    l = list(base)
-    l.pop(index)
-    return ''.join(l)
+    lis = list(base)
+    lis.pop(index)
+    return "".join(lis)
+
 
 class Input(ABC):
-    input_text = Reactive('')
+    input_text = Reactive("")
     is_white = Reactive(True)
     cursor_index = Reactive(0)
 
@@ -27,8 +31,8 @@ class Input(ABC):
 
         if key in [key.value for key in Keys]:
             if key == Keys.Enter:
-                await self.callback(self.input_text) # type: ignore
-                self.input_text = ' '
+                await self.callback(self.input_text)  # type: ignore
+                self.input_text = " "
                 self.cursor_index = 0
 
             if key == Keys.Left and self.cursor_index:
@@ -45,27 +49,24 @@ class Input(ABC):
 
         self.cursor_index += 1
         self.input_text = insert(self.input_text, self.cursor_index - 1, key)
-    
+
     def blink(self) -> None:
         """Switch the blink color on the cursor."""
         self.is_white = not self.is_white
 
     def on_mount(self):
-        self.set_interval(1, self.blink) # type: ignore
+        self.set_interval(1, self.blink)  # type: ignore
 
     @staticmethod
     def make_text(input_text: str, is_white: bool, cursor_index: int) -> str:
-        text: str = ''
+        text: str = ""
 
-        d = {
-            False: 'black on white',
-            True: 'white on black'
-        }
+        d = {False: "black on white", True: "white on black"}
 
-        for index, value in enumerate(input_text + ' '):
+        for index, value in enumerate(input_text + " "):
             if index == cursor_index:
                 t = d[is_white]
-                text += f'[{t}]{value}[/{t}]'
+                text += f"[{t}]{value}[/{t}]"
             else:
                 text += value
 

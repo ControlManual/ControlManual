@@ -1,17 +1,36 @@
-from typing import TypedDict, Optional, AsyncGenerator, Dict, Callable, Tuple, List, Literal, Any, Protocol, Union
+from typing import (Any, AsyncGenerator, Callable, Dict, List, Literal,
+                    Optional, Protocol, Tuple, TypedDict, Union)
+
 
 class CommandCallable(Protocol):
-    async def __call__(self, raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client):
+    async def __call__(
+        self,
+        raw: str,
+        args: List[str],
+        kwargs: Dict[str, str],
+        flags: List[str],
+        client,
+    ):
         ...
 
+
 class CommandIterator(Protocol):
-    async def __call__(self, raw: str, args: List[str], kwargs: Dict[str, str], flags: List[str], client) -> AsyncGenerator[Any, None]:
+    async def __call__(
+        self,
+        raw: str,
+        args: List[str],
+        kwargs: Dict[str, str],
+        flags: List[str],
+        client,
+    ) -> AsyncGenerator[Any, None]:
         ...
+
 
 class Colors(TypedDict):
     red: str
     green: str
     dark_green: str
+
 
 class BaseCommand(TypedDict):
     help: Optional[str]
@@ -23,15 +42,18 @@ class BaseCommand(TypedDict):
     args_help: Optional[dict]
     path: str
 
+
 class Command(BaseCommand):
     entry: CommandCallable
     iterator: Optional[CommandIterator]
     is_binary: Literal[False]
 
+
 class BinaryCommand(BaseCommand):
     entry: Callable[..., Any]
     iterator: Optional[Callable[..., Any]]
     is_binary: Literal[True]
+
 
 class CommandErrors(TypedDict):
     unknown_command: str
@@ -40,6 +62,7 @@ class CommandErrors(TypedDict):
     function_not_open: str
     function_undefined: str
     permission_error: str
+
 
 class Config(TypedDict):
     input_sep: str
@@ -56,6 +79,7 @@ class Config(TypedDict):
     truecolor: bool
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
     colors: Colors
+
 
 Commands = Dict[str, Union[Command, BinaryCommand]]
 ParsedString = Tuple[List[str], Dict[str, str], List[str]]
