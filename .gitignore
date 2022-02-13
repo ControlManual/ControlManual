@@ -124,7 +124,7 @@ config.json
 config-lock.toml
 
 # Auto-Generated Files
-commands/
+src/controlmanual/commands/
 logs/
 middleware/
 ControlManual.egg-info/
