@@ -3,7 +3,7 @@ import traceback
 from textual.keys import Keys
 from .client import Client
 import logging
-from .core.widgets import *
+from .core.widgets import ExcPanel, Console, Debugger, RightBar
 from textual.reactive import Reactive
 from textual.widgets import TreeControl, TreeClick
 import os
@@ -45,7 +45,9 @@ class Application(App):
 
     async def on_mount(self) -> None:
         self.console = console_object
-        self.client = await Client(self)
+        self.client = Client()
+        await self.client.init(self) # because mypy was angry
+
         self.bar = Debugger()
         self.filesystem_widget = TreeControl("Directory", "")
         self.exc_panel = ExcPanel()

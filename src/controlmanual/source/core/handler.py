@@ -5,7 +5,7 @@ from .parser import parse
 from .help import HelpCommand
 
 if TYPE_CHECKING:
-    from ..client import Client
+    from source.client import Client
 
 
 class CommandHandler:

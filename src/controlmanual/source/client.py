@@ -1,27 +1,28 @@
 from pathlib import Path
 import os
 from .constants import cm_dir, errors
-from .core.config import config
+from .core.config import config as conf
 from .constants.errors import *
 from typing import Optional, Dict, List, Any, Type, TYPE_CHECKING
 import colorama
 from .core.loader import load_commands
 from .typings import CommandCallable, Config, CommandIterator
 from .core.handler import CommandHandler
-from functools import wraps
 from typeguard import typechecked
-from .utils import commands, title
+from .utils import commands, title as titl
+import dload
+import toml
+from rich.console import Console
+import logging
+import shutil
 
 if TYPE_CHECKING:
     from .app import Application
 
+__all__ = ["Client"]
+
 class Client:
     """Class for allowing commands to interact with the engine."""
-    async def __new__(cls, app: "Application"):
-        self = super().__new__(cls)
-        await cls.init(self, app)
-        return self
-
     async def init(self, app: "Application") -> None:
         self._reset: bool = False
         self._path: Path = Path().home()
@@ -46,18 +47,47 @@ class Client:
         self._aliases: Dict[str, str] = {}
         self._vals: Dict[Any, Any] = {}
 
-        for i in config['aliases']:
-            self._aliases[i] = await self.load_variables(config['aliases'][i])
+        for i in conf['aliases']:
+            self._aliases[i] = await self.load_variables(conf['aliases'][i])
 
         colorama.init(convert = os.name == "nt") # enables ansi stuff
 
-        title("Control Manual")
+        titl("Control Manual")
         self._history: List[str] = []
+
+        self.install()
         await self.render()
 
-    def title(self, t: str) -> None:
+    def install(self):
+        with open(os.path.join(cm_dir, "config-lock.toml")) as f:
+            lock = toml.load(f)
+
+        if not lock['environment']['installed']:
+            with Console().status('Installing...', spinner = 'material'):
+                try:
+                    target: str = os.path.join(cm_dir, 'commands')
+                    dload.git_clone('https://github.com/ControlManual/ControlManual-builtin.git', target)
+                    source: str = os.path.join(target, 'ControlManual-Builtin-master')
+
+                    file_names = os.listdir(source)
+    
+                    for file_name in file_names:
+                        shutil.move(os.path.join(source, file_name), target)
+
+                    os.rmdir(source)
+                    lock['environment']['installed'] = True
+                except Exception as e:
+                    logging.error(f'failed to install builtins: {e}')
+                    self.error("Could not install builtins. Check the logs for more info.")
+
+
+        with open(os.path.join(cm_dir, "config-lock.toml"), "w") as f:
+            toml.dump(lock, f)
+    
+    @staticmethod
+    def title(t: str) -> None:
         """Set the terminal title."""
-        title(t)
+        titl(t)
 
     async def render(self) -> None:
         """Function for loading commands."""
@@ -89,7 +119,7 @@ class Client:
         return self._function_open
 
     @function_open.setter
-    def set_function_open(self, value) -> None:
+    def function_open(self, value: bool) -> None:
         self._function_open = value
 
     @property
@@ -103,7 +133,7 @@ class Client:
         return self._current_function
 
     @current_function.setter
-    def set_current_function(self, value: str) -> None:
+    def current_function(self, value: str) -> None:
         self._current_function = value
 
     @property
@@ -118,7 +148,7 @@ class Client:
     @property
     def config(self) -> Config:
         """Class for representing the JSON config."""
-        return config
+        return conf
 
     @property
     def origin(self) -> Path:
@@ -175,7 +205,7 @@ class Client:
         """Function for loading variables into a string."""
 
         for key, value in self.variables.items():
-            text: str = text.replace("{" + key + "}", value)
+            text = text.replace("{" + key + "}", value)
 
         return text
 

@@ -127,3 +127,4 @@ config-lock.toml
 commands/
 logs/
 middleware/
+ControlManual.egg-info/

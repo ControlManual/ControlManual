@@ -78,7 +78,7 @@ class Console(Widget, Input):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.client = kwargs.pop('client')
         self._console_client = ConsoleClient(self)
-        self.callback = self.client.run_command
+        self.callback = self.client.run_command # type: ignore
         
         super().__init__(*args, **kwargs)
         

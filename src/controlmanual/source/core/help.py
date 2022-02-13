@@ -1,5 +1,5 @@
 from ..typings import Commands
-from typing import Any, List
+from typing import Any, List, Optional, Dict
 from .config import config
 from ..utils import not_null
 
@@ -7,8 +7,8 @@ __all__ = ["HelpCommand"]
 
 error = print
 
-def make_str(commands: dict, command: str, key: str, prefix: str = "", default = None) -> str:
-    item = commands[command][key]
+def make_str(commands: Commands, command: str, key: str, prefix: str = "", default: Optional[str] = None) -> str:
+    item: str = commands[command][key] # type: ignore
 
     if item:
         return prefix + item + "\n"
@@ -111,8 +111,8 @@ class HelpCommand:
         if "exe" in cmd:
             return error("Command is an executable.")
 
-        args = not_null(cmd["args"])
-        args_help = not_null(cmd["args_help"])
+        args: Dict[str, str] = not_null(cmd["args"])
+        args_help: dict = not_null(cmd["args_help"])
 
         if argument not in args:
             return error("Argument does not exist.")

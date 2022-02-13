@@ -8,3 +8,4 @@ toml>=0.10.2
 textual>=0.1.15
 py-cpuinfo>=8.0.0
 typeguard>=2.13.3
+dload>=0.6

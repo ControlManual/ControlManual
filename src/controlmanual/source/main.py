@@ -31,12 +31,16 @@ run(check_health())
 from typing import Type
 from types import TracebackType
 from .app import Application
-from . import constants, logger
+from . import  logger
 import logging
 import click
 from rich import print as rich_print
 from pathlib import Path
 from rich.text import Text
+from .constants import cm_dir
+from .constants.info import __version__ # mypy is saying version is undefined when i import it above idfk
+
+__all__ = ['main', 'main_wrap']
 
 @click.command()
 @click.option("--file", "-f", help = "Run app starting with a file.", default = '')
@@ -44,21 +48,20 @@ from rich.text import Text
 @click.option("--clean", "-c", is_flag = True, help = "Clears all the auto generated files, and allows a clean install.")
 def main(file: str, version: bool, clean: bool):
     if version:
-        return print(f'ControlManual V{constants.__version__}')
+        return print(f'ControlManual V{__version__}')
 
     if clean:
         for i in {'logs', 'middleware', 'commands'}:
-            shutil.rmtree(os.path.join(constants.cm_dir, i))
+            shutil.rmtree(os.path.join(cm_dir, i))
             print(f'Deleted "{i}"')
         
         for x in {'config.json', 'config-lock.toml'}:
-            os.remove(os.path.join(constants.cm_dir, x))
+            os.remove(os.path.join(cm_dir, x))
             print(f'Deleted "{x}"')
 
         return
 
     logging.info("starting textual app")
-
     Application.run()
 
 def hook(exctype: Type[BaseException], value: BaseException, tb: TracebackType):
@@ -71,7 +74,8 @@ def hook(exctype: Type[BaseException], value: BaseException, tb: TracebackType):
     t = Text(f"\nPlease check the logs for more info ({Path(logger.log_path).name}).", style = "red")
     rich_print(t)
 
-sys.excepthook = hook
+sys.excepthook = hook # type: ignore
+# mypy has so many false positives wtf
 
 def main_wrap():
     try:

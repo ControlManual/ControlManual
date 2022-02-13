@@ -18,8 +18,8 @@ class BaseCommand(TypedDict):
     usage: Optional[str]
     package: Optional[str]
     warning: str
-    args: Optional[dict]
-    flags: Optional[dict]
+    args: Optional[Dict[str, str]]
+    flags: Optional[Dict[str, str]]
     args_help: Optional[dict]
     path: str
 
@@ -29,8 +29,8 @@ class Command(BaseCommand):
     is_binary: Literal[False]
 
 class BinaryCommand(BaseCommand):
-    entry: Callable
-    iterator: Optional[Callable]
+    entry: Callable[..., Any]
+    iterator: Optional[Callable[..., Any]]
     is_binary: Literal[True]
 
 class CommandErrors(TypedDict):

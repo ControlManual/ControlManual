@@ -57,7 +57,7 @@ installed = false"""
 async def check_health() -> None:
     """Function for checking if required files and folders exist."""
     dirs = ["commands", "middleware", "logs"]
-    files = {"config.json": CONFIG_BASE, "config-lock.toml": LOCK_TOML_BASE}
+    files = {"config.json": CONFIG_BASE, "config-lock.toml": LOCK_TOML_BASE, os.path.join("commands", "__init__.py"): "# Auto generated to register this folder as a module"}
 
     for i in dirs:
         path = os.path.join(cm_dir, i)

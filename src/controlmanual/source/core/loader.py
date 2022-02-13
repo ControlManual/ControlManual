@@ -7,8 +7,8 @@ import os
 from ..constants import cm_dir
 import importlib
 from ..utils import not_null
-from contextlib import suppress
 import logging
+
 
 __all__ = ["load_commands"]
 
@@ -47,7 +47,7 @@ async def load_directory(target: Literal["commands", "middleware"]) -> AsyncGene
     sys.path.append(directory)
 
     for i in os.listdir(directory):
-        if i in {"__pycache__", ".gitignore", '.git'}:
+        if i in {"__pycache__", ".gitignore", '.git', '__init__.py'}:
             continue
 
         p = os.path.join(directory, i)
@@ -56,7 +56,10 @@ async def load_directory(target: Literal["commands", "middleware"]) -> AsyncGene
         if p.endswith('.py'):
             file: str = filename if os.path.isfile(p) else f'{i}.main'
 
-            yield extract(importlib.import_module(f"commands.{file}"), p)
+            try:
+                yield extract(importlib.import_module(f"controlmanual.commands.{file}"), p)
+            except Exception as e:
+                logging.error(f'failed to load "{file}" due to error: {e}')
         elif p.endswith('.so'):
             raise NotImplementedError("shared library commands are not yet supported")
 

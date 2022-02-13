@@ -11,6 +11,7 @@ from rich.layout import Layout
 from cpuinfo import get_cpu_info
 from rich.table import Table
 from rich import box
+from ...utils import not_null
 
 __all__ = ["RightBar"]
 
@@ -50,7 +51,7 @@ class RightBar(Widget):
 [important]Architecture[/important]: {self.machine}
 [important]System Time[/important]: {self.sys_time}
 [important]CPU[/important]: {self.cpu_info["brand_raw"]}
-[important]Battery[/important]: {round(self.battery.percent, 2)}% ({"not " if not self.battery.power_plugged else ""}plugged in)
+[important]Battery[/important]: {round(not_null(self.battery).percent, 2)}% ({"not " if not not_null(self.battery).power_plugged else ""}plugged in)
 [important]CPU Usage[/important]: {self.cpu}%
 [important]Memory[/important]: {f"{self.memory.used // 1000000}mB / {self.memory.total // 1000000}mB"}
 [important]Disk[/important]: {f"{self.disk.used // 1000000000}gB / {self.disk.total // 1000000000}gB"}
