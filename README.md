@@ -1,6 +1,6 @@
 # Control Manual
 
-![https://pypi.org/project/ControlManual/](https://img.shields.io/pypi/v/ControlManual)
+![https://github.com/ControlManual/ControlManual](https://github.com/ControlManual/ControlManual/actions/workflows/tests.yml/badge.svg)
 ![https://pypi.org/project/ControlManual/](https://img.shields.io/pypi/dm/ControlManual)
 ![https://github.com/ZeroIntensity/ControlManual/blob/main/LICENSE](https://img.shields.io/github/license/ZeroIntensity/ControlManual)
 ![https://github.com/ZeroIntensity/ControlManual](https://img.shields.io/github/last-commit/ZeroIntensity/ControlManual)
