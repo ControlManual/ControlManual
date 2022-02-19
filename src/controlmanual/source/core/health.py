@@ -23,7 +23,9 @@ CONFIG_BASE = """{
         "touch": "create file",
         "config": "json '{config}'",
         "end": "exit",
-        "for": "iterate"
+        "for": "iterate",
+        "cat": "read",
+        "type": "read"
     },
     "comments": ["//", "#"],
     "functions": ["{", "}"],
@@ -43,7 +45,9 @@ CONFIG_BASE = """{
         "green": "#35b32a",
         "red": "#dd5a56",
         "dark_green": "#298e20"
-    }
+    },
+    "lowercase": false,
+    "read_theme": "one-dark"
 }"""
 
 LOCK_TOML_BASE: str = """# Auto generated, do not edit manually!

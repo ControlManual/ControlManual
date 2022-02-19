@@ -41,7 +41,7 @@ from . import logger
 from .app import Application
 from .constants import cm_dir
 from .constants.info import \
-    __version__  # mypy is saying version is undefined when i import it above idfk
+    __version__ # mypy is saying version is undefined when i import it above idfk
 
 from .utils import run
 
@@ -83,7 +83,7 @@ def hook(exctype: Type[BaseException], value: BaseException, tb: TracebackType):
 
     code = tb.tb_frame.f_code
     logging.critical(
-        f"{exctype.__name__}@{code.co_filename}:{code.co_firstlineno} - {value}"
+        f"{exctype.__name__} @ {code.co_filename}:{code.co_firstlineno} - {value}"
     )
     sys.__excepthook__(exctype, value, tb)
 

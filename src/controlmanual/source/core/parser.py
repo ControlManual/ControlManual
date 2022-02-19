@@ -1,6 +1,6 @@
 import re
 from typing import AsyncGenerator, Dict, List
-
+import logging
 from ..typings import ParsedString
 from .config import config
 
@@ -56,4 +56,5 @@ async def parse(raw: str) -> ParsedString:
         else:
             args.append(i)
 
+    logging.debug(f'a-k-f: {args, kwargs, flags}  raw: {raw}')
     return args, kwargs, flags

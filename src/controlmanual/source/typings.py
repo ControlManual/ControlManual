@@ -1,6 +1,62 @@
-from typing import (Any, AsyncGenerator, Callable, Dict, List, Literal,
-                    Optional, Protocol, Tuple, TypedDict, Union)
+from typing import (
+    Any, 
+    AsyncGenerator, 
+    Callable, 
+    Dict, 
+    List, 
+    Literal,
+    Optional, 
+    Protocol, 
+    Tuple, 
+    TypedDict, 
+    Union
+)
 
+ReadTheme = Literal[
+    "vim", 
+    "fruity", 
+    "inkpot", 
+    "native", 
+    "solarized-dark", 
+    "paraiso-dark", 
+    "stata-dark", 
+    "monokai", 
+    "gruvbox-dark", 
+    "dracula", 
+    "one-dark", 
+    "material", 
+    "zenburn", 
+    "paraiso-light",
+    "perldoc",
+    "friendly_grayscale",
+    "friendly",
+    "gruvbox-light",
+    "manni",
+    "solarized-light",
+    "tango",
+    "emacs",
+    "vs",
+    "trac",
+    "stata-light",
+    "stata",
+    "rainbow_dash",
+    "pastie",
+    "murphy",
+    "lovelace",
+    "igor",
+    "colorful",
+    "borland",
+    "autumn",
+    "arduino",
+    "agol_nu",
+    "agol",
+    "abap",
+    "rtt",
+    "xcode",
+    "sas",
+    "bw",
+    "default"
+]
 
 class CommandCallable(Protocol):
     async def __call__(
@@ -79,6 +135,8 @@ class Config(TypedDict):
     truecolor: bool
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
     colors: Colors
+    lowercase: bool
+    read_theme: ReadTheme
 
 
 Commands = Dict[str, Union[Command, BinaryCommand]]

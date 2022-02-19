@@ -11,6 +11,8 @@ from rich.panel import Panel
 from rich.table import Table
 from textual.reactive import Reactive
 from textual.widget import Widget
+import logging
+from ..config import config
 
 from ...client import Client
 from .utils import Input
@@ -28,6 +30,7 @@ Callback = Callable[[str], Coroutine[None, None, None]]
 
 __all__ = ["Console"]
 
+lower = lambda x: x.lower() if config['lowercase'] else x
 
 class ConsoleClient:
     """Class for handling communication with the console widget."""
@@ -37,15 +40,11 @@ class ConsoleClient:
 
     def error(self, *args: Any) -> None:
         """Print an error message."""
-        self.color("error", *args)
+        self.print(f"[error]Error[/error]: {' '.join(args)}")
 
     def success(self, *args: Any) -> None:
         """Print a success message."""
-        self.color("success", *args)
-
-    def color(self, color: str, *args: Any) -> None:
-        """Print a message using a rich color."""
-        self.print(f'[{color}]{" ".join(args)}[/{color}]')
+        self.print(f"[success]Success[/success]: {' '.join(args)}")
 
     def print(self, *args: Any) -> None:
         """Print a message."""
@@ -91,12 +90,8 @@ class Console(Widget, Input):
     def render(self) -> Layout:
         table = Table(box=box.SIMPLE)
 
-        table.add_column("Protocol")
-        table.add_column("Local Address")
-        table.add_column("Remote Address")
-        table.add_column("Status")
-        table.add_column("Process")
-        table.add_column("PID")
+        for x in ("Protocol", "Local Address", "Remote Address", "Status", "PID"):
+            table.add_column(lower(x))
 
         proc_names = {p.pid: p.name for p in psutil.process_iter(["pid", "name"])}
 

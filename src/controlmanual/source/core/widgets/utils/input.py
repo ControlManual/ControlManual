@@ -21,9 +21,9 @@ def remove(base: str, index: int) -> str:
 
 
 class Input(ABC):
-    input_text = Reactive("")
-    is_white = Reactive(True)
-    cursor_index = Reactive(0)
+    input_text: str = Reactive(" ") # type: ignore
+    is_white: bool = Reactive(True) # type: ignore
+    cursor_index: int = Reactive(0) # type: ignore
 
     async def on_key(self, event: Key) -> None:
         key: str = event.key
@@ -31,7 +31,7 @@ class Input(ABC):
 
         if key in [key.value for key in Keys]:
             if key == Keys.Enter:
-                await self.callback(self.input_text)  # type: ignore
+                await self.callback(self.input_text[:-1]) # type: ignore
                 self.input_text = " "
                 self.cursor_index = 0
 
