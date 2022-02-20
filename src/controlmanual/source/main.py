@@ -38,9 +38,6 @@ import sys
 import shutil
 import os
 import logging
-from .core.health import check_health
-
-check_health()
 
 
 __all__ = ["main", "main_wrap"]
@@ -56,8 +53,6 @@ __all__ = ["main", "main_wrap"]
     help="Clears all the auto generated files, and allows a clean install.",
 )
 def main(file: str, version: bool, clean: bool):
-    check_health()
-
     if version:
         return print(f"ControlManual V{__version__}")
 

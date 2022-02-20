@@ -115,9 +115,6 @@ class Console(Widget, Input):
         text: str = Input.make_text(self.input_text, self.is_white, self.cursor_index)
 
         lay = Layout()
-        """
-        For future implementation:
-
         lay2 = Layout()
 
         lay2.split_row(Panel(
@@ -129,16 +126,9 @@ class Console(Widget, Input):
             ),
             Panel("test"),
         )
-        """
 
         lay.split_column(
-            Panel(
-                f"{self.client.path} [success]{self.client.config['input_sep']}[/success] "
-                + text
-                + "\n"
-                + self.feed_text,
-                title="Terminal",
-            ),
+            lay2,
             Panel(Align.center(table), title="Connections"),
         )
 
