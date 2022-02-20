@@ -9,3 +9,4 @@ textual>=0.1.15
 py-cpuinfo>=8.0.0
 typeguard>=2.13.3
 dload>=0.6
+pyfiglet>=0.8.post1

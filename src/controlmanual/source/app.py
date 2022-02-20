@@ -10,7 +10,7 @@ from textual.widgets import TreeClick, TreeControl, ScrollView, Placeholder
 
 from .client import Client
 from .core.theme import console_object
-from .core.widgets import Console, Debugger, ExcPanel, RightBar
+from .core.widgets import Console, Debugger, ExcPanel, RightBar, Header
 from .utils import not_null
 from rich.syntax import Syntax
 from .core.config import config
@@ -52,6 +52,13 @@ class Application(App):
     async def set_syntax(self, path: str) -> None:
         await self.syntax_panel.update(MAKE_SYN(path))
 
+    def action_toggle_syntax(self):
+        current = self.syntax_panel.visible
+        
+        self.header.title = "Press CTRL+S to exit." if not current else "Control Manual"
+        self.header.visible = not current
+        self.syntax_panel.visible = not current
+
     async def on_mount(self) -> None:
         self.console = console_object
         self.client = Client()
@@ -68,17 +75,20 @@ class Application(App):
         self.exc_panel = ExcPanel()
         logging.debug(f"{self.console}")
         self.syntax_panel = ScrollView(MAKE_SYN(os.devnull))
+        self.syntax_panel.visible = False
 
         c = Console(client=self.client)
         self.interface = c
         await c.focus()
         logging.info("focused console")
+        self.header = Header(name = "header")
+        self.header.visible = False
 
+        await self.view.dock(self.header)
         await self.view.dock(self.filesystem_widget, edge="left", size=FS_LEN, z=1)
         await self.view.dock(self.exc_panel, edge="right", size=EXC_LEN, z=1)
         await self.view.dock(self.bar, edge="left", size=DEBUG_LEN, z=2)
         await self.view.dock(self.syntax_panel, size = 100, edge = "top", name = "syntax")
-        await self.press("ctrl+s") # probably not the best way to do this but textual doesnt have any documented solution
         await self.view.dock(RightBar("rightbar"), edge="right", size=50)
         await self.view.dock(c, edge="top")
 
@@ -93,7 +103,7 @@ class Application(App):
         await self.bind(Keys.ControlD, "toggle_sidebar")
         await self.bind(Keys.ControlF, "toggle_filesystem")
         await self.bind(Keys.ControlE, "toggle_excpanel")
-        await self.bind(Keys.ControlS, "view.toggle('syntax')")
+        await self.bind(Keys.ControlS, "toggle_syntax")
         await self.bind(Keys.ControlR, "view.toggle('rightbar')")
 
     async def handle_tree_click(self, message: TreeClick[str]) -> None:

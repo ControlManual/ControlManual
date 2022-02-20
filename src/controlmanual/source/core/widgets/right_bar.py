@@ -77,7 +77,7 @@ class RightBar(Widget):
 
     def render(self):
         layout = Layout()
-        
+
         layout.split_column(
             Panel(
                 f"""[success]{self.user}[/success]@[secondary]{self.node}[/secondary]
@@ -95,8 +95,19 @@ class RightBar(Widget):
                 title="System Info",
             ),
             ProcPanel(),
-            Panel(Align.center(pyfiglet.figlet_format(self.round_time, font = "big", width = 30), vertical = "middle"), title = "Time")
+            Panel(
+                Align.center(
+                    pyfiglet.figlet_format(
+                        self.round_time, 
+                        font = "big", 
+                        width = 30
+                    ), 
+                    vertical = "middle"
+                ), 
+                title = "Time"
+            )
         )
+
         return layout
 
     def set_vars(self):

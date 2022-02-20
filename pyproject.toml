@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 testpaths = [
     "tests",
 ]
+asyncio_mode = "auto"
 
 [tool.mypy]
 mypy_path = "src"
@@ -16,3 +17,4 @@ show_error_codes = true
 warn_redundant_casts = true
 warn_unreachable = true
 warn_no_return = true
+exclude = "src/commands"
