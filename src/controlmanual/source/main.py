@@ -22,28 +22,26 @@
 # SOFTWARE.
 # -------------------------------------------------------------------------------------------
 
+from .constants.info import (
+    __version__,
+)  # mypy is saying version is undefined when i import it above idfk
+from .constants import cm_dir
+from .app import Application
+from . import logger
+from rich.text import Text
+from rich import print as rich_print
+import click
+from typing import Type
+from types import TracebackType
+from pathlib import Path
+import sys
+import shutil
+import os
+import logging
 from .core.health import check_health
+
 check_health()
 
-import logging
-import os
-import shutil
-import sys
-from pathlib import Path
-from types import TracebackType
-from typing import Type
-
-import click
-from rich import print as rich_print
-from rich.text import Text
-
-from . import logger
-from .app import Application
-from .constants import cm_dir
-from .constants.info import \
-    __version__ # mypy is saying version is undefined when i import it above idfk
-
-from .utils import run
 
 __all__ = ["main", "main_wrap"]
 
@@ -59,7 +57,7 @@ __all__ = ["main", "main_wrap"]
 )
 def main(file: str, version: bool, clean: bool):
     check_health()
-    
+
     if version:
         return print(f"ControlManual V{__version__}")
 

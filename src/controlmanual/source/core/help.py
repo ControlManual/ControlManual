@@ -177,7 +177,7 @@ class HelpCommand:
             when_flag_is_passed += f"\n  - [primary]{i[0]}[/primary][important], [/important][secondary]{mfl(i[1])}[/secondary]"
 
         print(
-            f"[secondary]{description}[/secondary]" +
-            f"{arg_type}{valid}{effect_when_equals}{when_flag_is_passed}" +
-            f"{required_when}{not_required_when}{ignored_when}{when_unspecified}"
+            f"[secondary]{description}[/secondary]"
+            + f"{arg_type}{valid}{effect_when_equals}{when_flag_is_passed}"
+            + f"{required_when}{not_required_when}{ignored_when}{when_unspecified}"
         )

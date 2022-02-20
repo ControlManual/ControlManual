@@ -14,7 +14,6 @@ from textual.reactive import Reactive
 from textual.widget import Widget
 from ..config import config
 from rich.console import Console, ConsoleOptions, RenderResult
-import logging
 import pyfiglet
 from rich.align import Align
 
@@ -22,16 +21,22 @@ from ...utils import not_null
 
 __all__ = ["RightBar"]
 
-lower = lambda x: x.lower() if config['lowercase'] else x
+
+def lower(x): return x.lower() if config["lowercase"] else x
+
 
 class ProcPanel:
     def __init__(self) -> None:
-        self.base = lambda g: f'rgb(53,{g},42)'
+        self.base = lambda g: f"rgb(53,{g},42)"
         self.base_num: int = 179
-        self.a = lambda x: f'[{self.base(self.base_num)}]{x}[/{self.base(self.base_num)}]'
+        self.a = (
+            lambda x: f"[{self.base(self.base_num)}]{x}[/{self.base(self.base_num)}]"
+        )
         self.current: int = 3
-    
-    def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:
+
+    def __rich_console__(
+        self, console: Console, options: ConsoleOptions
+    ) -> RenderResult:
         self.table = Table(box=box.SIMPLE)
 
         for i in ("Process", "PID", "Memory", "User"):
@@ -54,6 +59,7 @@ class ProcPanel:
                 self.base_num -= 60
 
         yield Panel(self.table, title="Processes")
+
 
 class RightBar(Widget):
     """Display system info."""
@@ -97,15 +103,11 @@ class RightBar(Widget):
             ProcPanel(),
             Panel(
                 Align.center(
-                    pyfiglet.figlet_format(
-                        self.round_time, 
-                        font = "big", 
-                        width = 30
-                    ), 
-                    vertical = "middle"
-                ), 
-                title = "Time"
-            )
+                    pyfiglet.figlet_format(self.round_time, font="big", width=30),
+                    vertical="middle",
+                ),
+                title="Time",
+            ),
         )
 
         return layout

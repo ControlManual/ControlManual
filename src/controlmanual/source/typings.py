@@ -1,31 +1,31 @@
 from typing import (
-    Any, 
-    AsyncGenerator, 
-    Callable, 
-    Dict, 
-    List, 
+    Any,
+    AsyncGenerator,
+    Callable,
+    Dict,
+    List,
     Literal,
-    Optional, 
-    Protocol, 
-    Tuple, 
-    TypedDict, 
-    Union
+    Optional,
+    Protocol,
+    Tuple,
+    TypedDict,
+    Union,
 )
 
 ReadTheme = Literal[
-    "vim", 
-    "fruity", 
-    "inkpot", 
-    "native", 
-    "solarized-dark", 
-    "paraiso-dark", 
-    "stata-dark", 
-    "monokai", 
-    "gruvbox-dark", 
-    "dracula", 
-    "one-dark", 
-    "material", 
-    "zenburn", 
+    "vim",
+    "fruity",
+    "inkpot",
+    "native",
+    "solarized-dark",
+    "paraiso-dark",
+    "stata-dark",
+    "monokai",
+    "gruvbox-dark",
+    "dracula",
+    "one-dark",
+    "material",
+    "zenburn",
     "paraiso-light",
     "perldoc",
     "friendly_grayscale",
@@ -55,8 +55,9 @@ ReadTheme = Literal[
     "xcode",
     "sas",
     "bw",
-    "default"
+    "default",
 ]
+
 
 class CommandCallable(Protocol):
     async def __call__(

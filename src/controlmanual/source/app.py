@@ -6,7 +6,7 @@ import traceback
 from textual.app import App
 from textual.keys import Keys
 from textual.reactive import Reactive
-from textual.widgets import TreeClick, TreeControl, ScrollView, Placeholder
+from textual.widgets import TreeClick, TreeControl, ScrollView
 
 from .client import Client
 from .core.theme import console_object
@@ -21,7 +21,9 @@ DEBUG_LEN: int = 50
 FS_LEN: int = 40
 EXC_LEN: int = 100
 
-MAKE_SYN = lambda x: Syntax.from_path(x, line_numbers=True, theme = config['read_theme'])
+
+def MAKE_SYN(x): return Syntax.from_path(x, line_numbers=True, theme=config["read_theme"])
+
 
 class Application(App):
     client: Client
@@ -54,7 +56,7 @@ class Application(App):
 
     def action_toggle_syntax(self):
         current = self.syntax_panel.visible
-        
+
         self.header.title = "Press CTRL+S to exit." if not current else "Control Manual"
         self.header.visible = not current
         self.syntax_panel.visible = not current
@@ -81,14 +83,14 @@ class Application(App):
         self.interface = c
         await c.focus()
         logging.info("focused console")
-        self.header = Header(name = "header")
+        self.header = Header(name="header")
         self.header.visible = False
 
         await self.view.dock(self.header)
         await self.view.dock(self.filesystem_widget, edge="left", size=FS_LEN, z=1)
         await self.view.dock(self.exc_panel, edge="right", size=EXC_LEN, z=1)
         await self.view.dock(self.bar, edge="left", size=DEBUG_LEN, z=2)
-        await self.view.dock(self.syntax_panel, size = 100, edge = "top", name = "syntax")
+        await self.view.dock(self.syntax_panel, size=100, edge="top", name="syntax")
         await self.view.dock(RightBar("rightbar"), edge="right", size=50)
         await self.view.dock(c, edge="top")
 

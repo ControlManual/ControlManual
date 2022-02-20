@@ -1,4 +1,3 @@
-import logging
 import socket
 from socket import AF_INET, SOCK_DGRAM, SOCK_STREAM
 from typing import Any, Callable, Coroutine
@@ -30,7 +29,9 @@ Callback = Callable[[str], Coroutine[None, None, None]]
 
 __all__ = ["Console"]
 
-lower = lambda x: x.lower() if config['lowercase'] else x
+
+def lower(x): return x.lower() if config["lowercase"] else x
+
 
 class ConsoleClient:
     """Class for handling communication with the console widget."""
@@ -113,11 +114,10 @@ class Console(Widget, Input):
 
         text: str = Input.make_text(self.input_text, self.is_white, self.cursor_index)
 
-        
         lay = Layout()
         """
         For future implementation:
-        
+
         lay2 = Layout()
 
         lay2.split_row(Panel(
