@@ -13,6 +13,7 @@ from textual.widget import Widget
 import logging
 from ..config import config
 from rich.console import Console, ConsoleOptions
+from contextlib import suppress
 
 from ...client import Client
 from .utils import Input
@@ -117,19 +118,19 @@ class Console(Widget, Input):
 
         def imp(x):
             return f"[important]{x}[/important]"
-
-        for conn in psutil.net_connections():
-            name = proc_names.get(conn.pid, "?") or ""
-            laddr = imp("%s:%s") % (conn.laddr)
-            raddr = imp("%s:%s") % (conn.raddr) if conn.raddr else ""
-            table.add_row(
-                imp(proto_map[(conn.family, conn.type)]),
-                laddr,
-                raddr or imp(AD),
-                imp(conn.status),
-                imp(name if isinstance(name, str) else name()),
-                imp(conn.pid),
-            )
+        with suppress(psutil.AccessDenied):
+            for conn in psutil.net_connections():
+                name = proc_names.get(conn.pid, "?") or ""
+                laddr = imp("%s:%s") % (conn.laddr)
+                raddr = imp("%s:%s") % (conn.raddr) if conn.raddr else ""
+                table.add_row(
+                    imp(proto_map[(conn.family, conn.type)]),
+                    laddr,
+                    raddr or imp(AD),
+                    imp(conn.status),
+                    imp(name if isinstance(name, str) else name()),
+                    imp(conn.pid),
+                )
 
         text: str = Input.make_text(self.input_text, self.is_white, self.cursor_index)
         lay = Layout()

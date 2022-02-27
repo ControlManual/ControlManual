@@ -16,6 +16,7 @@ from ..config import config
 from rich.console import Console, ConsoleOptions, RenderResult
 import pyfiglet
 from rich.align import Align
+from contextlib import suppress
 
 from ...utils import not_null
 
@@ -44,19 +45,20 @@ class ProcPanel:
 
         a = self.a
 
-        # process_iter cannot be put into a list, it must be an iterator
-        for proc in psutil.process_iter():
-            self.table.add_row(
-                a(proc.name()),
-                a(str(proc.pid)),
-                a(str(round(proc.memory_percent(), 2))),
-                a(proc.username()),
-            )
+        with suppress(psutil.AccessDenied):
+            # process_iter cannot be put into a list, it must be an iterator
+            for proc in psutil.process_iter():
+                self.table.add_row(
+                    a(proc.name()),
+                    a(str(proc.pid)),
+                    a(str(round(proc.memory_percent(), 2))),
+                    a(proc.username()),
+                )
 
-            self.current += 1
+                self.current += 1
 
-            if (options.max_height - self.current) <= 3:
-                self.base_num -= 60
+                if (options.max_height - self.current) <= 3:
+                    self.base_num -= 60
 
         yield Panel(self.table, title="Processes")
 
