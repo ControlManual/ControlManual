@@ -12,6 +12,7 @@ from textual.reactive import Reactive
 from textual.widget import Widget
 import logging
 from ..config import config
+from rich.console import Console, ConsoleOptions
 
 from ...client import Client
 from .utils import Input
@@ -30,9 +31,27 @@ Callback = Callable[[str], Coroutine[None, None, None]]
 __all__ = ["Console"]
 
 
-def lower(x): return x.lower() if config["lowercase"] else x
+def lower(x: str) -> str: return x.lower() if config["lowercase"] else x
 
+class ConsolePanel:
+    def __init__(self, client: Client, text: str, feed_text: str) -> None:
+        self._client = client
+        self._text = text
+        self._feed_text = feed_text
 
+    def __rich_console__(self, console: Console, options: ConsoleOptions):
+        spl = self._feed_text.split('\n')
+        height: int = options.max_height - 3
+
+        txt = self._feed_text if height > len(spl) else '\n'.join(spl[-height:])
+
+        yield Panel(
+                f"{self._client.path} [success]{self._client.config['input_sep']}[/success] "
+                + self._text
+                + "\n"
+                + txt,
+                title="Terminal",
+        )
 class ConsoleClient:
     """Class for handling communication with the console widget."""
 
@@ -113,17 +132,10 @@ class Console(Widget, Input):
             )
 
         text: str = Input.make_text(self.input_text, self.is_white, self.cursor_index)
-
         lay = Layout()
 
         lay.split_column(
-            Panel(
-                f"{self.client.path} [success]{self.client.config['input_sep']}[/success] "
-                + text
-                + "\n"
-                + self.feed_text,
-                title="Terminal",
-            ),
+            ConsolePanel(self.client, text, self.feed_text),
             Panel(Align.center(table), title="Connections"),
         )
 

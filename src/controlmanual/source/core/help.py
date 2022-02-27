@@ -1,8 +1,11 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from ..typings import Commands
 from ..utils import not_null
 from .config import config
+
+if TYPE_CHECKING:
+    from ..client import Client
 
 __all__ = ["HelpCommand"]
 
@@ -44,9 +47,15 @@ def mfl(data: str) -> str:  # i kept adding a capital letter to some values
 class HelpCommand:
     """Class for running help command operations."""
 
-    def __init__(self, commands: Commands, args: List[str]):
+    def __init__(self, commands: Commands, args: List[str], client: "Client"):
         self._args = args
         self._commands = commands
+        self._client = client
+
+    @property
+    def client(self):
+        """Client object used."""
+        return self._client
 
     @property
     def commands(self):
@@ -93,7 +102,7 @@ class HelpCommand:
             for i, value_ in flags_dict.items():
                 flags += f"[primary]{i}[/primary] - [secondary]{value_}[/secondary]\n"
 
-        print(
+        self.client.print(
             f"""[primary]{cmd_help}[/primary]
     [important]Package: [secondary]{package}[/secondary]
     [important]Usage: [primary]{usage}[/primary]
@@ -104,6 +113,7 @@ class HelpCommand:
 
     async def print_help(self) -> None:
         commands = self.commands
+        print = self.client.print
 
         for i in commands:
             if "exe" in commands[i]:
@@ -111,11 +121,11 @@ class HelpCommand:
                     continue
                 hlp = "[danger]Executable File.[/danger]"
             else:
-                hlp = '[secondary]{commands[i]["help"]}[/secondary] [danger]{commands[i]["warning"]}[/danger]'
+                hlp = f'[secondary]{commands[i]["help"]}[/secondary] [danger]{commands[i]["warning"]}[/danger]'
 
             print(f"[primary]{i.lower()}[/primary] - {hlp}")
         print(
-            '[important]For more info on a command, use [/important][primary]"help <command>"[/primary]'
+            f'[important]For more info on a command, use [/important][primary]"help <command>"[/primary]'
         )
 
     async def print_argument_help(self) -> None:
@@ -176,7 +186,7 @@ class HelpCommand:
 
             when_flag_is_passed += f"\n  - [primary]{i[0]}[/primary][important], [/important][secondary]{mfl(i[1])}[/secondary]"
 
-        print(
+        self.client.print(
             f"[secondary]{description}[/secondary]"
             + f"{arg_type}{valid}{effect_when_equals}{when_flag_is_passed}"
             + f"{required_when}{not_required_when}{ignored_when}{when_unspecified}"

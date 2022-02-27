@@ -9,11 +9,14 @@ red = config["colors"]["red"]
 green = config["colors"]["green"]
 dark_green = config["colors"]["dark_green"]
 
+primary: str = f"{green}" if tc else "green"
+
 theme = Theme(
     {
         "error": f"bold {red}" if tc else "bold red",
         "important": f"bold {green}" if tc else "bold green",
-        "success": f"{green}" if tc else "green",
+        "success": primary,
+        "primary": primary,
         "secondary": f"{dark_green}" if tc else "dim green",
     }
 )

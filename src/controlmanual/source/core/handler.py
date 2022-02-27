@@ -93,7 +93,7 @@ class CommandHandler:
             return
 
         if cmd == config["help_command"]:
-            hlp = HelpCommand(commands, args)
+            hlp = HelpCommand(commands, args, self.client)
             target = (
                 hlp.print_help
                 if args
