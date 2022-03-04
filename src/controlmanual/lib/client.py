@@ -85,7 +85,7 @@ class Client:
                     target: str = os.path.join(cm_dir, "commands")
                     dload.git_clone(
                         "https://github.com/ControlManual/ControlManual-builtin.git",
-                        target,
+                        target + "\\" if os.name == "nt" else "", # this is required to make dload work
                     )
                     source: str = os.path.join(target, "ControlManual-Builtin-master")
 
