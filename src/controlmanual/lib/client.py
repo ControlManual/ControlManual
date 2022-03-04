@@ -21,11 +21,12 @@ from .constants.errors import (
     APIError,
     NothingChanged,
     Collision,
+    NotAnIterator
 )
 from .core.config import config as conf
 from .core.handler import CommandHandler
 from .core.loader import load_commands
-from .typings import CommandCallable, CommandIterator, Config
+from .typings import CommandCallable, CommandIterator, Config, CommandResponse
 from .utils import commands
 from .utils import title as titl
 
@@ -229,7 +230,7 @@ class Client:
 
         return text
 
-    async def _format_string(self, collection: dict, text: str) -> str:
+    async def _format_string(self, collection: Dict[str, str], text: str) -> str:
         for key, value in collection.items():
             text = text.replace("{" + key + "}", value)
 
@@ -248,11 +249,12 @@ class Client:
             APIError,
             NothingChanged,
             Collision,
+            NotAnIterator
         ]
 
-    async def run_command(self, command: str):
+    async def run_command(self, command: str) -> CommandResponse:
         """Run a command."""
-        await CommandHandler(self).run_string(command)
+        return await CommandHandler(self).run_string(command)
 
     @staticmethod
     @typechecked

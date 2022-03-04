@@ -17,7 +17,7 @@ from .core.config import config
 
 __all__ = ["Application"]
 
-DEBUG_LEN: int = 50
+DEBUG_LEN: int = 80
 FS_LEN: int = 40
 EXC_LEN: int = 100
 

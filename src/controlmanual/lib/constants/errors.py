@@ -50,3 +50,7 @@ class Collision(Exception):
     """Raised when a collision between items occurs."""
 
     pass
+
+class NotAnIterator(Exception):
+    """Raised when trying to iterate over a command that doesn't support iteration."""
+    pass

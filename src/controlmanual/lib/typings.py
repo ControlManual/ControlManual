@@ -1,6 +1,6 @@
 from typing import (
     Any,
-    AsyncGenerator,
+    AsyncIterator,
     Callable,
     Dict,
     List,
@@ -72,14 +72,14 @@ class CommandCallable(Protocol):
 
 
 class CommandIterator(Protocol):
-    async def __call__(
+    def __call__(
         self,
         raw: str,
         args: List[str],
         kwargs: Dict[str, str],
         flags: List[str],
         client,
-    ) -> AsyncGenerator[Any, None]:
+    ) -> AsyncIterator[Any]:
         ...
 
 
@@ -142,3 +142,4 @@ class Config(TypedDict):
 
 Commands = Dict[str, Union[Command, BinaryCommand]]
 ParsedString = Tuple[List[str], Dict[str, str], List[str]]
+CommandResponse = Union[Any, AsyncIterator[Any]]

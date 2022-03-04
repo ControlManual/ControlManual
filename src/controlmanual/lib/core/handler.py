@@ -1,12 +1,15 @@
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional, AsyncIterator
+from ..typings import CommandResponse
+
+from ..constants.errors import NotAnIterator
 
 from .config import config
 from .help import HelpCommand
 from .parser import parse
 
 if TYPE_CHECKING:
-    from source.client import Client
+    from lib.client import Client
 
 
 class CommandHandler:
@@ -48,7 +51,7 @@ class CommandHandler:
 
             return True
 
-    async def run_command(self, command: str):
+    async def run_command(self, command: str) -> CommandResponse:
         errors = config["errors"]
         client = self.client
 
@@ -105,12 +108,12 @@ class CommandHandler:
             return await target()
 
         elif cmd in commands:
-            await self.execute(cmd, raw_args, args, kwargs, flags)
+            return await self.execute(cmd, raw_args, args, kwargs, flags)
         else:
             logging.info("command not found")
             client.error(errors["unknown_command"])
 
-    async def run_string(self, text: str) -> Any:
+    async def run_string(self, text: str) -> CommandResponse:
         """Function for running a command."""
         client = self.client
         logging.info(f"handling string: {text}")
@@ -124,9 +127,12 @@ class CommandHandler:
                 return
 
         cmds = text.split(config["seperator"])
+        res = None # in case cmds is empty
 
         for comm in cmds:
-            await self.run_command(comm)
+            res: CommandResponse = await self.run_command(comm)
+
+        return res
 
     async def execute(
         self,
@@ -135,7 +141,7 @@ class CommandHandler:
         args: List[str],
         kwargs: Dict[str, str],
         flags: List[str],
-    ):
+    ) -> CommandResponse:
         """Function for executing a command."""
         errors = config["errors"]
         client = self.client
@@ -146,8 +152,19 @@ class CommandHandler:
 
         runner = current_command["entry"]
 
+        if 'iter' in flags:
+            runner = current_command["iterator"]
+
         try:
-            await runner(raw_args, args, kwargs, flags, client)
+            if not runner:
+                return None
+
+            coro = runner(raw_args, args, kwargs, flags, client)
+
+            if isinstance(coro, AsyncIterator):
+                return coro
+
+            return await coro
         except Exception as e:
             emap = client.error_map
 
