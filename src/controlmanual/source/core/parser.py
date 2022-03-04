@@ -1,5 +1,5 @@
 import re
-from typing import AsyncGenerator, Dict, List
+from typing import Dict, List
 import logging
 from ..typings import ParsedString
 from .config import config
@@ -7,45 +7,37 @@ from .config import config
 __all__ = ["parse"]
 
 
-async def split_text(text: str) -> AsyncGenerator[str, None]:
-    single_quote: bool = False
-    double_quote: bool = False
-    backslash: bool = False
-    current: str = ""
+def split_text(text: str) -> List[str]:
+    if not text:
+        return []
+
+    res: List[str] = ['']
+    index: int = 0
+    quote: bool = False
 
     for i in text:
-        if (i == "'") and (not backslash):
-            single_quote = not single_quote
+        if i == ' ':
+            if not quote:
+                index += 1
+                res.append('')
+                continue
 
-        elif (i == '"') and (not backslash):
-            double_quote = not double_quote
+        if i == '"':
+            quote = not quote
+            continue
 
-        elif i == "\\":
-            backslash = True
+        res[index] += i
 
-        elif i == " ":
-            if not single_quote or double_quote:
-                yield current
-                current = ""
-            else:
-                current += i
-
-        else:
-            current += i
-
-        backslash = False
-    yield current
+    return res
 
 
 async def parse(raw: str) -> ParsedString:
     """Function for parsing the input into different items."""
-    split = split_text(raw)
-
     kwargs: Dict[str, str] = {}
     flags: List[str] = []
     args: List[str] = []
 
-    async for i in split:
+    for i in split_text(raw):
         if re.match(
             ".+=.+", i
         ):  # im bad at regex so this might not be the best way to do it
