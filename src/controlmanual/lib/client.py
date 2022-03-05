@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import colorama
 import dload
@@ -10,25 +10,21 @@ import toml
 from rich.console import Console
 from typeguard import typechecked
 
-from .constants import cm_dir, errors
-from .constants.errors import (
-    InvalidArguments,
-    Other,
-    NotEnoughArguments,
-    Exists,
-    NotExists,
-    InvalidArgument,
-    APIError,
-    NothingChanged,
-    Collision,
-    NotAnIterator
-)
+from .constants import cm_dir, errors, CMBaseException
 from .core.config import config as conf
 from .core.handler import CommandHandler
 from .core.loader import load_commands
-from .typings import CommandCallable, CommandIterator, Config, CommandResponse
+from .typings import (
+    CommandCallable, 
+    CommandIterator, 
+    Config, 
+    CommandResponse, 
+    Functions, 
+    Function
+)
 from .utils import commands
 from .utils import title as titl
+import re
 
 if TYPE_CHECKING:
     from .app import Application
@@ -42,13 +38,14 @@ class Client:
     async def init(self, app: "Application") -> None:
         self._reset: bool = False
         self._path: Path = Path().home()
-        self._functions: dict = {}
+        self._functions: Functions = {}
         self._current_function: Optional[str] = None
         self._function_open: bool = False
         self._toggled_output: bool = True
         self._origin: Path = self._path
         self._command_response: Any = None
         self._app = app
+        self._return_value = None
 
         def get(x):
             return os.path.join(cm_dir, x)
@@ -144,9 +141,13 @@ class Client:
         self._function_open = value
 
     @property
-    def functions(self) -> dict:
+    def functions(self) -> Functions:
         """Dictionary of defined functions."""
         return self._functions
+
+    @functions.setter
+    def functions(self, key: str, value: Function) -> None:
+        self._functions[key] = value
 
     @property
     def current_function(self) -> Optional[str]:
@@ -154,7 +155,7 @@ class Client:
         return self._current_function
 
     @current_function.setter
-    def current_function(self, value: str) -> None:
+    def current_function(self, value: Optional[str]) -> None:
         self._current_function = value
 
     @property
@@ -222,11 +223,43 @@ class Client:
         """Tell the Control Manual instance to reset after the current command has finished. Only works when run via the main file."""
         self._reset = True
 
-    async def load_variables(self, text: str) -> str:  # type: ignore
+    async def load_variables(self, text: str) -> str:
         """Function for loading variables into a string."""
 
         for key, value in self.variables.items():
             text = text.replace("{" + key + "}", value)
+
+        return text
+
+    async def load_functions(self, text: str) -> str:
+        """Parse inline functions into a string."""
+        for match in re.finditer(r'[^\s]*(?<!\\)\b\w+\((. *|,+\s+\w *)*\)', text): # im pretty bad at regex so this might be unoptimized
+            find: str = match.group()
+
+            params_sep: int = find.index("(")
+            function_name: str = find[:params_sep]
+            params: List[str] = [
+                i if not i.startswith(' ') else i[1:] 
+                for i in re.split(
+                    ",|, ",
+                    find[params_sep:][1:-1]
+                )
+            ]
+            
+            if not function_name in self.functions:
+                continue
+            
+            rv: str = ''
+            span = match.span()
+
+            try:
+                rv = str(await self.run_function(function_name, *params))
+            except CMBaseException as e:
+                self.error(str(e))
+                text = text[:span[0]] + rv + text[span[1]:]
+                continue
+
+            text = text[:span[0]] + rv + text[span[1]:] # i cant think of a way to not violate DRY here
 
         return text
 
@@ -236,25 +269,39 @@ class Client:
 
         return text
 
-    @property
-    def error_map(self) -> List[Type[Exception]]:
-        """Map of errors and their corresponding metadata."""
-        return [
-            InvalidArguments,
-            Other,
-            NotEnoughArguments,
-            Exists,
-            NotExists,
-            InvalidArgument,
-            APIError,
-            NothingChanged,
-            Collision,
-            NotAnIterator
-        ]
-
     async def run_command(self, command: str) -> CommandResponse:
         """Run a command."""
         return await CommandHandler(self).run_string(command)
+
+    async def run_function(self, name: str, *params):
+        """Run a function. If being run by a non command, make sure to properly handle exceptions."""
+        fn = self.functions.get(name)
+
+        if not fn:
+            raise errors.InvalidArgument('Please specify a valid function.')
+
+        arguments = fn['arguments']
+
+        if not fn['defined']:
+            raise errors.NothingChanged(
+                f'Function "{name}" is defined, but does not have a body.'
+            )
+
+        if not len(arguments) <= len(params):
+            raise errors.NotEnoughArguments('Missing function parameters.')
+        
+        logging.debug(fn['script'])
+        for i in fn['script']:
+            text = i
+            variables: dict = {}
+
+            for index, value in enumerate(arguments):
+                variables[value] = params[index]
+
+            text = await self._format_string(variables, text)
+            await self.run_command(text)
+
+        return self.return_value
 
     @staticmethod
     @typechecked
@@ -296,3 +343,12 @@ class Client:
     async def show_exc(self, exc: Exception) -> None:
         """Display the exception on the ExcPanel widget."""
         await self._app.show_exc(exc)
+    
+    @property
+    def return_value(self) -> Optional[str]:
+        """Return value of last called function."""
+        return self._return_value
+
+    @return_value.setter
+    def return_value(self, value: str) -> None:
+        self._return_value = value

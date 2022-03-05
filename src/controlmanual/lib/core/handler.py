@@ -1,12 +1,11 @@
 import logging
 from typing import TYPE_CHECKING, Dict, List, Optional, AsyncIterator
-from ..typings import CommandResponse
-
-from ..constants.errors import NotAnIterator
+from ..typings import CommandResponse, Function
 
 from .config import config
 from .help import HelpCommand
 from .parser import parse
+from ..constants import CMBaseException
 
 if TYPE_CHECKING:
     from lib.client import Client
@@ -21,35 +20,42 @@ class CommandHandler:
         """Client class."""
         return self._client
 
-    async def handle_function(self, cmd: str, raw: str):
+    async def handle_function(self, cmd: str, raw: str) -> bool:
+        """Handle function parsing."""
         client = self.client
         errors = config["errors"]
-        crfn: Optional[str] = client.current_function
+        current: Optional[str] = client.current_function
+        is_syntax: bool = cmd in config["functions"]
 
-        for i in range(2):
-            is_syntax: bool = cmd == config["functions"][i]
-
+        if not current:
             if is_syntax:
-                if crfn:
-                    if client._function_open:
-                        if i:
-                            client.error(errors["function_open"])
-                        else:
-                            client.functions[client.current_function]["defined"] = True
-                            client._function_open = False
-                            client._current_function = None
-                    elif not i:
-                        client.error(errors["function_not_open"])
-                    else:
-                        client._function_open = True
-                else:
-                    client.error(errors["function_undefined"])
-                    return True
+                client.error(errors["function_undefined"])
+                return True
+            return False
 
-        if client._function_open:
-            client._functions[crfn]["script"].append(raw)
+        target: Function = client.functions[current]
 
-            return True
+        if is_syntax:
+            bool_map: Dict[str, bool] = {
+                value: not index
+                for index, value in enumerate(config["functions"])
+            }
+
+            if client.function_open == bool_map[cmd]:
+                client.error(errors[f"function_{'' if cmd == '{' else 'not_'}open"])
+                return True
+            
+            client.function_open = not client.function_open
+
+            if not client.function_open:
+                target["defined"] = True
+                client.current_function = None
+        else:
+            logging.debug("appended to target")
+            target["script"].append(raw)
+        
+        return True  
+    
 
     async def run_command(self, command: str) -> CommandResponse:
         errors = config["errors"]
@@ -86,6 +92,8 @@ class CommandHandler:
             if len(spl) > 1:
                 excess: str = " ".join(spl[1:])
                 raw_args = excess + " " + raw_args
+
+        raw_args = await client.load_functions(raw_args)
 
         args, kwargs, flags = await parse(raw_args)
         cmd: str = cmd.lower()
@@ -165,12 +173,10 @@ class CommandHandler:
                 return coro
 
             return await coro
+        except CMBaseException as e:
+            client.error(str(e))
+    
         except Exception as e:
-            emap = client.error_map
-
-            if type(e) in emap:
-                return client.error(str(e))
-
             logging.error(f"command ran into exception: {e}")
             if isinstance(e, PermissionError):
                 logging.debug("permission error found")

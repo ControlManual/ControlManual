@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import (
     Any,
     AsyncIterator,
@@ -67,7 +68,7 @@ class CommandCallable(Protocol):
         kwargs: Dict[str, str],
         flags: List[str],
         client,
-    ):
+    ) -> CommandResponse:
         ...
 
 
@@ -139,7 +140,12 @@ class Config(TypedDict):
     lowercase: bool
     read_theme: ReadTheme
 
+class Function(TypedDict):
+    arguments: List[str]
+    script: List[str]
+    defined: bool
 
 Commands = Dict[str, Union[Command, BinaryCommand]]
 ParsedString = Tuple[List[str], Dict[str, str], List[str]]
 CommandResponse = Union[Any, AsyncIterator[Any]]
+Functions = Dict[str, Function]
