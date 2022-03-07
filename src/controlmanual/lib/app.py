@@ -32,6 +32,7 @@ class Application(App):
     show_bar = Reactive(False)
     filesystem = Reactive(False)
     excpanel = Reactive(False)
+    connections = Reactive(True)
 
     def watch_show_bar(self, show_bar: bool) -> None:
         self.bar.animate("layout_offset_x", 0 if show_bar else -DEBUG_LEN)
@@ -50,6 +51,10 @@ class Application(App):
 
     def action_toggle_excpanel(self) -> None:
         self.excpanel = not self.excpanel
+
+    def action_toggle_connections(self) -> None:
+        self.connections = not self.connections
+        self.interface.refresh()
 
     async def set_syntax(self, path: str) -> None:
         await self.syntax_panel.update(MAKE_SYN(path))
@@ -107,6 +112,7 @@ class Application(App):
         await self.bind(Keys.ControlE, "toggle_excpanel")
         await self.bind(Keys.ControlS, "toggle_syntax")
         await self.bind(Keys.ControlR, "view.toggle('rightbar')")
+        await self.bind(Keys.ControlG, "toggle_connections")
 
     async def handle_tree_click(self, message: TreeClick[str]) -> None:
         await self.client.run_command(f"path {message.node.data}")

@@ -173,7 +173,7 @@ class CommandHandler:
                 return coro
 
             return await coro
-        except CMBaseException as e:
+        except (CMBaseException, AssertionError) as e:
             client.error(str(e))
     
         except Exception as e:

@@ -37,7 +37,9 @@ async def parse(raw: str) -> ParsedString:
     flags: List[str] = []
     args: List[str] = []
 
-    for i in split_text(raw):
+    txt: str = re.split('|'.join(config['comments']), raw, maxsplit = 1)[0] # this gets rid of inline comments
+
+    for i in split_text(txt):
         if re.match(
             ".+=.+", i
         ):  # im bad at regex so this might not be the best way to do it
@@ -47,6 +49,7 @@ async def parse(raw: str) -> ParsedString:
             flags.append(i[2:])
         else:
             args.append(i)
+            
 
     logging.debug(f"a-k-f: {args, kwargs, flags}  raw: {raw}")
     return args, kwargs, flags

@@ -4,8 +4,6 @@ from rich.console import Console, ConsoleOptions, RenderResult
 from textual.widget import Widget
 from ...logger import log_path
 
-from .utils import Input
-
 __all__ = ["Debugger"]
 
 
@@ -24,14 +22,14 @@ class LogPanel:
                 title = "Logs",
             )
 
-class Debugger(Widget, Input):
+class Debugger(Widget):
     """Widget for holding the debugger."""
 
     def render(self) -> Panel:
         lay = Layout()
         lay.split_column(
             LogPanel(),
-            Panel(Input.make_text(self.input_text, self.is_white, self.cursor_index)),
+            "null",
         )
             
         return Panel(lay, title="Debugger")

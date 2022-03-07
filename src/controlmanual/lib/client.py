@@ -219,13 +219,8 @@ class Client:
         """Function for changing the current path."""
         self._path = path
 
-    def invoke_reset(self) -> None:
-        """Tell the Control Manual instance to reset after the current command has finished. Only works when run via the main file."""
-        self._reset = True
-
     async def load_variables(self, text: str) -> str:
         """Function for loading variables into a string."""
-
         for key, value in self.variables.items():
             text = text.replace("{" + key + "}", value)
 
