@@ -1,4 +1,6 @@
-__title__ = "ControlManual"
-__author__ = "ZeroIntensity and 2231puppy"
-__license__ = "MIT"
-__version__ = "0.0.4.1"
+from typing import Final
+
+__title__: Final[str] = "ControlManual"
+__author__: Final[str] = "ZeroIntensity and 2231puppy"
+__license__: Final[str] = "MIT"
+__version__ : Final[str] = "0.0.4.1"

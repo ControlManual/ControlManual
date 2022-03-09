@@ -105,13 +105,14 @@ class CommandHandler:
 
         if cmd == config["help_command"]:
             hlp = HelpCommand(commands, args, self.client)
+            logging.debug(args)
             target = (
-                hlp.print_help
-                if args
+                hlp.print_help if not args
                 else hlp.print_argument_help
                 if len(args) > 1
                 else hlp.print_command_help
             )
+            
 
             return await target()
 

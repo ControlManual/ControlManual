@@ -1,5 +1,6 @@
 import os
+from typing import Final
 
-cm_dir: str = os.path.dirname(
+cm_dir: Final[str] = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
