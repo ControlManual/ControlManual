@@ -76,7 +76,7 @@ class HelpCommand:
 
         current = commands[command]
 
-        if current["is_binary"]:
+        if current.is_binary:
             return error("Command is an executable.")
 
         usage_str: str = f"[secondary]{command} [primary]"
@@ -116,12 +116,12 @@ class HelpCommand:
         print = self.client.print
 
         for i in commands:
-            if "exe" in commands[i]:
+            if commands[i].is_binary:
                 if config["hide_exe_from_help"]:
                     continue
                 hlp = "[danger]Executable File.[/danger]"
             else:
-                hlp = f'[secondary]{commands[i]["help"]}[/secondary] [danger]{commands[i]["warning"]}[/danger]'
+                hlp = f'[secondary]{commands[i].help}[/secondary] [danger]{commands[i].warning}[/danger]'
 
             print(f"[primary]{i.lower()}[/primary] - {hlp}")
         print(
@@ -137,11 +137,11 @@ class HelpCommand:
         if not cmd:
             return error("Command does not exist.")
 
-        if "exe" in cmd:
+        if cmd.is_binary:
             return error("Command is an executable.")
 
-        args: Dict[str, str] = not_null(cmd["args"])
-        args_help: dict = not_null(cmd["args_help"])
+        args: Dict[str, str] = not_null(cmd.args)
+        args_help: dict = not_null(cmd.args_help)
 
         if argument not in args:
             return error("Argument does not exist.")

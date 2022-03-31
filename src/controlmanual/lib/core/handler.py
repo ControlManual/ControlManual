@@ -48,11 +48,11 @@ class CommandHandler:
             client.function_open = not client.function_open
 
             if not client.function_open:
-                target["defined"] = True
+                target.defined = True
                 client.current_function = None
         else:
             logging.debug("appended to target")
-            target["script"].append(raw)
+            target.script.append(raw)
         
         return True  
     
@@ -73,11 +73,8 @@ class CommandHandler:
 
         split: List[str] = command.split(" ")
 
-        if not any(split):
-            return
-
-        while not split[0]:
-            split.pop(0)
+        if not any(split): return
+        while not split[0]: split.pop(0)
 
         raw_args = " ".join(split[1:])  # unsplit string of arguments
         cmd = split[0]
@@ -112,7 +109,6 @@ class CommandHandler:
                 if len(args) > 1
                 else hlp.print_command_help
             )
-            
 
             return await target()
 
@@ -156,13 +152,10 @@ class CommandHandler:
         client = self.client
         current_command = client.commands[cmd]
 
-        if "exe" in current_command:
-            raise NotImplementedError("binary execution not implemented")
-
-        runner = current_command["entry"]
+        runner = current_command.entry
 
         if 'iter' in flags:
-            runner = current_command["iterator"]
+            runner = current_command.iterator
 
         try:
             if not runner:

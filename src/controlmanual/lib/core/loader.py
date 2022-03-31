@@ -28,7 +28,7 @@ def extract(command: ModuleType, path: str) -> Command:
     iterator: Optional[CommandIterator] = get(command, "iterator", None)
 
     logging.debug(str(command.run))
-    return {
+    return Command(**{
         "entry": command.run,
         "help": cmd_help,
         "warning": warning,
@@ -40,7 +40,7 @@ def extract(command: ModuleType, path: str) -> Command:
         "iterator": iterator,
         "is_binary": False,
         "path": path,
-    }
+    })
 
 
 async def load_directory(
@@ -73,7 +73,7 @@ async def load_directory(
 async def load_commands() -> Commands:
     """Function for creating the commands dict for the client."""
     return {
-        Path(not_null(command["path"])).stem: command
+        Path(not_null(command.path)).stem: command
         async for command in load_directory("commands")
     }
 

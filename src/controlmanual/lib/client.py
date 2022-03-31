@@ -275,9 +275,9 @@ class Client:
         if not fn:
             raise errors.InvalidArgument('Please specify a valid function.')
 
-        arguments = fn['arguments']
+        arguments = fn.arguments
 
-        if not fn['defined']:
+        if not fn.defined:
             raise errors.NothingChanged(
                 f'Function "{name}" is defined, but does not have a body.'
             )
@@ -285,8 +285,7 @@ class Client:
         if not len(arguments) <= len(params):
             raise errors.NotEnoughArguments('Missing function parameters.')
         
-        logging.debug(fn['script'])
-        for i in fn['script']:
+        for i in fn.script:
             text = i
             variables: dict = {}
 

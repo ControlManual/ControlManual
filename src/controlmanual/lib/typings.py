@@ -2,16 +2,15 @@ from __future__ import annotations
 from typing import (
     Any,
     AsyncIterator,
-    Callable,
     Dict,
     List,
     Literal,
-    Optional,
     Protocol,
     Tuple,
     TypedDict,
     Union,
 )
+from .classes import Command, Function
 
 ReadTheme = Literal[
     "vim",
@@ -90,29 +89,6 @@ class Colors(TypedDict):
     dark_green: str
 
 
-class BaseCommand(TypedDict):
-    help: Optional[str]
-    usage: Optional[str]
-    package: Optional[str]
-    warning: str
-    args: Optional[Dict[str, str]]
-    flags: Optional[Dict[str, str]]
-    args_help: Optional[dict]
-    path: str
-
-
-class Command(BaseCommand):
-    entry: CommandCallable
-    iterator: Optional[CommandIterator]
-    is_binary: Literal[False]
-
-
-class BinaryCommand(BaseCommand):
-    entry: Callable[..., Any]
-    iterator: Optional[Callable[..., Any]]
-    is_binary: Literal[True]
-
-
 class CommandErrors(TypedDict):
     unknown_command: str
     command_error: str
@@ -140,12 +116,7 @@ class Config(TypedDict):
     lowercase: bool
     read_theme: ReadTheme
 
-class Function(TypedDict):
-    arguments: List[str]
-    script: List[str]
-    defined: bool
-
-Commands = Dict[str, Union[Command, BinaryCommand]]
+Commands = Dict[str, Command]
 ParsedString = Tuple[List[str], Dict[str, str], List[str]]
 CommandResponse = Union[Any, AsyncIterator[Any]]
 Functions = Dict[str, Function]
