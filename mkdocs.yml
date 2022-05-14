@@ -1,0 +1,11 @@
+site_name: Control Manual
+
+nav:
+  - Session: session.md
+
+theme:
+  name: "material"
+
+plugins:
+  - search
+  - mkdocstrings
