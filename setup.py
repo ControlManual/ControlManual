@@ -5,15 +5,15 @@ with open("./README.md") as f:
 
 if __name__ == "__main__":
     setup(
-        name="pointers.py",
-        version="1.2.2",
+        name="controlmanual",
+        version="1.0.0",
         author="ZeroIntensity",
         author_email="<zintensitydev@gmail.com>",
-        description="Bringing the hell of pointers to Python.",
+        description="Advanced command interpreter.",
         long_description_content_type="text/markdown",
         long_description=long_desc,
-        packages=["pointers"],
-        keywords=["python", "pointers"],
+        packages=["controlmanual"],
+        keywords=["python", "commands", "command"],
         install_requires=["typing_extensions"],
         classifiers=[
             "Programming Language :: Python :: 3.6",
@@ -25,8 +25,7 @@ if __name__ == "__main__":
         ],
         license="MIT",
         project_urls={
-            "Source": "https://github.com/ZeroIntensity/pointers.py",
-            "Documentation": "https://pointerspy.netlify.app/",
+            "Source": "https://github.com/ZeroIntensity/ControlManual",
         },
         package_dir={"": "src"},
     )
