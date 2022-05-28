@@ -1,4 +1,5 @@
-from typing import Protocol
+from typing import Protocol, Dict, Type
+from .object import Object
 
 class Output(Protocol):
     async def print(self, *values: str) -> None:
@@ -11,4 +12,8 @@ class Output(Protocol):
         ...
 
     async def error(self, *values: str) -> None:
+        ...
+
+class EngineCallable(Protocol):
+    def call(self, *args, **kwargs):
         ...

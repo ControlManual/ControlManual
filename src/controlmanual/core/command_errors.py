@@ -2,7 +2,11 @@ __all__ = (
     "CMException",
     "GenericError",
     "InternalError",
-    "CannotCast"
+    "CannotCast",
+    "ParseError",
+    "Undefined",
+    "CannotCall",
+    "UnsupportedObject"
 )
 
 class CMException(Exception):
@@ -24,5 +28,25 @@ class InternalError(CMException):
 
 class CannotCast(CMException):
     """Failed to cast a type."""
+
+    pass
+
+class ParseError(CMException):
+    """Failed to parse the input string."""
+
+    pass
+
+class Undefined(CMException):
+    """Tried to access something that does not exist."""
+
+    pass
+
+class CannotCall(CMException):
+    """Target object isn't callable."""
+
+    pass
+
+class UnsupportedObject(CMException):
+    """Internal object doesn't derive from Object."""
 
     pass
