@@ -39,6 +39,10 @@ def _split(data: str) -> List[str]:
             split_args.append(buffer)
             buffer = ''
             continue
+
+        if i == ".":
+            split_args.append(buffer)
+            buffer = ''
         
         parens += _PARENS(i)
         squote = not squote if i == "'" else squote
@@ -93,15 +97,17 @@ def _decode_params(params: List[Object]) -> Iterator[Any]:
 def _decode_object(obj: Variable) -> Object:
     return Objects.ensure_object(String(str(obj)) if isclass(obj) else obj)  # type: ignore
 
-def _convert_list(data: List[str], objects: Objects) -> List[Object]:
-    params: List[Object] = []
+def _finalize_params(params: List[Object], objects: Objects) -> List[Object]:
+    found = False
+    for index, param in enumerate(params):
+        raw = param.raw_data
 
-    for param in data:
-        if ').' in param:
+        if re.match(CALL_REGEX, raw):
+            found = True
             buffer: str = ''
             parsed: List[Union[str, Object]] = []
 
-            for i in param:
+            for i in raw:
                 buffer += i
 
                 if re.match(CALL_REGEX, buffer):
@@ -110,25 +116,42 @@ def _convert_list(data: List[str], objects: Objects) -> List[Object]:
 
             parsed.append(String(buffer))
 
-            obj: Variable = parsed.pop(0)  # type: ignore
+            first = parsed[0]
+            target = params[index - 1] if isinstance(first, str) and first.startswith('.') else first
+
+            obj = None
 
             for string in parsed:
                 if isinstance(string, str):
                     obj = _solve_object_call(
-                        obj,  # type: ignore
+                        target,  # type: ignore
                         string,
                         objects
                     ) \
                     if re.match(CALL_REGEX, string) \
                     else objects.lookup_object_attribute(
-                        obj,
+                        target,
                         string
                     )
 
-            params.append(_decode_object(obj))
-            continue
+            assert obj
+            params[index] = _decode_object(obj)
+            params.pop(index - 1)
 
+        elif isinstance(raw, str) and raw.startswith('.'):
+            found = True
+            params[index] = objects.lookup_object_attribute(params[index - 1], raw)  # type: ignore
+            params.pop(index - 1)
 
+    if found:
+        _finalize_params(params, objects)
+
+    return params
+
+def _convert_list(data: List[str], objects: Objects) -> List[Object]:
+    params: List[Object] = []
+
+    for param in data:
         if re.match(QUOTE_REGEX, param):
             params.append(String(param[1:-1]))
             continue
@@ -142,8 +165,8 @@ def _convert_list(data: List[str], objects: Objects) -> List[Object]:
             continue    
 
         params.append(String(param))
-
-    return params
+    
+    return _finalize_params(params, objects)
 
 def _solve_object_call(obj: Object, token: str, objects: Objects) -> Object:
     name: str = token.split('(')[0]
@@ -155,6 +178,9 @@ def _solve_object_call(obj: Object, token: str, objects: Objects) -> Object:
     return func.call(*_decode_params(obj_params))
 
 def _solve_call(token: str, objects: Objects) -> Object:
+    if token.startswith('.'):
+        return String(token)
+
     name: str = token.split('(')[0]
     params: list = _split_params(token[token.index('(') + 1:-1])
     obj_params: List[Object] = _convert_list(params, objects)

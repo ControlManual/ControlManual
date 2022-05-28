@@ -11,9 +11,9 @@ from typing import (
     Callable,
     Literal,
     Any,
-    List
+    List,
 )
-from typing_extensions import ParamSpec
+from typing_extensions import ParamSpec, TypeGuard
 from .command_errors import (
     Undefined,
     ParseError,
@@ -122,6 +122,7 @@ CM_MAPPABLE: Dict[type, Type[Object]] = {
     FunctionType: Function,
     MethodType: Function
 }
+ObjectLike = Union[Variable, str, int, FunctionType, MethodType]
 
 class Objects:
     """Class representing all objects in the current session."""
@@ -217,7 +218,7 @@ class Objects:
         
         return obj  # type: ignore
 
-    def lookup_object_attribute(self, obj: Variable, string: str) -> Variable:
+    def lookup_object_attribute(self, obj: ObjectLike, string: str) -> Variable:
         split = self._parse_string(string)
         attr_name = split.pop(0)
         self.ensure_object(obj)
@@ -225,7 +226,7 @@ class Objects:
         raw_attr = getattr(obj, attr_name, None)
 
         if (not raw_attr) or (not getattr(raw_attr, '__cm_exposed', None)):
-            raise Undefined(f'"{obj.type_name}" object has no attribute "{attr_name}"')
+            raise Undefined(f'"{obj.type_name}" object has no attribute "{attr_name}"')  # type: ignore
 
         attr = raw_attr if not split else self.lookup_object_attribute(raw_attr, '.'.join(split))
-        return attr
+        return self.ensure_object(attr)
