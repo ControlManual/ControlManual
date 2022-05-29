@@ -1,9 +1,21 @@
-from ..core.constants import CONFIG_DIR, CONFIG_FILE, COMMANDS_DIR, LOGS_DIR
 import os
 from rich.console import Console
 import aiofiles
+from pathlib import Path
 
 __all__ = ('check_health',)
+
+__all__ = (
+    'CONFIG_DIR',
+    'CONFIG_FILE',
+    'COMMANDS_DIR',
+    'LOGS_DIR'
+)
+
+CONFIG_DIR: str = os.path.join(Path.home(), '.controlmanual')
+CONFIG_FILE: str = os.path.join(CONFIG_DIR, 'config.json')
+COMMANDS_DIR: str = os.path.join(CONFIG_DIR, 'commands')
+LOGS_DIR: str = os.path.join(CONFIG_DIR, 'logs')
 
 console = Console()
 

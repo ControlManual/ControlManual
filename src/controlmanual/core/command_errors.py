@@ -6,7 +6,8 @@ __all__ = (
     "ParseError",
     "Undefined",
     "CannotCall",
-    "UnsupportedObject"
+    "UnsupportedObject",
+    "InvalidArgument"
 )
 
 class CMException(Exception):
@@ -48,5 +49,10 @@ class CannotCall(CMException):
 
 class UnsupportedObject(CMException):
     """Internal object doesn't derive from Object."""
+
+    pass
+
+class InvalidArgument(CMException):
+    """An invalid argument was passed."""
 
     pass

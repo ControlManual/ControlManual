@@ -12,20 +12,23 @@ from typing import (
     Literal,
     Any,
     List,
+    Tuple
 )
-from typing_extensions import ParamSpec, TypeGuard
+from typing_extensions import ParamSpec
 from .command_errors import (
     Undefined,
     ParseError,
     CannotCast,
     UnsupportedObject,
-    CannotCall
+    CannotCall,
+    InvalidArgument
 )
 from inspect import isclass
 from types import FunctionType, MethodType
 
 T = TypeVar("T")
 A = TypeVar("A", bound = "Object")
+B = TypeVar("B")
 P = ParamSpec("P")
 
 __all__ = (
@@ -36,17 +39,72 @@ __all__ = (
     "Objects"
 )
 
+def _make_int(data: Any) -> int:
+    string = str(data)
+    if string.isdigit():
+        return int(string)
+    
+    obj = Objects.ensure_object(data)
+    raise InvalidArgument(f'cannot cast "{obj}" to Integer')
+
+def _make_bool(data: Any) -> bool:
+    string = str(data)
+    
+    if string.isdigit():
+        num = int(string)
+
+        return num > 0
+
+    return bool(string) if data in BUILTINS else True
+
+BUILTINS: Tuple[type, type, type, type] = (str, float, bool, int)
+CM_CASTS: Dict[type, Callable] = {
+    str: str,
+    int: _make_int,
+    bool: _make_bool,
+}
+
+def map_type(
+    data: Any,
+    actual: Union["Object", type],
+    typ: Type[T]
+) -> T:
+    mappable_reversed = {v: k for k, v in CM_MAPPABLE.items()}
+
+    if actual is not typ:
+        if (actual in CM_MAPPABLE) or (actual in mappable_reversed):
+            target = CM_MAPPABLE.get(actual) \
+            if issubclass(
+                actual,  # type: ignore
+                BUILTINS
+            ) \
+            else mappable_reversed.get(actual)  # type: ignore
+
+            if target is typ:
+                assert target
+                data = target(data)
+    
+    return data
+
 class Object(ABC, Generic[T]):
     """Abstract class representing a Control Manual object."""
-
     type_name: str
     """Name of the type."""
+    raw_data_type: Type[T]
+    """Type of the raw data."""
 
     def __init__(self, raw_data: T):
-        self._raw_data = raw_data
+        typ = self.raw_data_type
+        actual: type = type(raw_data)
 
-    def __init_subclass__(cls, type_name: Optional[str] = None) -> None:
+        if (actual is not typ) and ((actual in BUILTINS) and (typ in BUILTINS)):
+            raw_data = CM_CASTS[typ](map_type(raw_data, actual, typ))
+
+        self._raw_data = map_type(raw_data, type(raw_data), typ)
+
+    def __init_subclass__(cls, raw_data_type: Type[T], type_name: Optional[str] = None) -> None:
         cls.type_name = type_name or cls.__name__
+        cls.raw_data_type = raw_data_type
 
     def cast(self, target: "Object", datatype: A) -> A:
         """Cast a type to a different type."""
@@ -59,7 +117,7 @@ class Object(ABC, Generic[T]):
 
     def to_debug_string(self) -> str:
         """Convert the object to a debug representation."""
-        return f"{self.type_name} object"
+        return self.__repr__()
 
     @property
     def raw_data(self) -> T:
@@ -69,20 +127,19 @@ class Object(ABC, Generic[T]):
     def __repr__(self) -> str:
         return self.to_string()
 
-class Function(Generic[P, T], Object[Callable[P, T]]):
+class Function(Generic[P, T], Object[Callable[P, T]], raw_data_type = FunctionType):
     def call(self, *args: P.args, **kwargs: P.kwargs) -> T:
-        return self.raw_data(*args, **kwargs)
+        return self.raw_data(*args, **kwargs)  
 
     def to_string(self) -> str:
-        return f'Function(<internally defined at {hex(id(self.raw_data))}>)'
-
+        return f'<internally defined function at {hex(id(self.raw_data))}>'
 
 def expose(func: Callable[P, T]) -> Callable[P, T]:
     """Expose a function to Control Manual."""
     func.__cm_exposed = True
     return func
 
-class String(Object[str]):
+class String(Object[str], raw_data_type = str):
     def to_string(self):
         return self._raw_data
     
@@ -103,25 +160,37 @@ class String(Object[str]):
         return datatype(target.to_string())
 
     def __repr__(self) -> str:
-        return f"String('{self._raw_data}')"
+        return f"'{self._raw_data}'"
 
-class Integer(Object[int]):
+class Integer(Object[int], raw_data_type = int):
+    pass
+
+class Boolean(Object[int], raw_data_type = bool):
     def to_string(self):
-        return self._raw_data
+        return str(self.raw_data).lower()
 
-    def cast(self, target: Object, datatype: Type[A]) -> A:
-        return datatype(target.to_string())
-
-    def __repr__(self) -> str:
-        return f"Integer({self._raw_data})"
+class Float(Object[float], raw_data_type = float):
+    pass
 
 Variable = Union[Type[Object], Object]
 CM_MAPPABLE: Dict[type, Type[Object]] = {
     str: String,
     int: Integer,
     FunctionType: Function,
-    MethodType: Function
+    MethodType: Function,
+    bool: Boolean,
+    float: Float
 }
+BASE_OBJECTS = {
+    'String': String,
+    'Integer': Integer,
+    'Boolean': Boolean,
+    'Function': Function,
+    'Float': Float,
+    'true': Boolean(True),
+    'false': Boolean(False),
+}
+
 ObjectLike = Union[Variable, str, int, FunctionType, MethodType]
 
 class Objects:
@@ -129,9 +198,9 @@ class Objects:
 
     def __init__(
         self,
-        objects: Dict[str, Variable],
+        objects: Optional[Dict[str, Variable]] = None,
     ) -> None:
-        self._objects = objects
+        self._objects = objects or BASE_OBJECTS
     
     @property
     def objects(self):

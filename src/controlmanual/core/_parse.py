@@ -35,14 +35,15 @@ def _split(data: str) -> List[str]:
         if parens == -1:
             raise ParseError('unexpected ")"')
 
-        if (i == " ") and not any({parens, squote, dquote}):
-            split_args.append(buffer)
-            buffer = ''
-            continue
+        if not any({parens, squote, dquote}):
+            if (i == " "):
+                split_args.append(buffer)
+                buffer = ''
+                continue
 
-        if i == ".":
-            split_args.append(buffer)
-            buffer = ''
+            if i == ".":
+                split_args.append(buffer)
+                buffer = ''
         
         parens += _PARENS(i)
         squote = not squote if i == "'" else squote
@@ -102,7 +103,7 @@ def _finalize_params(params: List[Object], objects: Objects) -> List[Object]:
     for index, param in enumerate(params):
         raw = param.raw_data
 
-        if re.match(CALL_REGEX, raw):
+        if isinstance(raw, str) and re.match(CALL_REGEX, raw):
             found = True
             buffer: str = ''
             parsed: List[Union[str, Object]] = []
@@ -162,10 +163,15 @@ def _convert_list(data: List[str], objects: Objects) -> List[Object]:
         
         if param.isdigit():
             params.append(Integer(param))  # type: ignore
-            continue    
+            continue
+        
+        found_obj = objects.objects.get(param)
+        if found_obj:
+            params.append(found_obj)
+            continue
 
         params.append(String(param))
-    
+
     return _finalize_params(params, objects)
 
 def _solve_object_call(obj: Object, token: str, objects: Objects) -> Object:
