@@ -1,7 +1,18 @@
-from typing import Protocol, Dict, Type
-from .object import Object
+from typing import (
+    Protocol,
+    Awaitable,
+    TypeVar,
+    Callable,
+    Union,
+    runtime_checkable,
+)
+from typing_extensions import ParamSpec
 
-class Output(Protocol):
+T = TypeVar("T", covariant=True)
+P = ParamSpec("P")
+
+
+class UI(Protocol):
     async def print(self, *values: str) -> None:
         ...
 
@@ -14,6 +25,15 @@ class Output(Protocol):
     async def error(self, *values: str) -> None:
         ...
 
-class EngineCallable(Protocol):
-    def call(self, *args, **kwargs):
+    async def input(self) -> str:
         ...
+
+
+@runtime_checkable
+class EngineCallable(Protocol[P, T]):
+    def cm_call(self, *args: P.args, **kwargs: P.kwargs) -> T:
+        ...
+
+
+MaybeAwaitable = Union[Awaitable[T], T]
+MaybeCoroutine = Callable[P, MaybeAwaitable[T]]

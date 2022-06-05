@@ -1,13 +1,14 @@
-from .typings import Output
+from .typings import UI
 from .command_errors import CMException
 from ._parse import parse
 from .object import Objects
 
+
 class Session:
     """Main class representing a Control Manual session."""
 
-    def __init__(self, output: Output):
-        self._output = output
+    def __init__(self, ui: UI):
+        self._ui = ui
         self._objects = Objects()
         self._commands = {}
         self._ready = False
@@ -21,4 +22,4 @@ class Session:
             await self.handle_cm_exc(e)
 
     async def handle_cm_exc(self, err: CMException):
-        await self._output.error(str(err))
+        await self._ui.error(str(err))
