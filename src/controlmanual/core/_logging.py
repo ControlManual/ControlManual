@@ -1,15 +1,14 @@
 import logging
 import os
 from datetime import datetime
-from ._health import CONFIG_DIR
 
 __all__ = ("setup_logging",)
 
 
-def setup_logging() -> None:
+def setup_logging(logs_dir: str) -> None:
     now = datetime.now()
     log_path: str = os.path.join(
-        CONFIG_DIR, "logs", now.strftime("%m.%d.%Y_%H-%M-%S.log")
+        logs_dir, now.strftime("%m.%d.%Y_%H-%M-%S.log")
     )
 
     logging.basicConfig(

@@ -8,6 +8,7 @@ __all__ = (
     "CannotCall",
     "UnsupportedObject",
     "InvalidArgument",
+    "CommandLoadFailed",
 )
 
 
@@ -63,5 +64,11 @@ class UnsupportedObject(CMException):
 
 class InvalidArgument(CMException):
     """An invalid argument was passed."""
+
+    pass
+
+
+class CommandLoadFailed(CMException):
+    """Failed to load a command."""
 
     pass

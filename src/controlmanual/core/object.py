@@ -130,3 +130,30 @@ class Integer(DataType[int], data_type=int):
 
 class Boolean(DataType[bool], data_type=bool):
     pass
+
+
+class Objects:
+    """Class acting as a handler for objects."""
+
+    def __init__(self):
+        self._objects: Dict[str, Object] = {}
+
+    @property
+    def raw(self) -> Dict[str, Object]:
+        return self._objects
+
+    async def lookup(self, name: str) -> Object:
+        """Lookup an object."""
+        ...
+
+    async def delete(self, name: str) -> None:
+        """Delete an existing object."""
+        ...
+
+    async def new(self, name: str, value: Object) -> None:
+        """Create a new object."""
+        ...
+
+    async def exists(self, name: str) -> bool:
+        """Check if an object exists under the specified name."""
+        ...

@@ -1,14 +1,9 @@
 import json
 from dataclasses import dataclass
-from ._health import CONFIG_FILE
 
-__all__ = ("config", "Config")
+__all__ = ("Config",)
 
 
 @dataclass
 class Config:
     pass
-
-
-with open(CONFIG_FILE) as f:
-    config = Config(**json.load(f))
