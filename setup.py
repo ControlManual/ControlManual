@@ -1,4 +1,6 @@
 from setuptools import setup
+from setuptools_rust import Binding, RustExtension
+from glob import glob
 
 with open("./README.md") as f:
     long_desc: str = f.read()
@@ -28,4 +30,13 @@ if __name__ == "__main__":
             "Source": "https://github.com/ZeroIntensity/ControlManual",
         },
         package_dir={"": "src"},
+        rust_extensions=[
+            RustExtension(
+                "_controlmanual",
+                path="./src/native/Cargo.toml",
+                binding=Binding.PyO3,
+                debug=False,
+            )
+        ],
+        zip_safe=False,
     )

@@ -5,6 +5,5 @@ from typing_extensions import ParamSpec
 T = TypeVar("T")
 P = ParamSpec("P")
 
-
 class Command(ABC):
     """Abstract class representing a command."""

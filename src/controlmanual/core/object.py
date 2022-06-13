@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import (
     TypeVar,
     Generic,
@@ -6,143 +6,82 @@ from typing import (
     Optional,
     Type,
     Dict,
-    overload,
-    Union,
     Callable,
-    Literal,
-    Any,
-    List,
-    Tuple,
+    NoReturn,
 )
-from typing_extensions import ParamSpec, TypeGuard
+from typing_extensions import ParamSpec
 from .command_errors import (
     Undefined,
-    ParseError,
-    UnsupportedObject,
     CannotCall,
-    InvalidArgument,
 )
-from inspect import isclass
-from types import FunctionType, MethodType
-from .typings import MaybeCoroutine
-import asyncio
-from .typings import EngineCallable
 
 T = TypeVar("T")
-A = TypeVar("A", bound="Object")
-B = TypeVar("B")
 P = ParamSpec("P")
 
-__all__ = ("expose", "Object", "String", "Integer", "Objects")
 
+class BaseObject(ABC, Generic[T]):
+    """Abstract base class representing a Control Manual object."""
 
-async def _maybe_await(
-    func: MaybeCoroutine[P, T], *args: P.args, **kwargs: P.kwargs
-) -> T:
-    maybe_coro = func(*args, **kwargs)
-
-    if asyncio.iscoroutine(maybe_coro):
-        return await maybe_coro
-
-    return maybe_coro  # type: ignore
-
-
-def _make_int(data: Any) -> int:
-    string = str(data)
-    if string.isdigit():
-        return int(string)
-
-    obj = Objects.map_object(data)
-    raise InvalidArgument(f'cannot cast "{obj}" to Integer')
-
-
-def _make_bool(data: Any) -> bool:
-    string = str(data)
-
-    if string.isdigit():
-        num = int(string)
-
-        return num > 0
-
-    return bool(string) if data in BUILTINS else True
-
-
-BUILTINS: Tuple[type, type, type, type] = (str, float, bool, int)
-CM_CASTS: Dict[type, Callable] = {
-    str: str,
-    int: _make_int,
-    bool: _make_bool,
-}
-
-
-def map_type(data: Any, actual: Union["Object", type], typ: Type[T]) -> T:
-    mappable_reversed = {v: k for k, v in CM_MAPPABLE.items()}
-
-    if actual is not typ:
-        if (actual in CM_MAPPABLE) or (actual in mappable_reversed):
-            target = (
-                CM_MAPPABLE.get(actual)
-                if issubclass(actual, BUILTINS)
-                else mappable_reversed.get(actual)  # type: ignore
-            )
-
-            if target is typ:
-                assert target
-                data = target(data)
-
-    return data
-
-
-class Object(ABC, Generic[T]):
-    """Abstract class representing a Control Manual object."""
-
-    type_name: str
+    name: str
     """Name of the type."""
-    raw_data_type: Type[T]
-    """Type of the raw data."""
 
-    def __init__(self, raw_data: T):
-        typ = self.raw_data_type
-        actual: type = type(raw_data)
+    def __init_subclass__(cls, name: Optional[str] = None) -> None:
+        cls.name = name or cls.__name__
+        return super().__init_subclass__()
 
-        if (actual is not typ) and ((actual in BUILTINS) and (typ in BUILTINS)):
-            raw_data = CM_CASTS[typ](map_type(raw_data, actual, typ))
+    @abstractmethod
+    async def cm_init(self, *args, **kwargs) -> None:
+        """Called when the engine initalizes a new instance of the object."""
+        ...
 
-        self._raw_data = map_type(raw_data, type(raw_data), typ)
+    @abstractmethod
+    def cm_get_attribute(self, name: str) -> "BaseObject":
+        """Get an attribute from the engine."""
+        ...
 
-    def __init_subclass__(
-        cls, raw_data_type: Type[T], type_name: Optional[str] = None
-    ) -> None:
-        cls.type_name = type_name or cls.__name__
-        cls.raw_data_type = raw_data_type
+    @abstractmethod
+    def cm_set_attribute(self, name: str, value: "BaseObject") -> None:
+        """Set an attribute on the object from the engine."""
+        ...
 
+    @abstractmethod
+    async def cm_call(self, *args, **kwargs) -> "BaseObject":
+        """Call the object from the engine."""
+        ...
+
+    @abstractmethod
     def to_string(self) -> str:
         """Convert the object to a string representation."""
-        return str(self.raw_data)
-
-    def to_debug_string(self) -> str:
-        """Convert the object to a debug representation."""
-        return self.__repr__()
-
-    @property
-    def raw_data(self) -> T:
-        """Raw internal data."""
-        return self._raw_data
-
-    def __repr__(self) -> str:
-        return self.to_string()
+        ...
 
 
-class Function(
-    Generic[P, T],
-    Object[Callable[P, T]],
-    raw_data_type=FunctionType,
-):
-    async def cm_call(self, *args: P.args, **kwargs: P.kwargs) -> T:
-        return await _maybe_await(self.raw_data, *args, **kwargs)
+class Object(BaseObject, ABC):
+    """High level base class for objects."""
 
+    def __init__(self):
+        self._attributes: Dict[str, BaseObject] = {}
+
+    @abstractmethod
+    async def cm_init(self, *args, **kwargs) -> None:
+        ...
+
+    def cm_get_attribute(self, name: str) -> BaseObject:
+        obj = self._attributes.get(name)
+
+        if not obj:
+            raise Undefined(f'"{self.name}" object has no attribute "{name}"')
+
+        return obj
+
+    def cm_set_attribute(self, name: str, value: BaseObject) -> None:
+        self._attributes[name] = value
+
+    async def cm_call(self) -> NoReturn:
+        raise CannotCall(f'"{self.name}" object is not callable')
+
+    @abstractmethod
     def to_string(self) -> str:
-        return f"[internally defined function at {hex(id(self.raw_data))}]"
+        ...
 
 
 def expose(func: Callable[P, T]) -> Callable[P, T]:
@@ -151,190 +90,43 @@ def expose(func: Callable[P, T]) -> Callable[P, T]:
     return func
 
 
-class String(Object[str], raw_data_type=str):
-    def to_string(self):
-        return self._raw_data
+class DataType(Object, ABC, Generic[T]):
+    """Abstract class for mapping Python types to Control Manual objects."""
 
-    def to_debug_string(self) -> str:
-        return f'"{self._raw_data}"'
-
-    @expose
-    async def upper(self):
-        """Convert the string to upper case."""
-        return self._raw_data.upper()
-
-    @expose
-    async def lower(self):
-        """Convert the string to lower case."""
-        return self._raw_data.lower()
-
-    def __repr__(self) -> str:
-        return f"'{self._raw_data}'"
-
-
-class Integer(Object[int], raw_data_type=int):
-    pass
-
-
-class Boolean(Object[int], raw_data_type=bool):
-    def to_string(self):
-        return str(self.raw_data).lower()
-
-
-class Float(Object[float], raw_data_type=float):
-    pass
-
-
-CM_MAPPABLE: Dict[type, Type[Object]] = {
-    str: String,
-    int: Integer,
-    FunctionType: Function,
-    MethodType: Function,
-    bool: Boolean,
-    float: Float,
-}
-BASE_OBJECTS = {
-    "String": String,
-    "Integer": Integer,
-    "Boolean": Boolean,
-    "Function": Function,
-    "Float": Float,
-    "true": Boolean(True),
-    "false": Boolean(False),
-}
-
-Variable = Union[Object, Type[Object]]
-ObjectLike = Union[Variable, str, int, FunctionType, float]
-
-
-class Objects:
-    """Class representing all objects in the current session."""
-
-    def __init__(
-        self,
-        objects: Optional[Dict[str, Variable]] = None,
-    ) -> None:
-        self._objects = objects or BASE_OBJECTS
+    data_type: Type[T]
+    """Type of the data."""
 
     @property
-    def objects(self):
-        return self._objects
+    def data(self) -> T:
+        """Internal raw data."""
+        return self._data
 
-    @overload
-    async def lookup(
-        self,
-        name: str,
-        ensure_callable: bool = False,
-        ensure_instance: Literal[False] = False,
-        ensure_not_instance: Literal[True] = True,
-    ) -> Type[Object]:
-        ...
+    def cm_init(self, data: T) -> None:
+        self._data = data
 
-    @overload
-    async def lookup(
-        self,
-        name: str,
-        ensure_callable: bool = False,
-        ensure_instance: Literal[True] = True,
-        ensure_not_instance: Literal[False] = False,
-    ) -> Object:
-        ...
+    def to_string(self) -> str:
+        return str(self._data)
 
-    async def lookup(
-        self,
-        name: str,
-        ensure_callable: bool = False,
-        ensure_instance: bool = False,
-        ensure_not_instance: bool = False,
-    ) -> Variable:
-        obj = self.map_object(
-            self._objects.get(name)
-            if "." not in name
-            else self._lookup_attribute(name)
-        )
+    def __init_subclass__(
+        cls, data_type: Type[T], name: Optional[str] = None
+    ) -> None:
+        cls.data_type = data_type
+        return super().__init_subclass__(name)
 
-        if not obj:
-            raise Undefined(f'"{name}" is not defined')
 
-        if ensure_instance:
-            if isclass(obj):
-                raise Exception
+class String(DataType[str], data_type=str):
+    @expose
+    def upper(self):
+        return self.data.upper()
 
-        if ensure_not_instance:
-            if not isclass(obj):
-                raise Exception
+    @expose
+    def lower(self):
+        return self.data.lower()
 
-        if ensure_callable:
-            await self.ensure_callable(obj)
 
-        return obj  # type: ignore
+class Integer(DataType[int], data_type=int):
+    pass
 
-    def _parse_string(self, string: str) -> List[str]:
-        return (string if not string.startswith(".") else string[1:]).split(".")
 
-    async def _lookup_attribute(self, string: str) -> Variable:
-        split = self._parse_string(string)
-
-        if len(split) == 1:
-            raise ParseError('unexpected "."')
-
-        obj = await self.lookup(split.pop(0))
-        return await self.lookup_object_attribute(obj, ".".join(split))
-
-    @staticmethod
-    def _is_valid_object(obj: Union[Object[T], Any]) -> TypeGuard[Object[T]]:
-        return (
-            isclass(obj) and issubclass(obj, Object) or isinstance(obj, Object)
-        )
-
-    @classmethod
-    async def map_object(cls, obj: Union[Object[T], Any]) -> Object[T]:
-        if not cls._is_valid_object(obj):
-            obj_type = obj if isclass(obj) else type(obj)
-            mapped_type = CM_MAPPABLE.get(obj_type)
-
-            if mapped_type:
-                return mapped_type(obj)
-        else:
-            return obj
-
-        raise UnsupportedObject(f'"{obj}" does not derive from Object')
-
-    @classmethod
-    async def is_valid(cls, obj: Union[Object[T], Any]) -> TypeGuard[Object[T]]:
-        if not cls._is_valid_object(obj):
-            if (obj if isclass(obj) else type(obj)) in CM_MAPPABLE:
-                return True
-        else:
-            return True
-
-        return False
-
-    @classmethod
-    async def ensure_callable(cls, raw_obj: Any) -> EngineCallable:
-        obj = await cls.map_object(raw_obj)
-
-        if not isinstance(obj, EngineCallable):
-            raise CannotCall(f'"{obj.type_name}" object is not callable')
-
-        return obj
-
-    async def lookup_object_attribute(
-        self, obj: ObjectLike, string: str
-    ) -> Object:
-        split = self._parse_string(string)
-        attr_name = split.pop(0)
-        cm_obj = await self.map_object(obj)
-        raw_attr = getattr(obj, attr_name, None)
-
-        if (not raw_attr) or (not getattr(raw_attr, "__cm_exposed", None)):
-            raise Undefined(
-                f'"{cm_obj.type_name}" object has no attribute "{attr_name}"'
-            )
-
-        attr = (
-            raw_attr
-            if not split
-            else self.lookup_object_attribute(raw_attr, ".".join(split))
-        )
-        return await self.map_object(attr)
+class Boolean(DataType[bool], data_type=bool):
+    pass

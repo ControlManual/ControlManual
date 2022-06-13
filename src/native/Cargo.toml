@@ -1,0 +1,13 @@
+[package]
+
+name = "_controlmanual"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+name = "_controlmanual"
+crate-type = ["cdylib"]
+
+[dependencies.pyo3]
+version = "0.16.2"
+features = ["extension-module"]
