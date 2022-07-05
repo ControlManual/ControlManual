@@ -6,16 +6,18 @@
 typedef struct STRUCT_OBJECT instance_object;
 typedef struct STRUCT_TYPE type_object;
 
-typedef void (*instance_init)(vector*, instance_object*);
+typedef void (*instance_init)(instance_object*, vector*);
 typedef instance_object* (*instance_alloc)(type_object*);
-typedef void (*instance_dealloc)(instance_object*);
+typedef void (*instance_imethod)(instance_object*);
+typedef char* (*instance_sgmethod)(instance_object*);
 
 struct STRUCT_TYPE {
     const char* name;
     map* attributes;
     instance_init init;
     instance_alloc alloc;
-    instance_dealloc dealloc;
+    instance_imethod dealloc;
+    instance_sgmethod to_string;
 };
 
 struct STRUCT_OBJECT {
@@ -29,7 +31,8 @@ type_object* type_new(
     map* attributes,
     const instance_init init,
     const instance_alloc alloc,
-    const instance_dealloc dealloc
+    const instance_imethod dealloc,
+    const instance_sgmethod to_string
 );
 
 instance_object* instance_construct(
@@ -39,5 +42,7 @@ instance_object* instance_construct(
 
 void instance_free(instance_object* obj);
 void type_free(type_object* type);
+
+extern char* instance_to_string(instance_object* obj);
 
 #endif

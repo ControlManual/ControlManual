@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 exc* _CURRENT_ERROR = NULL;
+bool _SUPPRESS = false;
 
 exc* error_new(
     const char* message,
@@ -21,7 +23,7 @@ exc* error_new(
 }
 
 void process_error(void) {
-    if (_CURRENT_ERROR) {
+    if (_CURRENT_ERROR && !_SUPPRESS) {
         fprintf(
             stderr,
             " --- CORE ERROR --- \n%s() generated exception with message: %s\n",
@@ -31,18 +33,4 @@ void process_error(void) {
         free(_CURRENT_ERROR);
         exit(1);
     }
-}
-
-exc* catch_error(void) {
-    exc* caught = (exc*) malloc(sizeof(exc));
-
-    if (!caught) {
-        puts("failed to catch error: out of memory");
-        exit(1);
-    }
-
-    memcpy(caught, _CURRENT_ERROR, sizeof(exc));
-    free(_CURRENT_ERROR);
-    _CURRENT_ERROR = NULL;
-    return caught;
 }

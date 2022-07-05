@@ -46,11 +46,15 @@ map* map_new(void) {
 
 void* map_get(map* m, const char* key) {
     NONULL(m, "map_get");
+
     for (int i = 0; i < m->size; i++) {
+        printf("iteration #%d\n", i);
         if (!strcmp(m->items[i][0], key)) {
             return m->items[i][1];
         }
     }
+
+    THROW("map_get", "key not found", 0);
 
     return NULL;
 }
@@ -78,6 +82,7 @@ void map_full_free(map* m) {
 
 void map_free(map* m) {
     NONULL(m, "map_free");
+
     for (int i = 0; i < m->size; i++) {
         free(m->items[i]);
     }

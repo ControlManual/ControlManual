@@ -9,7 +9,8 @@ type_object* type_new(
     map* attributes,
     const instance_init init,
     const instance_alloc alloc,
-    const instance_dealloc dealloc
+    const instance_imethod dealloc,
+    const instance_sgmethod to_string
 ) {
     type_object* type = (type_object*) malloc(sizeof(type_object));
     if (!type) NOMEM("type_new");
@@ -19,6 +20,7 @@ type_object* type_new(
     type->init = init;
     type->alloc = alloc;
     type->dealloc = dealloc;
+    type->to_string = to_string;
 
     return type;
 }
@@ -31,11 +33,14 @@ instance_object* instance_construct(
     process_error();
 
     obj->attributes = map_new();
-    memcpy(obj->attributes, type->attributes, sizeof(type->attributes));
+    memmove(obj->attributes, type->attributes, sizeof(type->attributes));
+    obj->attributes->items = (void***) calloc(0, 0);
+    if (!obj->attributes->items) NOMEM("instance_construct");
+
     obj->type = type;
     obj->private = NULL;
     
-    type->init(args, obj);
+    type->init(obj, args);
     process_error();
 
     vector_free(args);
@@ -43,14 +48,21 @@ instance_object* instance_construct(
 }
 
 void instance_free(instance_object* obj) {
-    obj->type->dealloc(obj);
-    process_error();
-
+    NONULL(obj, "instance_free");
+    if (obj->type->dealloc) {
+        obj->type->dealloc(obj);
+        process_error();
+    }
     map_free(obj->attributes);
     free(obj);
 }
 
 void type_free(type_object* type) {
+    NONULL(type, "type_free");
     map_free(type->attributes);
     free(type);
+}
+
+inline char* instance_to_string(instance_object* obj) {
+    return (char*) obj->type->to_string(obj);
 }
