@@ -2,14 +2,14 @@
 #define __CM_ERROR_H__
 #include <stdlib.h>
 #include <stdbool.h>
-#define THROW(what, message, fatal) _CURRENT_ERROR = error_new(message, what); if (fatal) process_error()
+#define PEND_ERROR _SUPPRESS = true
+#define UNLOCK_ERROR _SUPPRESS = false
+#define THROW(what, message, fatal) _CURRENT_ERROR = error_new(message, what); if (fatal) { UNLOCK_ERROR; process_error(); }
 #define FATAL(what, message) THROW(what, message, 1)
 #define NOMEM(what) FATAL(what, "out of memory")
 #define NONULL(obj, what) if (obj == NULL) FATAL(what, "received NULL pointer")
 #define SET_ERROR(name) exc* name = _CURRENT_ERROR
-#define CATCH_ERROR SET_ERROR(exc)
-#define PEND_ERROR _SUPPRESS = true
-#define UNLOCK_ERROR _SUPPRESS = false
+#define CATCH_ERROR SET_ERROR(err)
 
 typedef struct STRUCT_ERROR {
     const char* message;

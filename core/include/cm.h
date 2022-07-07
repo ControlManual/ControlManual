@@ -5,5 +5,6 @@
 #include <cmobject.h>
 #include <exception.h>
 #include <builtins.h>
+#include <session.h>
 
 #endif
