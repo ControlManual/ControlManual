@@ -11,6 +11,7 @@
 #define SET_ERROR(name) exc* name = _CURRENT_ERROR
 #define CATCH_ERROR SET_ERROR(err)
 
+/* Structure containing data for an exception. */
 typedef struct STRUCT_ERROR {
     const char* message;
     const char* what;
