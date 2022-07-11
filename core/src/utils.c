@@ -182,6 +182,7 @@ node* linked_list_new(void* value) {
     node* n = _linked_list_alloc(value);
     size_t* size = (size_t*) malloc(sizeof(size_t));
     if (!size) NOMEM("linked_list_new");
+    *size = 1;
 
     n->next = NULL;
     n->last = NULL;
@@ -194,7 +195,8 @@ node* linked_list_new(void* value) {
 node* linked_list_append(node* list, void* value) {
     NONULL(list, "linked_list_append");
     node* n = _linked_list_alloc(value);
-    *(list->size)++;
+    (*(list->size))++;
+    
     n->next = list->next;
     n->last = list;
     n->size = list->size;
@@ -209,7 +211,7 @@ node* linked_list_get_node(node* list, int index) {
     node* current = list;
 
     for (int i = 0; i < index; i++) {
-        current = list->next;
+        current = current->next;
     }
 
     if (!current) THROW("linked_list_get_node", "invalid index", 0);
@@ -229,6 +231,7 @@ void linked_list_free(node* list) {
 
     LINKEDLIST_FREE(last);
     LINKEDLIST_FREE(next);
+    free(list->size);
     free(list);
 }
 
@@ -236,9 +239,9 @@ void linked_list_free(node* list) {
 node* linked_list_pop(node* n) {
     NONULL(n, "linked_list_pop");
 
-    *(n->size)--;
+    (*(n->size))--;
+    if (n->last) n->last->next = n->next;
 
-    n->last->next = n->next;
     return n;
 }
 

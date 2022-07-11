@@ -5,7 +5,7 @@
 
 /* Type representing an object structure. */
 typedef struct STRUCT_OBJECT instance_object;
-/* Type representing an type object structure. */
+/* Type representing a type object structure. */
 typedef struct STRUCT_TYPE type_object;
 
 /* Instance initalization method. Called after the instance object has been constructed and allocated from its parent type. */

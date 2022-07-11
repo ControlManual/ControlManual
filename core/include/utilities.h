@@ -16,7 +16,6 @@ void vector_full_free(vector* vec);
 void vector_append(vector* vec, void* item);
 void vector_insert(vector* vec, int index, void* item);
 void* vector_pop(vector* vec, int index);
-void* vector_pop(vector* vec, int index)
 extern void vector_remove(vector* vec, int index);
 
 typedef struct STRUCT_MAP_KV {
