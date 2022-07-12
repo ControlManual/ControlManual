@@ -2,43 +2,53 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdio.h>
-#define ITEMALLOC(item) if (!list) { \
-  list = linked_list_new(item); \
-  first = list; \
-} else list = linked_list_append(list, item);
-#define OPERATOR(op) if (last == op) { \
-    char* item = (char*) malloc(3 * sizeof(char)); \
-    sprintf(item, "%c%c", last, c); \
-    int buf_len = strlen(buffer); \
-    char* buf = (char*) malloc(buf_len * sizeof(char)); \
-    strncpy(buf, buffer, buf_len - 1); \
-    ITEMALLOC(buf); \
-    list = linked_list_append(list, item); \
-    strcpy(buffer, ""); \
-  }
-// i probably shouldnt use a macro for this but who cares
-node* tokenize(const char* data) {
-    node* first = NULL;
+#include <parser.h>
+#include <regex.h>
+
+token* token_new(char* restrict content, token_type type) {
+    token* t = (token*) malloc(sizeof(token));
+    t->content = content;
+    t->type = type;
+    return t;    
+}
+
+inline void token_free(token* restrict tok) {
+    free(tok->content);
+    free(tok);
+}
+
+node** split(const char* restrict data) {
     node* list = NULL;
-    int len = strlen(data);
-    char* buffer = malloc((len * sizeof(char)) + 1);
+    node** first = NULL;
+
     int parens = 0;
     int braces = 0;
+    char last = ' ';
     bool squote = false;
     bool dquote = false;
-    char last = ' ';
+    char* buffer = (char*) malloc((strlen(data) + 1) * sizeof(char));
 
-    for (int i = 0; i < len; i++) {
-        char c = data[i];
+
+    for (int i = 0; i < strlen(data); i++) {
+        const char c = data[i];
+        
         switch (c) {
-            case ' ':
-                char* item = malloc((strlen(buffer) + 1) * sizeof(char));
-                strcpy(item, buffer);
-                if (!squote && !dquote && !parens && !braces)
-                  ITEMALLOC(item); 
-                strcpy(buffer, "");
+            case '{':
+                braces++;
+                break
+            
+            case '}':
+                braces--;
                 break;
 
+            case '(':
+                parens++;
+                break;
+            
+            case ')':
+                parens--;
+                break;
+            
             case '"':
                 dquote = !dquote;
                 break;
@@ -47,37 +57,28 @@ node* tokenize(const char* data) {
                 squote = !squote;
                 break;
             
-            case '(':
-                parens++;
+            case ' ':
+                if (!squote && !dquote && !parens && !braces) {
+                    char* item = (char*) malloc((strlen(buffer) + 1) * sizeof(char));
+                    strcpy(item, buffer);
+                    if (!list) {
+                        list = linked_list_new(item);
+                        first = &list;
+                    }
+                    else list = linked_list_append(list, item);
+                    strcpy(buffer, "");
+                }
                 break;
-
-            case ')':
-                parens--;
-                break;
-            
-            case '{':
-                braces++;
-                break;
-            
-            case '}':
-                braces--;
-                break;
-
-            case '=':
-                OPERATOR('=');
-                OPERATOR('!');
-                OPERATOR('+');
-                OPERATOR('-');
-                OPERATOR('/');
-                OPERATOR('*');
-                break;
-
-            default:
-                strncat(buffer, &c, 1);
         }
-        last = c;
     }
-    buffer = realloc(buffer, (strlen(buffer) + 1) * sizeof(char));
-    linked_list_append(list, buffer);
+
     return first;
+}
+
+node* tokenize(const char* restrict data) {
+    node* list = *split(data);
+    
+    for (int i = 0; i < *list->size; i++) {
+        
+    }
 }

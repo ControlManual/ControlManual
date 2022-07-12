@@ -3,6 +3,16 @@
 
 #include <cm.h>
 
+typedef enum ENUM_TOKENTYPE {
+    OPERATOR,
+    DATA
+} token_type;
+
+typedef struct STRUCT_TOKEN {
+    char* content;
+    token_type type;
+} token;
+
 typedef struct STRUCT_PARSED {
     char* command;
     vector* args;
@@ -11,5 +21,7 @@ typedef struct STRUCT_PARSED {
 } parsed;
 
 node* tokenize(const char* data);
+token* token_new(char* restrict content, token_type type);
+extern void token_free(token* restrict tok);
 
 #endif
