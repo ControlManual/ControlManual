@@ -9,8 +9,8 @@ bool _SUPPRESS = false;
 
 /* Generate a new error. */
 exc* error_new(
-    const char* message,
-    const char* what
+    const char* restrict message,
+    const char* restrict what
 ) {
     exc* exception = (exc*) malloc(sizeof(exc));
     if (!exception) {

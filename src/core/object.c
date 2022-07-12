@@ -8,12 +8,12 @@
 /* Generate a new type object. */
 type_object* type_new(
     const char* name,
-    map* attributes,
+    map* restrict attributes,
     const instance_init init,
     const instance_alloc alloc,
     const instance_imethod dealloc,
     const instance_sgmethod to_string,
-    const type_object* extends
+    const type_object* restrict extends
 ) {
     type_object* type = (type_object*) malloc(sizeof(type_object));
     if (!type) NOMEM("type_new");
@@ -50,8 +50,8 @@ type_object* type_new(
 
 /* Generate a new instance object from a type. */
 instance_object* instance_construct(
-    type_object* type,
-    vector* args
+    type_object* restrict type,
+    vector* restrict args
 ) {
     instance_object* obj = type->alloc(type);
     process_error();
@@ -71,7 +71,7 @@ instance_object* instance_construct(
 }
 
 /* Free an instance of a type. */
-void instance_free(instance_object* obj) {
+void instance_free(instance_object* restrict obj) {
     NONULL(obj, "instance_free");
     if (obj->type->dealloc) {
         obj->type->dealloc(obj);
@@ -82,13 +82,13 @@ void instance_free(instance_object* obj) {
 }
 
 /* Free a type object. */
-void type_free(type_object* type) {
+void type_free(type_object* restrict type) {
     NONULL(type, "type_free");
     map_free(type->attributes);
     free(type);
 }
 
 /* Convert an instance object to a string. */
-inline char* instance_to_string(instance_object* obj) {
+inline char* instance_to_string(instance_object* restrict obj) {
     return (char*) obj->type->to_string(obj);
 }

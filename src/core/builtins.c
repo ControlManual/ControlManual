@@ -8,14 +8,14 @@
     return str
 
 /* Baic allocation function for a type object. */
-instance_object* basic_alloc(type_object* type) {
+instance_object* basic_alloc(type_object* restrict type) {
     instance_object* obj = (instance_object*) malloc(sizeof(instance_object));
     if (!obj) NOMEM("basic_alloc");
     return obj;
 }
 
 /* To-string method for the string type object. */
-char* str_to_string(instance_object* self) {
+char* str_to_string(instance_object* restrict self) {
     char* str = (char*) malloc(
         (strlen(self->type->name) * sizeof(char)) + 
         (sizeof(char) * 5) + 
@@ -26,12 +26,12 @@ char* str_to_string(instance_object* self) {
 }
 
 /* To-string method for the integer type object. */
-char* int_to_string(instance_object* self) {
+char* int_to_string(instance_object* restrict self) {
     TOSTR("%d");
 }
 
 /* Initialization method for the string type object. */
-void string_init(instance_object* self, vector* args) {
+void string_init(instance_object* restrict self, vector* restrict args) {
     if (args->items[0] == NULL) {
         THROW("string_init", "expected at least 1 value in args", 0);
         return;
@@ -41,7 +41,7 @@ void string_init(instance_object* self, vector* args) {
 }
 
 /* Deallocation method for the string type object. */
-void string_dealloc(instance_object* self) {
+void string_dealloc(instance_object* restrict self) {
     free(self->private);
 }
 

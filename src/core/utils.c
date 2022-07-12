@@ -17,14 +17,14 @@ vector* vector_new(void) {
 }
 
 /* Free a vector. */
-void vector_free(vector* vec) {
+void vector_free(vector* restrict vec) {
     NONULL(vec, "vector_free");
     free(vec->items);
     free(vec);
 }
 
 /* Free a vector, along with all of its items. */
-void vector_full_free(vector* vec) {
+void vector_full_free(vector* restrict vec) {
     NONULL(vec, "vector_full_free");
     for (int i = 0; i < vec->size; i++)
         free(vec->items[i]);
@@ -33,7 +33,7 @@ void vector_full_free(vector* vec) {
 }
 
 /* Append a value to the target vector. */
-void vector_append(vector* vec, void* item) {
+void vector_append(vector* restrict vec, void* item) {
     NONULL(vec, "vector_append");
     vec->size++;
     vec->items = realloc(vec->items, vec->size * sizeof(item));
@@ -42,7 +42,7 @@ void vector_append(vector* vec, void* item) {
 };
 
 /* Insert a value at the target index. */
-void vector_insert(vector* vec, int index, void* item) {
+void vector_insert(vector* restrict vec, int index, void* item) {
     NONULL(vec, "vector_insert");
 
     if (index > vec->size) FATAL("vector_insert", "index is above vector size");
@@ -56,7 +56,7 @@ void vector_insert(vector* vec, int index, void* item) {
 };
 
 /* Remove the index from the target vector and return its value. */
-void* vector_pop(vector* vec, int index) {
+void* vector_pop(vector* restrict vec, int index) {
     NONULL(vec, "vector_pop");
     void* item = vec->items[index];
     void** new_items = calloc(vec->size - 1, sizeof(void*));
@@ -74,7 +74,7 @@ void* vector_pop(vector* vec, int index) {
 }
 
 /* Remove the inedx from the target vector and free its value. */
-inline void vector_remove(vector* vec, int index) {
+inline void vector_remove(vector* restrict vec, int index) {
     free(vector_pop(vec, index));
 }
 
@@ -92,7 +92,7 @@ _kv* map_get_node(map* m, char* key) {
     NONULL(m, "map_get_node");
 
     for (int i = 0; i < m->size; i++) 
-        if (!strcmp(m->items[i]->key, key)) 
+          if (!strcmp(m->items[i]->key, key)) 
             return m->items[i];
 
     THROW("map_get_node", "key not found", 0);
@@ -101,7 +101,7 @@ _kv* map_get_node(map* m, char* key) {
 }
 
 /* Get a value from a map. */
-inline void* map_get(map* m, char* key) {
+inline void* map_get(map* restrict m, char* key) {
     return map_get_node(m, key);
 }
 
@@ -117,7 +117,7 @@ static _kv* _kv_new(char* key, void* value) {
 }
 
 /* Add a value to the map. */
-void map_add(map* m, char* key, void* value) {
+void map_add(map* restrict m, char* key, void* value) {
     NONULL(m, "map_add");
     m->size++;
     m->items = realloc(m->items, m->size * sizeof(_kv));
@@ -125,7 +125,7 @@ void map_add(map* m, char* key, void* value) {
 }
 
 /* Free a map, along with its keys. */
-void map_free_keys(map* m) {
+void map_free_keys(map* restrict m) {
     for (int i = 0; i < m->size; i++) {
         free(m->items[i]->key);
         free(m->items[i]);
@@ -135,7 +135,7 @@ void map_free_keys(map* m) {
 }
 
 /* Free a map, along with its values. */
-void map_free_values(map* m) {
+void map_free_values(map* restrict m) {
     for (int i = 0; i < m->size; i++) {
         free(m->items[i]->value);
         free(m->items[i]);
@@ -145,7 +145,7 @@ void map_free_values(map* m) {
 }
 
 /* Free a map, along with its keys and values. */
-void map_full_free(map* m) {
+void map_full_free(map* restrict m) {
     NONULL(m, "map_full_free");
 
     for (int i = 0; i < m->size; i++) {
@@ -159,7 +159,7 @@ void map_full_free(map* m) {
 }
 
 /* Free a map. */
-void map_free(map* m) {
+void map_free(map* restrict m) {
     NONULL(m, "map_free");
 
     for (int i = 0; i < m->size; i++) {
@@ -192,7 +192,7 @@ node* linked_list_new(void* value) {
 }
 
 /* Append to the current node a linked list. */
-node* linked_list_append(node* list, void* value) {
+node* linked_list_append(node* restrict list, void* value) {
     NONULL(list, "linked_list_append");
     node* n = _linked_list_alloc(value);
     (*(list->size))++;
@@ -206,7 +206,7 @@ node* linked_list_append(node* list, void* value) {
 }
 
 /* Get the node at the offset from the current node. */
-node* linked_list_get_node(node* list, int index) {
+node* linked_list_get_node(node* restrict list, int index) {
     NONULL(list, "linked_list_get_node");
     node* current = list;
 
@@ -219,12 +219,12 @@ node* linked_list_get_node(node* list, int index) {
 }
 
 /* Get the value at the offset from the current node. */
-inline void* linked_list_get(node* list, int index) {
+inline void* linked_list_get(node* restrict list, int index) {
     return linked_list_get_node(list, index)->value;
 }
 
 /* Free a linked list. */
-void linked_list_free(node* list) {
+void linked_list_free(node* restrict list) {
     NONULL(list, "linked_list_free");
     node* last = list->last;
     node* next = list->next;
@@ -236,7 +236,7 @@ void linked_list_free(node* list) {
 }
 
 /* Remove the target node from the linked list and return it. */
-node* linked_list_pop(node* n) {
+node* linked_list_pop(node* restrict n) {
     NONULL(n, "linked_list_pop");
 
     (*(n->size))--;
@@ -246,6 +246,6 @@ node* linked_list_pop(node* n) {
 }
 
 /* Remove the target from the linked list and free it. */
-inline void linked_list_remove(node* n) {
+inline void linked_list_remove(node* restrict n) {
     free(linked_list_pop(n));
 }

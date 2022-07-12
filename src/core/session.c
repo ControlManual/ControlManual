@@ -1,6 +1,6 @@
 #include <cm.h>
 
-scope* scope_new(session* ses) {
+scope* scope_new(session* restrict ses) {
     scope* s = (scope*) malloc(sizeof(scope));
     if (!s) NOMEM("scope_new");
     s->parent = ses;
@@ -20,7 +20,7 @@ session* session_new(void) {
     return s;
 }
 
-void session_add_type(scope* sc, type_object* type) {
+void session_add_type(scope* restrict sc, type_object* restrict type) {
     map_add(sc->types, (char*) type->name, type);
 }
 
