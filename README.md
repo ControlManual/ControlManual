@@ -8,25 +8,36 @@ This is an alternative to traditional command interpreters. I'll put more here a
 
 ```
 # Bash
-if [[ $something -eq 0 ]] then;
+if [[ $something -eq 0 ]]; then
     echo Something happened
 else
     echo Something else happened
 fi
+
+ls | grep myfile.txt
 ```
 
 ```
 # Control Manual
-if {something} == 0 {
+if something == 0 {
     echo Something happened
 } else {
     echo Something else happened
 }
+
+for i in ls() {
+  if i == "myfile.txt" {
+      echo {i}
+      break;
+    }
+}
+# alternatively
+match ls() --iter "myfile.txt"
 ```
 
 ### Installation
 
-Since this is still a heavy WIP, there isn't really any installation process. You can however clone the repository and build, like so:
+Since this is still a heavy WIP, there isn't really any installation process. However, you can clone the repository and build, like so:
 
 ```bash
 $ git clone https://github.com/ZeroIntensity/controlmanual
