@@ -15,7 +15,7 @@ type_object* type_new(
     const instance_sgmethod to_string,
     const type_object* restrict extends
 ) {
-    type_object* type = (type_object*) malloc(sizeof(type_object));
+    type_object* type = malloc(sizeof(type_object));
     if (!type) NOMEM("type_new");
 
     type->name = name;
@@ -25,6 +25,7 @@ type_object* type_new(
     type->dealloc = dealloc;
     type->to_string = to_string;
     type->extends = extends;
+    type->is_type = true;
 
     if (extends) {
         EXTATTR(init);
@@ -55,6 +56,7 @@ instance_object* instance_construct(
 ) {
     instance_object* obj = type->alloc(type);
     process_error();
+    obj->is_type = false;
 
     obj->attributes = map_new();
     memmove(obj->attributes, type->attributes, sizeof(type->attributes));

@@ -5,6 +5,8 @@
 #include <cmobject.h>
 #include <exception.h>
 #include <builtins.h>
-#include <session.h>
+#include <scope.h>
+
+#define STRSIZE(data) (strlen(data) + 1) * sizeof(char)
 
 #endif

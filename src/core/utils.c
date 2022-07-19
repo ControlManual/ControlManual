@@ -8,7 +8,7 @@
 
 /* Create a new vector. */
 vector* vector_new(void) {
-    vector* vec = (vector*) malloc(sizeof(vector));
+    vector* vec = malloc(sizeof(vector));
     if (!vec) NOMEM("vector_new");
     
     vec->size = 0;
@@ -80,7 +80,7 @@ inline void vector_remove(vector* restrict vec, int index) {
 
 /* Create a new map. */
 map* map_new(void) {
-    map* m = (map*) malloc(sizeof(map));
+    map* m = malloc(sizeof(map));
     if (!m) NOMEM("map_new");
     m->size = 0;
     m->items = calloc(0, sizeof(_kv));
@@ -88,7 +88,7 @@ map* map_new(void) {
 }
 
 /* Get a key-value pair from a map. */
-_kv* map_get_node(map* m, char* key) {
+_kv* map_get_node(map* m, const char* key) {
     NONULL(m, "map_get_node");
 
     for (int i = 0; i < m->size; i++) 
@@ -101,13 +101,13 @@ _kv* map_get_node(map* m, char* key) {
 }
 
 /* Get a value from a map. */
-inline void* map_get(map* restrict m, char* key) {
-    return map_get_node(m, key);
+inline void* map_get(map* restrict m, const char* key) {
+    return map_get_node(m, key)->value;
 }
 
 /* Allocate a new key-value pair. */
 static _kv* _kv_new(char* key, void* value) {
-    _kv* kv = (_kv*) malloc(sizeof(_kv));
+    _kv* kv = malloc(sizeof(_kv));
     if (!kv) NOMEM("_kv_new");
 
     kv->key = key;
@@ -171,7 +171,7 @@ void map_free(map* restrict m) {
 
 /* Internal function for allocating a linked list node. */
 static node* _linked_list_alloc(void* value) {
-    node* n = (node*) malloc(sizeof(node));
+    node* n = malloc(sizeof(node));
     if (!n) NOMEM("_linked_list_alloc");
     n->value = value;
     return n;
@@ -180,13 +180,14 @@ static node* _linked_list_alloc(void* value) {
 /* Create a new linked list. */
 node* linked_list_new(void* value) {
     node* n = _linked_list_alloc(value);
-    size_t* size = (size_t*) malloc(sizeof(size_t));
+    size_t* size = malloc(sizeof(size_t));
     if (!size) NOMEM("linked_list_new");
     *size = 1;
 
     n->next = NULL;
     n->last = NULL;
     n->size = size;
+    n->first = &n;
 
     return n;
 }

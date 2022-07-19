@@ -12,7 +12,7 @@ exc* error_new(
     const char* restrict message,
     const char* restrict what
 ) {
-    exc* exception = (exc*) malloc(sizeof(exc));
+    exc* exception = malloc(sizeof(exc));
     if (!exception) {
         puts("failed to generate error: out of memory");
         exit(1);

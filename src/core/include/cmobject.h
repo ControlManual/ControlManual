@@ -26,6 +26,7 @@ struct STRUCT_TYPE {
     instance_imethod dealloc;
     instance_sgmethod to_string;
     const type_object* extends;
+    bool is_type;
 };
 
 /* Struct holding data for instance objects. */
@@ -33,6 +34,7 @@ struct STRUCT_OBJECT {
     type_object* type;
     map* attributes;
     void* private;
+    bool is_type;
 };
 
 type_object* type_new(
@@ -54,5 +56,10 @@ void instance_free(instance_object* obj);
 void type_free(type_object* type);
 
 extern char* instance_to_string(instance_object* obj);
+
+typedef union {
+    type_object* type;
+    instance_object* instance;
+} cm_object;
 
 #endif

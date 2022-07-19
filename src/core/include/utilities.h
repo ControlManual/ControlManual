@@ -29,8 +29,8 @@ typedef struct STRUCT_MAP {
 } map;
 
 map* map_new(void);
-_kv* map_get_node(map* m, char* key);
-extern void* map_get(map* m, char* key);
+_kv* map_get_node(map* m, const char* key);
+extern void* map_get(map* m, const char* key);
 void map_add(map* m, char* key, void* value);
 void map_keys_free(map* m);
 void map_values_free(map* m);
@@ -45,6 +45,7 @@ struct STRUCT_NODE {
     node* next;
     node* last;
     size_t* size;
+    node** first;
 };
 
 node* linked_list_new(void* value);

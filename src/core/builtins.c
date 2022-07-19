@@ -9,15 +9,15 @@
 
 /* Baic allocation function for a type object. */
 instance_object* basic_alloc(type_object* restrict type) {
-    instance_object* obj = (instance_object*) malloc(sizeof(instance_object));
+    instance_object* obj = malloc(sizeof(instance_object));
     if (!obj) NOMEM("basic_alloc");
     return obj;
 }
 
 /* To-string method for the string type object. */
 char* str_to_string(instance_object* restrict self) {
-    char* str = (char*) malloc(
-        (strlen(self->type->name) * sizeof(char)) + 
+    char* str = malloc(
+        (STRSIZE(self->type->name)) + 
         (sizeof(char) * 5) + 
         (strlen((char*) self->private) * sizeof(char))
     );
@@ -36,7 +36,7 @@ void string_init(instance_object* restrict self, vector* restrict args) {
         THROW("string_init", "expected at least 1 value in args", 0);
         return;
     }
-    self->private = malloc((strlen(args->items[0]) * sizeof(char)) + 1);
+    self->private = malloc(STRSIZE(args->items[0]));
     strcpy(self->private, args->items[0]);
 }
 
