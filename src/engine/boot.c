@@ -1,5 +1,5 @@
 #include <engine.h>
-#include <cm.h>
+#include <core.h>
 
 
 void finalize() {
@@ -8,4 +8,7 @@ void finalize() {
 
 void boot(ui* engine_ui) {
     setup_types();
+    session* ses = session_new(engine_ui);
+
+    engine_ui->start(ses);
 }

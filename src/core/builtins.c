@@ -1,4 +1,4 @@
-#include <cm.h>
+#include <core.h>
 #include <string.h>
 #include <stdio.h>
 #define SETUP_TYPE(name, str, init, to_str) name = type_new(str, map_new(), &init, &basic_alloc, NULL, &to_str, NULL)

@@ -19,7 +19,7 @@ typedef char* (*instance_sgmethod)(instance_object*);
 
 /* Struct holding data for type objects. */
 struct STRUCT_TYPE {
-    const char* name;
+    char* name;
     map* attributes;
     instance_init init;
     instance_alloc alloc;
@@ -38,7 +38,7 @@ struct STRUCT_OBJECT {
 };
 
 type_object* type_new(
-    const char* name,
+    char* name,
     map* attributes,
     const instance_init init,
     const instance_alloc alloc,

@@ -1,7 +1,8 @@
 #ifndef __ENGINE_H__
 #define __ENGINE_H__
 
-#include <cm.h>
-#include <ui.h>
+#include <core.h>
+#include <lexer.h>
+#include <session.h>
 
 #endif

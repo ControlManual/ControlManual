@@ -1,12 +1,12 @@
-#include <cm.h>
+#include <core.h>
 #define SFREE_ATTR(m, fn) for (int i = 0; i < m->size; i++) { \
         fn(m->items[i]->value); \
     };
 
-scope* scope_new(scope* restrict global) {
+scope* scope_new(scope* restrict glbl) {
     scope* s = malloc(sizeof(scope));
     if (!s) NOMEM("scope_new");
-    s->global = global;
+    s->glbl = glbl;
     s->objects = map_new();
     return s;
 }

@@ -7,7 +7,7 @@
 
 /* Generate a new type object. */
 type_object* type_new(
-    const char* name,
+    char* name,
     map* restrict attributes,
     const instance_init init,
     const instance_alloc alloc,
