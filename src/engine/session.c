@@ -6,14 +6,15 @@ session* session_new(ui* restrict engine_ui) {
     if (!ses) NOMEM("session_new");
 
     ses->commands = map_new();
-    ses->glbl = scope_new();
+    ses->global = scope_new(NULL);
     ses->engine_ui = engine_ui;
+    ses->current_scope = NULL;
 
     return ses;
 }
 
 void session_free(session* restrict ses) {
-    scope_free(ses->glbl);
+    scope_free(ses->global);
     map_free(ses->commands);
 }
 

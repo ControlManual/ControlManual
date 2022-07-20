@@ -33,7 +33,7 @@ struct STRUCT_TYPE {
 struct STRUCT_OBJECT {
     type_object* type;
     map* attributes;
-    void* private;
+    void* internal;
     bool is_type;
 };
 

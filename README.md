@@ -25,13 +25,6 @@ if something == 0 {
     echo Something else happened
 }
 
-for i in ls() {
-  if i == "myfile.txt" {
-      echo {i}
-      break;
-    }
-}
-# alternatively
 match ls() --iter "myfile.txt"
 ```
 

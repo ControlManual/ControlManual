@@ -63,7 +63,7 @@ instance_object* instance_construct(
     obj->attributes->items = (_kv**) calloc(0, 0);
 
     obj->type = type;
-    obj->private = NULL;
+    obj->internal = NULL;
     
     type->init(obj, args);
     process_error();

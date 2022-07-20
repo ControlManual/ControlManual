@@ -8,10 +8,10 @@ typedef struct STRUCT_SCOPE scope;
 
 struct STRUCT_SCOPE {
     map* objects;
-    scope* glbl;
+    scope* global;
 };
 void scope_free(scope* sc);
 void scope_add_type(scope* sc, type_object* type);
-scope* scope_new(scope* restrict glbl);
+scope* scope_new(scope* global);
 
 #endif

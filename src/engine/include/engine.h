@@ -4,5 +4,6 @@
 #include <core.h>
 #include <lexer.h>
 #include <session.h>
+#include <boot.h>
 
 #endif

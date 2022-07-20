@@ -3,11 +3,7 @@
 
 #include <core.h>
 
-typedef struct STRUCT_SESSION {
-    scope* glbl;
-    ui* engine_ui;
-    map* commands;
-} session;
+typedef struct STRUCT_SESSION session;
 
 typedef struct STRUCT_UI ui;
 typedef void (*ui_outmsg)(session*, char* msg);
@@ -20,6 +16,14 @@ struct STRUCT_UI {
     ui_input input;
     ui_outmsg log;
     ui_start start;
+};
+
+struct STRUCT_SESSION {
+    scope* global;
+    ui* engine_ui;
+    map* commands;
+    char* path;
+    scope* current_scope;
 };
 
 ui* ui_new(

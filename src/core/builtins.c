@@ -2,9 +2,9 @@
 #include <string.h>
 #include <stdio.h>
 #define SETUP_TYPE(name, str, init, to_str) name = type_new(str, map_new(), &init, &basic_alloc, NULL, &to_str, NULL)
-#define TOSTR(fmt) int len = snprintf(NULL, 0, fmt, self->private); \
+#define TOSTR(fmt) int len = snprintf(NULL, 0, fmt, self->internal); \
     char* str = malloc(len + 1); \
-    snprintf(str, len + 1, fmt, self->private); \
+    snprintf(str, len + 1, fmt, self->internal); \
     return str
 
 /* Baic allocation function for a type object. */
@@ -19,9 +19,9 @@ char* str_to_string(instance_object* restrict self) {
     char* str = malloc(
         (STRSIZE(self->type->name)) + 
         (sizeof(char) * 5) + 
-        (strlen((char*) self->private) * sizeof(char))
+        (strlen((char*) self->internal) * sizeof(char))
     );
-    sprintf(str, "%s(\"%s\")", self->type->name, (char*) self->private);
+    sprintf(str, "%s(\"%s\")", self->type->name, (char*) self->internal);
     return str;
 }
 
@@ -36,13 +36,13 @@ void string_init(instance_object* restrict self, vector* restrict args) {
         THROW("string_init", "expected at least 1 value in args", 0);
         return;
     }
-    self->private = malloc(STRSIZE(args->items[0]));
-    strcpy(self->private, args->items[0]);
+    self->internal = malloc(STRSIZE(args->items[0]));
+    strcpy(self->internal, args->items[0]);
 }
 
 /* Deallocation method for the string type object. */
 void string_dealloc(instance_object* restrict self) {
-    free(self->private);
+    free(self->internal);
 }
 
 /* Initialization method for the integer type object. */
@@ -51,7 +51,7 @@ void int_init(instance_object* self, vector* args) {
         THROW("int_init", "expected at least 1 value in args", 0);
         return;
     }
-    self->private = args->items[0];
+    self->internal = args->items[0];
 }
 
 /* Initialization method for the boolean type object. */

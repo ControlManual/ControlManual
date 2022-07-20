@@ -3,10 +3,10 @@
         fn(m->items[i]->value); \
     };
 
-scope* scope_new(scope* restrict glbl) {
+scope* scope_new(scope* restrict global) {
     scope* s = malloc(sizeof(scope));
     if (!s) NOMEM("scope_new");
-    s->glbl = glbl;
+    s->global = global;
     s->objects = map_new();
     return s;
 }
