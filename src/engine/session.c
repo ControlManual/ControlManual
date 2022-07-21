@@ -1,8 +1,6 @@
 #include <session.h>
 #include <core.h>
 
-session* _CURRENT_SESSION = NULL;
-
 session* session_new(ui* restrict engine_ui) {
     session* ses = malloc(sizeof(session));
     if (!ses) NOMEM("session_new");
@@ -25,7 +23,8 @@ ui* ui_new(
     ui_outmsg error,
     ui_input input,
     ui_outmsg log,
-    ui_start start
+    ui_event start,
+    ui_event end
 ) {
     ui* u = malloc(sizeof(ui));
     if (!u) NOMEM("ui_new");
@@ -34,6 +33,7 @@ ui* ui_new(
     u->input = input;
     u->log = log;
     u->start = start;
+    u->end = end;
 
     return u;
 }

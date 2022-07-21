@@ -4,7 +4,7 @@ arbitrary_data* data_new(bool should_free, void* contents) {
     arbitrary_data* data = malloc(sizeof(arbitrary_data));
     if (!data) NOMEM("heap_data_new");
 
-    data->should_free = true;
+    data->should_free = should_free;
     data->contents = contents;
     return data;
 }

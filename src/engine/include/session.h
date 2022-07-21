@@ -6,16 +6,17 @@
 typedef struct STRUCT_SESSION session;
 
 typedef struct STRUCT_UI ui;
-typedef void (*ui_outmsg)(session*, char* msg);
-typedef arbitrary_data* (*ui_input)(session*, char* prompt);
-typedef void (*ui_start)(session*);
+typedef void (*ui_outmsg)(session*, arbitrary_data* msg);
+typedef arbitrary_data* (*ui_input)(session*, arbitrary_data* prompt);
+typedef void (*ui_event)(session*);
 
 struct STRUCT_UI {
     ui_outmsg print;
     ui_outmsg error;
     ui_input input;
     ui_outmsg log;
-    ui_start start;
+    ui_event start;
+    ui_event end;
 };
 
 struct STRUCT_SESSION {
@@ -31,12 +32,11 @@ ui* ui_new(
     ui_outmsg error,
     ui_input input,
     ui_outmsg log,
-    ui_start start
+    ui_event start,
+    ui_event end
 );
 
-session* session_new(ui* restrict engine_ui);
-void session_free(session* restrict ses);
-
-extern session* _CURRENT_SESSION;
+session* session_new(ui* engine_ui);
+void session_free(session* ses);
 
 #endif

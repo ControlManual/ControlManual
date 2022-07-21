@@ -3,16 +3,10 @@
 #include <iostream>
 #include <filesystem>
 #include <cstring>
+#include <files.h>
+#include <engine.h>
 
 namespace fs = std::filesystem;
-
-extern "C" char* home() {
-    #ifdef _WIN32
-        return getenv("HOMEPATH");
-    #else
-        return getenv("HOME");
-    #endif
-}
 
 extern "C" void create_directory(const char* path) {
     fs::create_directory(path);
@@ -46,4 +40,15 @@ extern "C" const char* join_paths(
     // TODO: make this better
 
     return new_str;
+}
+
+extern "C" void directory_iter_files(const char* path, iter_func fn, session* ses) {
+    for (auto &i : fs::directory_iterator(path)) {
+        if (i.is_regular_file()) {
+                std::string str = i.path();
+                char* new_str = new char[str.size() + 1];
+                std::strcpy(new_str, str.c_str());
+                fn(ses, new_str);
+        };
+    }
 }
