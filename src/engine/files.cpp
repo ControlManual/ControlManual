@@ -1,13 +1,10 @@
 #include <stdlib.h>
 #include <fstream>
-
-#if __cplusplus < 201703L
-#include <experimental/filesystem>
-    namespace fs = std::experimental::filesystem;
-#else
+#include <iostream>
 #include <filesystem>
-    namespace fs = std::filesystem;
-#endif
+#include <cstring>
+
+namespace fs = std::filesystem;
 
 extern "C" char* home() {
     #ifdef _WIN32
@@ -40,8 +37,13 @@ extern "C" const char* join_paths(
     const char* path_a,
     const char* path_b
 ) {
-    fs::path dir(path_a);
-    fs::path file(path_b);
+    fs::path a { path_a };
+    fs::path b { path_b };
+    
+    std::string str = (a / b).string();
+    char* new_str = new char[str.size() + 1];
+    std::strcpy(new_str, str.c_str());
+    // TODO: make this better
 
-    return (dir / file).c_str();
+    return new_str;
 }

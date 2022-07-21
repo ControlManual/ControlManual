@@ -1,6 +1,8 @@
 #include <session.h>
 #include <core.h>
 
+session* _CURRENT_SESSION = NULL;
+
 session* session_new(ui* restrict engine_ui) {
     session* ses = malloc(sizeof(session));
     if (!ses) NOMEM("session_new");

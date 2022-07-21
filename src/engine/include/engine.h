@@ -5,5 +5,7 @@
 #include <lexer.h>
 #include <session.h>
 #include <boot.h>
+#include <register.h>
+#include <files.h>
 
 #endif

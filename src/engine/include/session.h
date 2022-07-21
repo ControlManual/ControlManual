@@ -7,7 +7,7 @@ typedef struct STRUCT_SESSION session;
 
 typedef struct STRUCT_UI ui;
 typedef void (*ui_outmsg)(session*, char* msg);
-typedef char* (*ui_input)(session*, char* prompt);
+typedef arbitrary_data* (*ui_input)(session*, char* prompt);
 typedef void (*ui_start)(session*);
 
 struct STRUCT_UI {
@@ -36,5 +36,7 @@ ui* ui_new(
 
 session* session_new(ui* restrict engine_ui);
 void session_free(session* restrict ses);
+
+extern session* _CURRENT_SESSION;
 
 #endif
