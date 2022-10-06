@@ -1,30 +1,17 @@
-#include <core.h>
-#define SFREE_ATTR(m, fn) for (int i = 0; i < m->size; i++) { \
-        fn(m->items[i]->value); \
-    };
+#include <core/scope.h>
+#include <core/error.h>
+#include <stdlib.h>
 
-scope* scope_new(scope* restrict global) {
-    scope* s = malloc(sizeof(scope));
-    if (!s) NOMEM("scope_new");
-    s->global = global;
-    s->objects = map_new();
+scope* scope_new(map* globals) {
+    scope* s = safe_malloc(sizeof(scope));
+    s->globals = globals ? globals : map_new();
+    s->locals = map_new();
+
     return s;
 }
 
-void scope_free(scope* restrict sc) {
-    for (int i = 0; i < sc->objects->size; i++) {
-        cm_object* current = sc->objects->items[i]->value;
-
-        if (current->type->is_type) {
-            type_free(current->type);
-        } else {
-            instance_free(current->instance);
-        }
-    }
-    NONULL(sc, "scope_free");
-}
-
-void scope_add_type(scope* restrict sc, type_object* type) {
-    map_add(sc->objects, type->name, type);
-    NONULL(sc, "scope_free");
+scope* scope_free(scope* s) {
+    if (s->globals) map_free(s->globals);
+    map_free(s->locals);
+    free(s);
 }

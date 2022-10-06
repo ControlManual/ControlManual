@@ -9,9 +9,9 @@ This is an alternative to traditional command interpreters. I'll put more here a
 ```
 # Bash
 if [[ $something -eq 0 ]]; then
-    echo Something happened
+    echo "Something happened"
 else
-    echo Something else happened
+    echo "Something else happened"
 fi
 
 ls | grep myfile.txt
@@ -20,12 +20,12 @@ ls | grep myfile.txt
 ```
 # Control Manual
 if something == 0 {
-    echo Something happened
+    echo "Something happened"
 } else {
-    echo Something else happened
+    echo "Something else happened"
 }
 
-match ls() --iter "myfile.txt"
+match ls() "myfile.txt"
 ```
 
 ### Installation

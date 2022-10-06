@@ -1,17 +1,18 @@
-#include <core.h>
+#include <core/data.h>
+#include <stdbool.h>
+#include <core/error.h>
+#include <stdlib.h>
 
-arbitrary_data* data_new(bool should_free, void* contents) {
-    arbitrary_data* data = malloc(sizeof(arbitrary_data));
-    if (!data) NOMEM("heap_data_new");
-
-    data->should_free = should_free;
-    data->contents = contents;
-    return data;
+data* data_new(void* contents, bool should_free, data_dealloc dealloc) {
+    data* d = safe_malloc(sizeof(data));
+    d->contents = contents;
+    d->should_free = should_free;
+    d->dealloc = dealloc;
+    return d;
 }
 
-void data_free(arbitrary_data* data) {
-    NONULL(data, "data_free");
-    if (data->should_free) free(data->contents);
-
-    free(data);
+inline void data_free(data* d) {
+    if (d->should_free) 
+        (d->dealloc ? d->dealloc : free)(d->contents);
+    free(d);
 }
