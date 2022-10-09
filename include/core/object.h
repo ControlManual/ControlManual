@@ -33,6 +33,10 @@ extern type base;
 extern type integer;
 extern type func;
 
+extern object* integer_object;
+extern object* func_object;
+extern object* boolean_object;
+
 void init_types(void);
 void unload_types(void);
 extern object* object_get_attr(object* ob, const char* name);
@@ -51,5 +55,7 @@ object* object_call_special(object* o, const char* name, vector* args);
 bool type_derives(type* src, type* tp);
 object* object_internal_new(object* tp, vector* params);
 object* object_internal_newf(object* tp, size_t len, ...);
+object* object_call(object* o, vector* args);
+object* object_callf(object* o, size_t len, ...);
 
 #endif

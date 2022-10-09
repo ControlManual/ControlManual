@@ -3,3 +3,4 @@ out
 run
 vgcore.*
 cosh.c
+test.c

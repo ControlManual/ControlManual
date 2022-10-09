@@ -8,8 +8,8 @@
 #include <stdio.h> // snprintf
 #include <core/vector.h>
 #include <core/list.h>
+#include <core/error.h>
 #include <stdarg.h>
-#include <core/error.h> // process_errors
 #define BUILTIN(tp) map_set( \
     globals, \
     tp.name, \
@@ -20,20 +20,31 @@
     vector* vecname = vector_new(); \
     for (int i = 0; i < len; i++) \
         vector_append(v, va_arg(args, data*)); \
-    va_end(args) \
-
-
+    va_end(args)
+#define SETATTR(obj, k, v) map_set( \
+        obj.cattributes, \
+        STACK_DATA(k), \
+        STACK_DATA(v) \
+    )
 #define LOADBUILTIN(nm, str) nm.name = STACK_DATA(str); \
     nm.attributes = map_new(1); \
     nm.parent = &base; \
-    nm.cattributes = map_new(4)
-
-// is this ok?
+    nm.cattributes = map_new(4);
+#define IARG(tp) { \
+                tp* ptr = va_arg(args, tp*); \
+                *ptr = obj; \
+                break; \
+            }
+#define BUILDOBJ(nm) nm##_object = object_from(&nm);
 
 type base;
 type integer;
 type func;
 type boolean;
+
+object* integer_object;
+object* func_object;
+object* boolean_object;
 
 static bool ensure_derives(object* ob_a, type* tp) {
     if (!type_derives(ob_a->tp, tp)) {
@@ -76,18 +87,51 @@ bool parse_args(vector* params, const char* format, ...) {
     return true;
 }
 
+void parse_iargs(vector* params, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    size_t len = strlen(format);
+
+    for (int i = 0; i < len; i++) {
+        char c = format[i];
+        void* obj = vector_get(params, i);
+        if (!obj) fail("not enough arguments");
+
+        switch (c) {
+            case 'i': IARG(int*)
+            case 'f': IARG(obj_func)
+        }
+    }
+
+    va_end(args);
+}
+
 static object* func_call(object* ob, vector* args) {
     
 }
 
 static object* func_construct(object* ob, vector* args) {
     map_set(ob->cattributes, STACK_DATA("_caller"), STACK_DATA(func_call));
-    object* i;
-    if (!parse_args(args, "i", &i)) return NULL;
+}
+
+static object* func_iconstruct(object* ob, vector* args) {
+    obj_func f;
+    parse_iargs(args, "f", &f);
+    map_set(ob->cattributes, STACK_DATA("_caller"), STACK_DATA(f));
 }
 
 static object* int_iconstruct(object* o, vector* args) {
-    map_set(o->cattributes, STACK_DATA("value"), vector_get_data(args, 0));
+    int value;
+    parse_iargs(args, "i", &value);
+    int* heap_value = safe_malloc(sizeof(int));
+    *heap_value = value;
+    map_set(o->cattributes, STACK_DATA("value"), HEAP_DATA(heap_value));
+}
+
+static object* int_construct(object* o, vector* args) {
+    object* value;
+    if (!parse_args(args, "i", &value)) return NULL;
+    map_set(o->attributes, STACK_DATA("value"), HEAP_DATA(value));
 }
 
 void init_types(void) {
@@ -103,16 +147,14 @@ void init_types(void) {
     LOADBUILTIN(func, "function");
     LOADBUILTIN(boolean, "bool");
 
-    map_set(
-        func.cattributes,
-        STACK_DATA("_construct"),
-        STACK_DATA(func_construct)
-    );
-    map_set(
-        integer.cattributes,
-        STACK_DATA("_iconstruct"),
-        STACK_DATA(int_iconstruct)
-    );
+    SETATTR(func, "_construct", func_construct);
+    SETATTR(func, "_iconstruct", func_iconstruct);
+    SETATTR(integer, "_iconstruct", int_iconstruct);
+
+    BUILDOBJ(func);
+    BUILDOBJ(integer);
+    BUILDOBJ(boolean);
+
 }
 
 void unload_types(void) {
@@ -138,7 +180,6 @@ bool type_derives(type* src, type* tp) {
     
     return false;
 }
-
 
 static object* object_alloc(object* tp) {
     object* obj = safe_malloc(sizeof(object));
@@ -227,13 +268,15 @@ object* object_call_special(object* o, const char* name, vector* args) {
         vector* v = args ? args : vector_new();
         object* result = cfunc(o, v);
         if (!args) vector_free(v);
-        process_errors(false);
         return result;
     }
 
     object* attr = object_get_attr(o, name);
     if (!attr) {
-        THROW_STATIC("special does not exist");
+        size_t size = strlen(name) + 26;
+        char* str = safe_malloc(size);
+        snprintf(str, size, "%s does not exist on object", name);
+        THROW_HEAP(str);
         return NULL;
     }
 
@@ -242,8 +285,10 @@ object* object_call_special(object* o, const char* name, vector* args) {
     return object_call(attr, args);
 }
 
-static inline void object_dealloc(object* obj) {
-    object_call_special(obj, "_dealloc", NULL);
+static void object_dealloc(object* obj) {
+    map_free(obj->attributes);
+    map_free(obj->cattributes);
+    free(obj);
 }
 
 scope* scope_new(void) {
