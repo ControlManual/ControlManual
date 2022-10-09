@@ -1,12 +1,27 @@
-#ifndef CM_ALLOC_H
-#define CM_ALLOC_H
+#ifndef CM_ERROR_H
+#define CM_ERROR_H
+#include <core/data.h>
+#include <core/list.h>
+#include <stdbool.h>
+#include <stdlib.h> // NULL
+#define ERRSTACK_INIT error_stack = list_new()
+#define ERRSTACK_FREE list_free(error_stack)
+#define THROW_STATIC(content) throw( \
+    STACK_DATA(content), \
+    STACK_DATA("<native code>"), \
+    NULL \
+)
 
-#include <stdlib.h>
+typedef struct STRUCT_ERROR error;
 
-void error_no_memory();
-extern void* safe_malloc(size_t bytes);
-extern void* safe_realloc(void* ptr, size_t nbytes);
-extern void* safe_calloc(size_t num, size_t size);
-void fail(const char* message);
+struct STRUCT_ERROR {
+    data* content;
+    data* origin;
+    error* cause;
+};
+
+extern list* error_stack;
+void process_errors(bool should_kill);
+void throw(data* content, data* origin, error* cause);
 
 #endif

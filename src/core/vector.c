@@ -1,8 +1,6 @@
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+#include <stdlib.h> // size_t
 #include <core/vector.h>
-#include <core/error.h>
+#include <core/util.h>
 #include <core/data.h>
 
 /* Create a new vector. */
@@ -13,13 +11,16 @@ vector* vector_new(void) {
     return vec;
 }
 
+/* Get the data at the target index. */
+data* vector_get_data(vector* vec, size_t index) {
+    if (index >= vec->size) return NULL;
+    return vec->items[index];
+}
+
 /* Free a vector. */
 void vector_free(vector* vec) {
-    for (int i = 0; i < vec->size; i++) {
-        data* d = vector_get_data(vec, i);
-        if (!d) process_errors();
-        data_free(d);
-    }
+    for (int i = 0; i < vec->size; i++)
+        data_free(vector_get_data(vec, i));
     free(vec->items);
     free(vec);
 }
@@ -33,18 +34,18 @@ void vector_append(vector* vec, data* item) {
 
 /* Insert a value at the target index. */
 void vector_insert(vector* vec, size_t index, data* item) {
-    if (index > vec->size) fail("index is above vector size");
-
     vec->size++;
-    vec->items = safe_realloc(vec->items, vec->size * sizeof(data));
+    data** items = safe_realloc(vec->items, vec->size * sizeof(data));
     for (int i = vec->size - 1; i >= index; i--)
-        if (i == index) vec->items[i] = item;
-        else vec->items[i] = vec->items[i - 1];
+        if (i == index) items[i] = item;
+        else items[i] = items[i - 1];
+    
+    free(vec->items);
+    vec->items = items;
 };
 
 /* Remove the index from the target vector and return its value. */
 data* vector_pop(vector* vec, size_t index) {
-    if (index > vec->size) fail("index is above vector size");
     void* item = vec->items[index];
     data** new_items = safe_calloc(vec->size - 1, sizeof(data));
     size_t offset = 0;
@@ -65,16 +66,9 @@ inline void vector_remove(vector* vec, size_t index) {
     data_free(vector_pop(vec, index));
 }
 
-/* Get the data at the target index. */
-inline data* vector_get_data(vector* vec, size_t index) {
-    if (index >= vec->size) fail("vector index out of range");
-    return vec->items[index];
-}
-
 /* Get the value at the target index. */
 inline void* vector_get(vector* vec, size_t index) {
-    data* d = vector_get_data(vec, index);
-    return d->contents;
+    return data_content_maybe(vector_get_data(vec, index));
 }
 
 inline void vector_set(vector* vec, size_t index, data* value) {

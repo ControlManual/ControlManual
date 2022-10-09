@@ -1,28 +1,25 @@
 #ifndef CM_MAP_H
 #define CM_MAP_H
 
+#include <core/data.h>
 #include <stdlib.h>
-#include "data.h"
-#include "vector.h"
 
-typedef struct STRUCT_PAIR {
-	data* key;
-	data* value;
+typedef struct STRUCT_MAP_PAIR {
+    data* key;
+    data* value;
 } pair;
 
-
 typedef struct STRUCT_MAP {
-	size_t size;
-	vector* items;
+    size_t len;
+    size_t capacity;
+    pair** items;
 } map;
 
-map* map_new(void);
-void map_add(map* m, data* key, data* value);
-void map_remove(map* m, const char* key);
-pair* map_get_pair(map* m, const char* key, int* index);
-void map_free(map* m);
-
 extern void* map_get(map* m, const char* key);
-extern void map_free(map* m);
+map* map_new(size_t inital_capacity);
+void map_set(map* m, data* key, data* value);
+void map_free(map* m);
+map* map_copy(map* m);
+data* map_get_data(map* m, const char* key);
 
 #endif

@@ -2,7 +2,7 @@
 #define CM_VECTOR_H
 
 #include <stdlib.h>
-#include "data.h"
+#include <core/data.h>
 
 /* Dynamic array that may hold any type. */
 typedef struct STRUCT_VECTOR {
@@ -17,7 +17,7 @@ void vector_insert(vector* vec, size_t index, data* item);
 data* vector_pop(vector* vec, size_t index);
 extern void vector_remove(vector* vec, size_t index);
 extern void* vector_get(vector* vec, size_t index);
-extern data* vector_get_data(vector* vec, size_t index);
 extern void vector_set(vector* vec, size_t index, data* value);
+data* vector_get_data(vector* vec, size_t index);
 
 #endif
