@@ -4,16 +4,7 @@
 #include <core/data.h>
 #include <stdlib.h>
 
-typedef struct STRUCT_MAP_PAIR {
-    data* key;
-    data* value;
-} pair;
-
-typedef struct STRUCT_MAP {
-    size_t len;
-    size_t capacity;
-    pair** items;
-} map;
+typedef struct STRUCT_MAP map;
 
 extern void* map_get(map* m, const char* key);
 map* map_new(size_t inital_capacity);

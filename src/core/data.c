@@ -3,6 +3,13 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+struct STRUCT_DATA {
+    bool should_free;
+    void* contents;
+    data_dealloc dealloc;
+    size_t* refs;
+};
+
 data* data_new(void* contents, bool should_free, data_dealloc dealloc) {
     data* d = safe_malloc(sizeof(data));
     size_t* size = safe_malloc(sizeof(size_t));
@@ -45,4 +52,9 @@ inline void* data_content(data* d) {
 inline void* data_content_maybe(data* d) {
     if (!d) return NULL;
     return d->contents;
+}
+
+/* Size of data object. */
+inline size_t data_sizeof(void) {
+    return sizeof(data);
 }

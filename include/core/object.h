@@ -15,9 +15,9 @@ typedef struct STRUCT_SCOPE {
 typedef struct STRUCT_TYPE type;
 
 struct STRUCT_TYPE {
-    data* name;
-    map* attributes;
-    map* cattributes;
+    data* name; // Should be data to char*
+    map* attributes; // Everything in this must be data to an object*
+    map* cattributes; // May hold any C value (including object*)
     type* parent;
 };
 

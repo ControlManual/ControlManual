@@ -37,14 +37,7 @@
             }
 #define BUILDOBJ(nm) nm##_object = object_from(&nm);
 
-type base;
-type integer;
-type func;
-type boolean;
-
-object* integer_object;
-object* func_object;
-object* boolean_object;
+/* Argument parsing */
 
 static bool ensure_derives(object* ob_a, type* tp) {
     if (!type_derives(ob_a->tp, tp)) {
@@ -100,11 +93,15 @@ void parse_iargs(vector* params, const char* format, ...) {
         switch (c) {
             case 'i': IARG(int*)
             case 'f': IARG(obj_func)
+            case 'v': IARG(vector*)
+            case 'm': IARG(map*)
         }
     }
 
     va_end(args);
 }
+
+/* Builtin object methods */
 
 static object* func_call(object* ob, vector* args) {
     
@@ -134,6 +131,36 @@ static object* int_construct(object* o, vector* args) {
     map_set(o->attributes, STACK_DATA("value"), HEAP_DATA(value));
 }
 
+static object* array_iconstruct(object* o, vector* args) {
+    vector* v;
+    parse_iargs(args, "v", &v);
+    map_set(o->cattributes, STACK_DATA("value"), HEAP_DATA(v));
+}
+
+static object* hashmap_iconstruct(object* o, vector* args) {
+    map* m;
+    parse_iargs(args, "m", &m);
+    map_set(o->cattributes, STACK_DATA("value"), HEAP_DATA(m));
+}
+
+/* Builtin types and objects */
+
+type base;
+type integer;
+type func;
+type boolean;
+type array;
+type hashmap;
+
+object* integer_object;
+object* func_object;
+object* boolean_object;
+object* array_object;
+object* hashmap_object;
+
+/* Type functions */
+
+/* Initalize all types. */
 void init_types(void) {
     map* m = map_new(8);
     map_set(m, STACK_DATA("a"), STACK_DATA("b"));
@@ -146,31 +173,30 @@ void init_types(void) {
     LOADBUILTIN(integer, "int");
     LOADBUILTIN(func, "function");
     LOADBUILTIN(boolean, "bool");
+    LOADBUILTIN(array, "array");
+    LOADBUILTIN(hashmap, "hashmap");
 
     SETATTR(func, "_construct", func_construct);
     SETATTR(func, "_iconstruct", func_iconstruct);
     SETATTR(integer, "_iconstruct", int_iconstruct);
+    SETATTR(array, "_iconstruct", array_iconstruct);
+    SETATTR(hashmap, "_iconstruct", hashmap_iconstruct);
 
     BUILDOBJ(func);
     BUILDOBJ(integer);
     BUILDOBJ(boolean);
-
+    BUILDOBJ(array);
+    BUILDOBJ(hashmap);
 }
 
+/* Free builtin types. */
 void unload_types(void) {
     map_free(integer.attributes);
     map_free(func.attributes);
     map_free(base.attributes);
 }
 
-inline object* object_get_attr(object* ob, const char* name) {
-    return map_get(ob->attributes, name);
-}
-
-void* object_get_cattr(object* ob, const char* name) {
-    return map_get(ob->cattributes, name);
-}
-
+/* Does the source type derive from the target. */
 bool type_derives(type* src, type* tp) {
     type* current = src;
     while (current != &base) {
@@ -181,6 +207,31 @@ bool type_derives(type* src, type* tp) {
     return false;
 }
 
+/* New type object. */
+type* type_new(
+    data* name,
+    map* attributes,
+    type* parent
+) {
+    type* tp = safe_malloc(sizeof(type));
+    tp->name = name;
+    tp->attributes = attributes;
+    tp->parent = parent;
+    return tp;
+}
+
+/* Object functions */
+
+/* Get Control Manual object at the attribute. NULL if not found. */
+inline object* object_get_attr(object* ob, const char* name) {
+    return map_get(ob->attributes, name);
+}
+
+/* Get the C object at the attribute. NULL if not found. */
+void* object_get_cattr(object* ob, const char* name) {
+    return map_get(ob->cattributes, name);
+}
+
 static object* object_alloc(object* tp) {
     object* obj = safe_malloc(sizeof(object));
     obj->attributes = map_copy(tp->attributes);
@@ -189,7 +240,12 @@ static object* object_alloc(object* tp) {
 
     return obj;
 }
-/* Instantiate a new object from a type. */
+
+/*
+Instantiate a new object from a type.
+ 
+Everything in params object should be a Control Manual object.
+*/
 object* object_new(object* tp, vector* params) {
     object* obj = object_alloc(tp);
     if (!object_call_special(obj, "_construct", params)) return NULL;
@@ -197,6 +253,7 @@ object* object_new(object* tp, vector* params) {
     return obj;
 }
 
+/* New object from a format string. len should match the number of arguments. */
 object* object_newf(object* tp, size_t len, ...) {
     VA_VEC(v, len);
     object* obj = object_new(tp, v);
@@ -205,6 +262,7 @@ object* object_newf(object* tp, size_t len, ...) {
     return obj;
 }
 
+/* Create a new object using C value opposed to a Control Manual object. */
 object* object_internal_new(object* tp, vector* params) {
     object* obj = object_alloc(tp);
     if (!object_call_special(obj, "_iconstruct", params)) return NULL;
@@ -212,6 +270,7 @@ object* object_internal_new(object* tp, vector* params) {
     return obj;
 }
 
+/* Create a new internal object from a format string. len should match the number of argument. */
 object* object_internal_newf(object* tp, size_t len, ...) {
     VA_VEC(v, len);
     object* obj = object_internal_new(tp, v);
@@ -229,18 +288,7 @@ object* object_from(type* tp) {
     return o;
 }
 
-type* type_new(
-    data* name,
-    map* attributes,
-    type* parent
-) {
-    type* tp = safe_malloc(sizeof(type));
-    tp->name = name;
-    tp->attributes = attributes;
-    tp->parent = parent;
-    return tp;
-}
-
+/* Call the specified object. Everything in args should be a Control Manual object. */
 object* object_call(object* o, vector* args) {
     if (!type_derives(o->tp, &func)) {
         THROW_STATIC("doesnt derive from func");
@@ -255,6 +303,7 @@ object* object_call(object* o, vector* args) {
     return res;
 }
 
+/* Call an object with a format string. len should match the number of arguments. */
 object* object_callf(object* o, size_t len, ...) {
     VA_VEC(v, len);
     object* obj = object_call(o, v);
@@ -262,6 +311,7 @@ object* object_callf(object* o, size_t len, ...) {
     return obj;
 }
 
+/* Call a special method on the object. */
 object* object_call_special(object* o, const char* name, vector* args) {
     obj_func cfunc = object_get_cattr(o, name);
     if (cfunc) {
@@ -291,6 +341,9 @@ static void object_dealloc(object* obj) {
     free(obj);
 }
 
+/* Scope functions */
+
+/* Create a new scope */
 scope* scope_new(void) {
     scope* s = safe_malloc(sizeof(scope));
     map* globals = map_new(16);
@@ -302,6 +355,7 @@ scope* scope_new(void) {
     BUILTIN(func);
 }
 
+/* Create a new scope using an existing global map. */
 scope* scope_from(map* globals) {
     scope* s = safe_malloc(sizeof(scope));
     s->local = map_new(8);
@@ -309,8 +363,23 @@ scope* scope_from(map* globals) {
     return s;
 }
 
+/* Free a scope (and its objects). */
 void scope_free(scope* s, bool free_globals) {
     map_free(s->local);
     if (free_globals) map_free(s->global);
     free(s);
+}
+
+/* Utilities */
+
+/* Integer from a C integer. */
+object* integer_from(int value) {
+    int* ptr = safe_malloc(sizeof(int));
+    *ptr = 1;
+    return object_internal_newf(integer_object, 1, HEAP_DATA(ptr));
+}
+
+/* Function from a C function. */
+object* func_from(obj_func function) {
+    return object_internal_newf(func_object, 1, STACK_DATA(function));
 }

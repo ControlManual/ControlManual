@@ -7,7 +7,7 @@
 vector* vector_new(void) {
     vector* vec = safe_malloc(sizeof(vector));
     vec->size = 0;
-    vec->items = safe_calloc(0, sizeof(data));
+    vec->items = safe_calloc(0, data_sizeof());
     return vec;
 }
 
@@ -28,14 +28,14 @@ void vector_free(vector* vec) {
 /* Append a value to the target vector. */
 void vector_append(vector* vec, data* item) {
     vec->size++;
-    vec->items = safe_realloc(vec->items, vec->size * sizeof(data));
+    vec->items = safe_realloc(vec->items, vec->size * sizeof(data*));
     vec->items[vec->size - 1] = item;
 };
 
 /* Insert a value at the target index. */
 void vector_insert(vector* vec, size_t index, data* item) {
     vec->size++;
-    data** items = safe_realloc(vec->items, vec->size * sizeof(data));
+    data** items = safe_realloc(vec->items, vec->size * sizeof(data*));
     for (int i = vec->size - 1; i >= index; i--)
         if (i == index) items[i] = item;
         else items[i] = items[i - 1];
@@ -47,7 +47,7 @@ void vector_insert(vector* vec, size_t index, data* item) {
 /* Remove the index from the target vector and return its value. */
 data* vector_pop(vector* vec, size_t index) {
     void* item = vec->items[index];
-    data** new_items = safe_calloc(vec->size - 1, sizeof(data));
+    data** new_items = safe_calloc(vec->size - 1, sizeof(data*));
     size_t offset = 0;
 
     for (int i = 0; i < vec->size; i++) 
