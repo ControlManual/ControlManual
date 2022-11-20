@@ -1,5 +1,5 @@
 #include <core/object.h>
-#include <core/util.h> // safe_malloc, fail
+#include <core/util.h> // safe_malloc, fail, RETN
 #include <stdlib.h> // NULL
 #include <core/data.h> // STACK_DATA
 #include <core/map.h>
@@ -21,10 +21,10 @@
     for (int i = 0; i < len; i++) \
         vector_append(v, va_arg(args, data*)); \
     va_end(args)
-#define SETATTR(obj, k, v) map_set( \
+#define SETATTR(obj, name) map_set( \
         obj.cattributes, \
-        STACK_DATA(k), \
-        STACK_DATA(v) \
+        STACK_DATA(#name), \
+        STACK_DATA(obj## name##) \
     )
 #define LOADBUILTIN(nm, str) nm.name = STACK_DATA(str); \
     nm.attributes = map_new(1); \
@@ -35,6 +35,12 @@
                 *ptr = obj; \
                 break; \
             }
+#define ARG(tp) { \
+    object** ptr = va_arg(args, object**); \
+    if (!ensure_derives(obj, &tp)) return false; \
+    *ptr = obj; \
+    break; \
+}
 #define BUILDOBJ(nm) nm##_object = object_from(&nm);
 
 /* Argument parsing */
@@ -47,7 +53,7 @@ static bool ensure_derives(object* ob_a, type* tp) {
 
         char* str = safe_malloc(size);
         snprintf(str, size, "expected %s, got %s", tp_name, ob_name);
-        throw(HEAP_DATA(str), STACK_DATA("<native code>"), NULL);
+        THROW_HEAP(str);
         return false;
     }
 
@@ -68,11 +74,7 @@ bool parse_args(vector* params, const char* format, ...) {
         }
 
         switch (c) {
-            case 'i':
-                object** ptr = va_arg(args, object**);
-                if (!ensure_derives(obj, &integer)) return false;
-                *ptr = obj;
-                break;
+            case 'i': ARG(integer);
         }
     }
 
@@ -103,44 +105,44 @@ void parse_iargs(vector* params, const char* format, ...) {
 
 /* Builtin object methods */
 
-static object* func_call(object* ob, vector* args) {
+static object* func_call(object* o, vector* args) {
     
 }
 
-static object* func_construct(object* ob, vector* args) {
-    map_set(ob->cattributes, STACK_DATA("_caller"), STACK_DATA(func_call));
+static object* func_construct(object* o, vector* args) {
+    SET_CATTR_SS(o, _caller, func_call);
 }
 
-static object* func_iconstruct(object* ob, vector* args) {
+static object* func_iconstruct(object* o, vector* args) {
     obj_func f;
     parse_iargs(args, "f", &f);
-    map_set(ob->cattributes, STACK_DATA("_caller"), STACK_DATA(f));
+    SET_CATTR_SS(o, _caller, f);
 }
 
-static object* int_iconstruct(object* o, vector* args) {
+static object* integer_iconstruct(object* o, vector* args) {
     int value;
     parse_iargs(args, "i", &value);
     int* heap_value = safe_malloc(sizeof(int));
     *heap_value = value;
-    map_set(o->cattributes, STACK_DATA("value"), HEAP_DATA(heap_value));
+    SET_CATTR_SH(o, value, heap_value);
 }
 
-static object* int_construct(object* o, vector* args) {
+static object* integer_construct(object* o, vector* args) {
     object* value;
     if (!parse_args(args, "i", &value)) return NULL;
-    map_set(o->attributes, STACK_DATA("value"), HEAP_DATA(value));
+    SET_ATTR_SH(o, value, value);
 }
 
 static object* array_iconstruct(object* o, vector* args) {
     vector* v;
     parse_iargs(args, "v", &v);
-    map_set(o->cattributes, STACK_DATA("value"), HEAP_DATA(v));
+    SET_CATTR_SH(o, value, v);
 }
 
 static object* hashmap_iconstruct(object* o, vector* args) {
     map* m;
     parse_iargs(args, "m", &m);
-    map_set(o->cattributes, STACK_DATA("value"), HEAP_DATA(m));
+    SET_CATTR_SH(o, value, m);
 }
 
 /* Builtin types and objects */
@@ -176,11 +178,11 @@ void init_types(void) {
     LOADBUILTIN(array, "array");
     LOADBUILTIN(hashmap, "hashmap");
 
-    SETATTR(func, "_construct", func_construct);
-    SETATTR(func, "_iconstruct", func_iconstruct);
-    SETATTR(integer, "_iconstruct", int_iconstruct);
-    SETATTR(array, "_iconstruct", array_iconstruct);
-    SETATTR(hashmap, "_iconstruct", hashmap_iconstruct);
+    //SETATTR(func, _construct);
+    //SETATTR(func, _iconstruct);
+    //SETATTR(integer, _iconstruct);
+    //SETATTR(array, _iconstruct);
+    //SETATTR(hashmap, _iconstruct);
 
     BUILDOBJ(func);
     BUILDOBJ(integer);
@@ -191,6 +193,7 @@ void init_types(void) {
 
 /* Free builtin types. */
 void unload_types(void) {
+    // unfinished
     map_free(integer.attributes);
     map_free(func.attributes);
     map_free(base.attributes);
@@ -290,12 +293,8 @@ object* object_from(type* tp) {
 
 /* Call the specified object. Everything in args should be a Control Manual object. */
 object* object_call(object* o, vector* args) {
-    if (!type_derives(o->tp, &func)) {
-        THROW_STATIC("doesnt derive from func");
-        return NULL;
-    }
-    
-    obj_func func = object_get_cattr(o, "_caller");
+    obj_func func = CATTR(o, _caller);
+    if (!func) RETN(THROW_STATIC("object is not callable"))
     vector* v = args ? args : vector_new();
     object* res = func(o, v);
     if (!args) vector_free(v);
@@ -330,7 +329,7 @@ object* object_call_special(object* o, const char* name, vector* args) {
         return NULL;
     }
 
-    if (args->size) vector_insert(args, 0, NOFREE_DATA(o));
+    if (VECTOR_LENGTH(args)) vector_insert(args, 0, NOFREE_DATA(o));
     else vector_append(args, NOFREE_DATA(o));
     return object_call(attr, args);
 }
@@ -353,6 +352,7 @@ scope* scope_new(void) {
     BUILTIN(base);
     BUILTIN(integer);
     BUILTIN(func);
+    // unfinished
 }
 
 /* Create a new scope using an existing global map. */

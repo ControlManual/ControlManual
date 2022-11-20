@@ -2,18 +2,19 @@
 #include <core/vector.h>
 #include <core/util.h>
 #include <core/data.h>
+#include <string.h> // memcpy
 
 /* Create a new vector. */
 vector* vector_new(void) {
     vector* vec = safe_malloc(sizeof(vector));
-    vec->size = 0;
     vec->items = safe_calloc(0, data_sizeof());
+    vec->size = 0;
     return vec;
 }
 
 /* Get the data at the target index. */
 data* vector_get_data(vector* vec, size_t index) {
-    if (index >= vec->size) return NULL;
+    if (index >= VECTOR_LENGTH(vec)) return NULL;
     return vec->items[index];
 }
 
@@ -74,4 +75,11 @@ inline void* vector_get(vector* vec, size_t index) {
 inline void vector_set(vector* vec, size_t index, data* value) {
     data_free(vec->items[index]);
     vec->items[index] = value;
+}
+
+vector* vector_copy(const vector* vec) {
+    vector* new = safe_malloc(sizeof(vector));
+    memcpy(new->items, vec->items, sizeof(vec->items));
+    new->size = 0;
+    return new;
 }

@@ -35,7 +35,7 @@ data* map_get_data(map* m, const char* key) {
     uint64_t hash = hash_key(key);
     size_t index = (size_t) (hash & (uint64_t) (m->capacity - 1));
     while (m->items[index] != NULL) {
-        if (strcmp(key, data_content(m->items[index]->key)) == 0)
+        if (!strcmp(key, data_content(m->items[index]->key)))
             return m->items[index]->value;
         index++;
         if (index == m->capacity) {
@@ -69,7 +69,7 @@ static void set_entry(
     size_t index = (size_t) (hash & (uint64_t) (capacity - 1));
 
     while (items[index] != NULL) {
-        if (strcmp(data_content(key), data_content(items[index]->key)) == 0) {
+        if (!strcmp(data_content(key), data_content(items[index]->key))) {
             data_free(items[index]->value);
             items[index]->value = value;
             data_free(key);

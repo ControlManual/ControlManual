@@ -4,6 +4,7 @@
 #include <core/util.h> // safe_malloc
 #include <core/ui.h>
 #include <stdbool.h>
+#include <core/vector.h>
 
 list* error_stack = NULL;
 
@@ -25,10 +26,18 @@ inline error* error_pop(void) {
     return list_get(error_stack, error_stack->len - 1);
 }
 
-void throw(data* content, data* origin, error* cause) {
+void throw(
+    data* content,
+    data* origin,
+    error* cause,
+    data* expr,
+    vector* problems
+) {
     error* e = safe_malloc(sizeof(error));
     e->content = content;
     e->origin = origin;
     e->cause = cause;
+    e->expr = expr;
+    e->problems = problems;
     list_append(error_stack, HEAP_DATA(e));
 }

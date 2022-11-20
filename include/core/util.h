@@ -6,8 +6,8 @@
 #define _INVOKE(expr) expr
 #define _UNPAREN(args) _INVOKE(_REALLY_UNPAREN args)
 #define FUNCTYPE(name, ret, args) ret (*name)(_UNPAREN(args));
+#define RETN(expr) { expr; return NULL; }
 
-void error_no_memory();
 void* safe_malloc(size_t bytes);
 void* safe_realloc(void* ptr, size_t nbytes);
 void* safe_calloc(size_t num, size_t size);

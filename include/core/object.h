@@ -7,6 +7,31 @@
 #include <core/vector.h>
 #include <stdlib.h> // size_t
 
+/* All object attributes should use the following macros incase of an API change in the future. */
+
+#define SET_ATTR(o, k, v) map_set(o->attributes, k, v)
+#define SET_CATTR(o, k, v) map_set(o->cattributes, k, v)
+
+#define SET_ATTR_S_SH(o, k, v) SET_ATTR(o, STACK_DATA(k), HEAP_DATA(v))
+#define SET_ATTR_S_SS(o, k, v) SET_ATTR(o, STACK_DATA(k), STACK_DATA(v))
+#define SET_ATTR_SH(o, k, v) SET_ATTR_S_SH(o, #k, v)
+#define SET_ATTR_SS(o, k, v) SET_ATTR_S_SS(o, #k, v)
+#define SET_ATTR_HS(o, k, v) SET_ATTR(o, HEAP_DATA(k), STACK_DATA(v))
+#define SET_ATTR_HH(o, k, v) SET_ATTR(o, HEAP_DATA(k), HEAP_DATA(v))
+
+#define SET_CATTR_S_SH(o, k, v) SET_CATTR(o, STACK_DATA(k), HEAP_DATA(v))
+#define SET_CATTR_S_SS(o, k, v) SET_CATTR(o, STACK_DATA(k), STACK_DATA(v))
+#define SET_CATTR_SS(o, k, v) SET_CATTR_S_SS(o, #k, v)
+#define SET_CATTR_SH(o, k, v) SET_CATTR_S_SH(o, #k, v)
+#define SET_CATTR_HS(o, k, v) SET_CATTR(o, HEAP_DATA(k), STACK_DATA(v))
+#define SET_CATTR_HH(o, k, v) SET_CATTR(o, HEAP_DATA(k), HEAP_DATA(v))
+
+#define ATTR_S(o, k) map_get(o->attributes, k)
+#define ATTR(o, k) map_get(o->attributes, #k)
+
+#define CATTR_S(o, k) map_get(o->cattributes, k)
+#define CATTR(o, k) map_get(o->cattributes, #k)
+
 typedef struct STRUCT_SCOPE {
     map* global;
     map* local;

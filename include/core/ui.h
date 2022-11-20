@@ -16,4 +16,12 @@ typedef struct STRUCT_UI {
     ui_onearg print;
 } ui;
 
+ui* ui_new(
+    ui_error error,
+    ui_twoargs warn,
+    ui_twoargs log,
+    ui_twoargs notify,
+    ui_onearg print
+);
+
 #endif
