@@ -9,20 +9,20 @@
 
 #define PARSE_ERROR(content) RETN(parse_error(len, str, content, i))
 #define DUMPBUF() if (strlen(buf)) { \
-            vector_append(tokens, CUSTOM_DATA(btoken_new(NOTOK, strdup(buf), i), btoken_dealloc)); \
+            vector_append(tokens, CUSTOM_DATA(btoken_new(NOTOK, strdup(buf)), btoken_dealloc)); \
             buf = safe_malloc(len + 1); \
             strcpy(buf, ""); \
 }
         
 #define DUMP(tok) DUMPBUF(); \
-        vector_append(tokens, HEAP_DATA(btoken_new(tok, NULL, i))); \
+        vector_append(tokens, HEAP_DATA(btoken_new(tok, NULL))); \
         vector_remove(stack, VECTOR_LENGTH(stack) - 1); \
 
-#define PUSH(flags, tok) vector_append(stack, HEAP_DATA(int_convert(flags))); \
+#define PUSH(flags, tok) vector_append(stack, HEAP_DATA(stackitem_new(flags, i))); \
     DUMPBUF(); \
-    vector_append(tokens, HEAP_DATA(btoken_new(tok, NULL, i)));
+    vector_append(tokens, HEAP_DATA(btoken_new(tok, NULL)));
 #define PUSH_AND_DUMP(tok) DUMPBUF(); \
-    vector_append(tokens, CUSTOM_DATA(btoken_new(tok, char_to_string(c), i), btoken_dealloc));
+    vector_append(tokens, CUSTOM_DATA(btoken_new(tok, char_to_string(c)), btoken_dealloc));
 #define CHECK(flags) (current_flags & (flags)) == (flags)
 #define WRITE() strncat(buf, char_to_string(c), len);
 #define STACK_PUSH(item) vector_append( \
@@ -30,7 +30,12 @@
                     item \
                 )
 #define WRITE_BUFFER() strcat(buf, btok->content)
-#define CLEAR_BUFFER() free(buf); buf = safe_malloc(len + 1); strcpy(buf, "");
+#define CLEAR_BUFFER_NOWRITE() free(buf); buf = safe_malloc(len + 1); strcpy(buf, "");
+#define CLEAR_BUFFER() if (strlen(buf)) { \
+        STACK_PUSH(token_new(is_digit ? INTEGER_LITERAL : STRING_LITERAL, strdup(buf))); \
+        is_digit = false; \
+    } \
+    CLEAR_BUFFER_NOWRITE();
 
 typedef enum ENUM_BTOKEN_TYPE {
     NOTOK,
@@ -52,15 +57,32 @@ typedef enum ENUM_BTOKEN_TYPE {
 typedef struct STRUCT_BTOKEN {
     btoken_type type;
     char* content;
-    size_t index;
 } btoken;
 
-static btoken* btoken_new(btoken_type type, void* content, size_t index) {
+static btoken* btoken_new(btoken_type type, void* content) {
     btoken* t = safe_malloc(sizeof(btoken));
     t->content = content;
     t->type = type;
-    t->index = index;
     return t;
+}
+
+typedef struct STRUCT_STACKITEM {
+    unsigned int flags;
+    size_t index;
+} stackitem;
+
+static stackitem* stackitem_new(unsigned int flags, size_t index) {
+    stackitem* s = safe_malloc(sizeof(stackitem));
+    s->flags = flags;
+    s->index = index;
+    return s;
+}
+
+static callexpr* callexpr_new(vector* tokens, token* name) {
+    callexpr* c = safe_malloc(sizeof(callexpr));
+    c->tokens = tokens;
+    c->name = name;
+    return c;
 }
 
 typedef enum ENUM_BASICFLAG {
@@ -104,14 +126,14 @@ vector* tokenize_basic(const char* str) {
     char* buf = safe_malloc(len + 1);
     strcpy(buf, "");
     vector* stack = vector_new();
-    int current_flags;
+    unsigned int current_flags;
 
     for (int i = 0; i < len; i++) {
         char c = str[i];
         
-        void* item = vector_get(stack, VECTOR_LENGTH(stack) - 1);
-        current_flags = item ? *((unsigned int*) item) : 0;
-        
+        stackitem* item = vector_get(stack, VECTOR_LENGTH(stack) - 1);
+        current_flags = item ? item->flags : 0;
+
         switch (c) {
             case '"': {
                 if (CHECK(is_dquote)) {
@@ -200,7 +222,8 @@ vector* tokenize_basic(const char* str) {
 
             case '{': {
                 if (CHECK(ignore_toks) == 0) {
-                    PUSH(is_bracket, BRACKET_OPEN);
+                    PUSH(is_bracket | disallow_whitespace, BRACKET_OPEN);
+                    break;
                 }
                 WRITE();
                 break;
@@ -242,9 +265,23 @@ vector* tokenize_basic(const char* str) {
     }
     
     if (strlen(buf))
-        vector_append(tokens, CUSTOM_DATA(btoken_new(NOTOK, strdup(buf), len - 1), btoken_dealloc));
-    
-    if (VECTOR_LENGTH(stack) != 0) RETN(parse_error(len, str, "unterminated token", ((btoken*) vector_get(stack, VECTOR_LENGTH(stack) - 1))->index));
+        vector_append(
+            tokens,
+            CUSTOM_DATA(
+                btoken_new(NOTOK, strdup(buf)),
+                btoken_dealloc
+            )
+        );
+   
+
+    if (VECTOR_LENGTH(stack) != 0) RETN(
+            parse_error(
+                len,
+                str,
+                "unterminated token",
+                ((stackitem*) vector_get(stack, VECTOR_LENGTH(stack) - 1))->index
+            )
+        );
     vector_free(stack);
 
     return tokens;
@@ -271,6 +308,7 @@ vector* tokenize(const char* str) {
     size_t len = strlen(str);
     char* buf = safe_malloc(len + 1);
     strcpy(buf, "");
+    bool is_digit = false;
 
     for (int i = 0; i < VECTOR_LENGTH(basic); i++) {
         btoken* btok = vector_get(basic, i);
@@ -281,34 +319,71 @@ vector* tokenize(const char* str) {
                 STACK_PUSH(token_new(STRING_LITERAL, strdup(buf)));
                 CLEAR_BUFFER();
                 break;
-            
+
+            case BRACKET_CLOSE:
+                STACK_PUSH(token_new(REFERENCE, strdup(buf)));
+                CLEAR_BUFFER_NOWRITE();
+                break;
+                
+            case WHITESPACE:
+            case COMMA:
             case DSTRING_OPEN:
             case SSTRING_OPEN:
                 CLEAR_BUFFER();
                 break;
-            
-            case COMMA:
-                CLEAR_BUFFER();
+           
+            case DIGIT:
+                if (!strlen(buf) && !is_digit) is_digit = true;
+                WRITE_BUFFER();
                 break;
-            
+
+            case PAREN_OPEN:
             case ARRAY_OPEN:
+                CLEAR_BUFFER();
                 vector_append(token_stack, HEAP_DATA(vector_new()));
                 break;
             
+            case PAREN_CLOSE:
+                CLEAR_BUFFER();
+                vector* group = (vector*) data_content(vector_pop(token_stack, VECTOR_LENGTH(token_stack) - 1));
+                vector* tstack = vector_get(token_stack, VECTOR_LENGTH(token_stack) - 1);
+                token_type tp = ((token*)
+                    vector_get(
+                        tstack,
+                        VECTOR_LENGTH(tstack) - 1
+                    )
+                )->type == STRING_LITERAL ? CALL : GROUP_LITERAL;
+                
+                void* content;
+
+                if (tp == CALL) {
+                    content = callexpr_new(group, data_content(vector_pop(tstack, VECTOR_LENGTH(tstack) - 1)));
+                }  else {
+                    content = group;
+                }
+
+                STACK_PUSH(
+                    token_new(
+                        tp,
+                        content
+                    )
+                );
+                break;
+
             case ARRAY_CLOSE:
+                CLEAR_BUFFER();
                 data* array = vector_pop(token_stack, VECTOR_LENGTH(token_stack) - 1);
                 STACK_PUSH(token_new(ARRAY_LITERAL, data_content(array)));
                 break;
 
             case NOTOK:
+                is_digit = false;
                 WRITE_BUFFER();
-                break;
-
-            case WHITESPACE:
-                CLEAR_BUFFER();
                 break;
         }
     }
+
+    CLEAR_BUFFER();
 
     vector_free(basic);
     //vector_free(token_stack);
