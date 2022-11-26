@@ -35,5 +35,5 @@ Since this is still a heavy WIP, there isn't really any installation process. Ho
 ```bash
 $ git clone https://github.com/ZeroIntensity/controlmanual
 $ cd controlmanual
-$ gcc ./engine/src/*.c ./core/src/*.c -o out -I core/include -I engine/include -Werror
+$ gcc yourfile.c -I include src/core/*.c src/engine/*.c -o out -lm
 ```
