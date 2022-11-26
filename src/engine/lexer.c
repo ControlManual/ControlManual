@@ -6,6 +6,9 @@
 #include <string.h>
 #include <core/util.h> // safe_malloc, RETN
 #include <stdio.h> // sprintf
+#include <engine/util.h> // char_to_string
+#include <core/object.h>
+#include <core/error.h> // THROW_STATIC
 
 #define PARSE_ERROR(content) RETN(parse_error(len, str, content, i))
 #define DUMPBUF() if (strlen(buf)) { \
@@ -100,24 +103,17 @@ static inline void btoken_dealloc(btoken* tok) {
     free(tok);
 }
 
-static unsigned int* int_convert(unsigned int value) {
-    unsigned int* i = safe_malloc(sizeof(unsigned int));
-    *i = value;
-    return i;
-}
-
-static char* char_to_string(char c) {
-    char* str = safe_malloc(2);
-    str[0] = c;
-    str[1] = '\0';
-    return str;
-}
-
 static void parse_error(size_t len, const char* str, char* er_str, size_t i) {
     vector* v = vector_new();
     vector_append(v, HEAP_DATA(int_convert(i)));
 
-    throw(STACK_DATA(er_str), STACK_DATA("<parsing>"), NULL, NOFREE_DATA((char*) str), v);
+    throw(
+        STACK_DATA(er_str),
+        STACK_DATA("<parsing>"),
+        NULL,
+        NOFREE_DATA((char*) str),
+        v
+    );
 }
 
 vector* tokenize_basic(const char* str) {
@@ -279,7 +275,10 @@ vector* tokenize_basic(const char* str) {
                 len,
                 str,
                 "unterminated token",
-                ((stackitem*) vector_get(stack, VECTOR_LENGTH(stack) - 1))->index
+                ((stackitem*) vector_get(
+                    stack,
+                    VECTOR_LENGTH(stack) - 1
+                ))->index
             )
         );
     vector_free(stack);
@@ -345,8 +344,15 @@ vector* tokenize(const char* str) {
             
             case PAREN_CLOSE:
                 CLEAR_BUFFER();
-                vector* group = (vector*) data_content(vector_pop(token_stack, VECTOR_LENGTH(token_stack) - 1));
-                vector* tstack = vector_get(token_stack, VECTOR_LENGTH(token_stack) - 1);
+                vector* group = (vector*) data_content(
+                    vector_pop(
+                        token_stack, VECTOR_LENGTH(token_stack) - 1
+                    )
+                );
+                vector* tstack = vector_get(
+                    token_stack,
+                    VECTOR_LENGTH(token_stack) - 1
+                );
                 token_type tp = ((token*)
                     vector_get(
                         tstack,
@@ -357,7 +363,12 @@ vector* tokenize(const char* str) {
                 void* content;
 
                 if (tp == CALL) {
-                    content = callexpr_new(group, data_content(vector_pop(tstack, VECTOR_LENGTH(tstack) - 1)));
+                    content = callexpr_new(
+                        group,
+                        data_content(
+                            vector_pop(tstack, VECTOR_LENGTH(tstack) - 1)
+                        )
+                    );
                 }  else {
                     content = group;
                 }
@@ -372,7 +383,10 @@ vector* tokenize(const char* str) {
 
             case ARRAY_CLOSE:
                 CLEAR_BUFFER();
-                data* array = vector_pop(token_stack, VECTOR_LENGTH(token_stack) - 1);
+                data* array = vector_pop(
+                    token_stack,
+                    VECTOR_LENGTH(token_stack) - 1
+                );
                 STACK_PUSH(token_new(ARRAY_LITERAL, data_content(array)));
                 break;
 
@@ -390,4 +404,39 @@ vector* tokenize(const char* str) {
     free(buf);
 
     return tokens;
+}
+
+
+vector* params_from_tokens(vector* tokens, char** command_name) {
+    vector* params = vector_new();
+    if (VECTOR_LENGTH(tokens) == 0) return NULL;
+    data* name = vector_pop(tokens, 0);
+    token* t = data_content(name);
+    if (t->type != STRING_LITERAL) RETN(
+        THROW_STATIC("command name must be a string", "<parsing>")
+    )
+    *command_name = t->content;
+
+    data_free(name);
+
+    for (int i = 0; i < VECTOR_LENGTH(tokens); i++) {
+        token* t = vector_get(tokens, i);
+        switch (t->type) {
+            case STRING_LITERAL:
+                vector_append(
+                    params,
+                    HEAP_DATA(string_from(NOFREE_DATA(t->content)))
+                );
+                break;
+            case INTEGER_LITERAL:
+                // TODO: make sure integer limit isnt hit here
+                int value;
+                sscanf(t->content, "%d", &value);
+
+                vector_append(params, HEAP_DATA(integer_from(value)));
+                break;
+        }
+    }
+
+    return params;
 }

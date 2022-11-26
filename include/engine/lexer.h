@@ -24,4 +24,6 @@ typedef struct STRUCT_CALLEXPR {
     token* name;
 } callexpr;
 
+vector* params_from_tokens(vector* tokens, char** command_name);
+
 #endif

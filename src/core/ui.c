@@ -1,12 +1,24 @@
 #include <core/ui.h>
 #include <core/util.h> // safe_malloc
+#include <stdlib.h> // NULL
 
-ui* ui_new(
+ui* _UI = NULL;
+
+inline ui* ui_acquire() {
+    if (!_UI) FAIL("UI has not been registered");
+    return _UI;
+}
+
+void ui_register(
     ui_error error,
-    ui_twoargs warn,
+    ui_onearg warn,
     ui_twoargs log,
     ui_twoargs notify,
-    ui_onearg print
+    ui_onearg print,
+    ui_input input,
+    ui_none start,
+    ui_none end,
+    ui_help help
 ) {
     ui* u = safe_malloc(sizeof(ui));
     u->error = error;
@@ -14,5 +26,9 @@ ui* ui_new(
     u->log = log;
     u->notify = notify;
     u->print = print;
-    return u;
+    u->input = input;
+    u->start = start;
+    u->help = help;
+    u->end = end;
+    _UI = u;
 }

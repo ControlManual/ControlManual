@@ -38,29 +38,43 @@ typedef struct STRUCT_SCOPE {
 } scope;
 
 typedef struct STRUCT_TYPE type;
+typedef struct STRUCT_OBJECT object;
+
+typedef FUNCTYPE(obj_func, object*, (object*, vector*));
+typedef FUNCTYPE(obj_func_noret, void, (object*, vector*));
+typedef FUNCTYPE(obj_func_noargs, object*, (object*));
+
 
 struct STRUCT_TYPE {
-    data* name; // Should be data to char*
-    map* attributes; // Everything in this must be data to an object*
-    map* cattributes; // May hold any C value (including object*)
+    data* name;
+    map* attributes;
+    map* cattributes;
     type* parent;
+    obj_func_noret iconstruct;
+    obj_func_noret construct;
+    obj_func call;
+    obj_func_noargs to_string;
+    obj_func_noargs dealloc;
 };
 
-typedef struct STRUCT_OBJECT {
+struct STRUCT_OBJECT {
     type* tp;
     map* attributes;
     map* cattributes;
-} object;
-
-typedef FUNCTYPE(obj_func, object*, (object*, vector*));
+    void* value;
+};
 
 extern type base;
 extern type integer;
 extern type func;
+extern type string;
+extern type boolean;
 
 extern object* integer_object;
 extern object* func_object;
 extern object* boolean_object;
+extern object* string_object;
+extern object* base_object;
 
 void init_types(void);
 void unload_types(void);
@@ -71,16 +85,24 @@ object* object_from(type* tp);
 type* type_new(
     data* name,
     map* attributes,
-    type* parent
+    type* parent,
+    obj_func_noret iconstruct,
+    obj_func_noret construct,
+    obj_func call,
+    obj_func_noargs to_string,
+    obj_func_noargs dealloc
 );
 scope* scope_new(void);
 scope* scope_from(map* globals);
 void scope_free(scope* s, bool free_globals);
-object* object_call_special(object* o, const char* name, vector* args);
 bool type_derives(type* src, type* tp);
 object* object_internal_new(object* tp, vector* params);
 object* object_internal_newf(object* tp, size_t len, ...);
 object* object_call(object* o, vector* args);
 object* object_callf(object* o, size_t len, ...);
+object* string_from(data* str);
+object* integer_from(int value);
+
+bool parse_args(vector* params, const char* format, ...);
 
 #endif

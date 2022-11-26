@@ -8,8 +8,9 @@
 
 list* error_stack = NULL;
 
-void process_errors(ui* u, bool should_kill) {
-    if (!error_stack->len) return;
+bool process_errors(bool should_kill) {
+    ui* u = UI();
+    if (!error_stack->len) return false;
 
     for (int i = 0; i < error_stack->len; i++) {
         error* e = list_get(error_stack, i);
@@ -20,6 +21,7 @@ void process_errors(ui* u, bool should_kill) {
     }
 
     if (should_kill) exit(1);
+    return true;
 }
 
 inline error* error_pop(void) {
