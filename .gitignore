@@ -4,3 +4,4 @@ run
 vgcore.*
 esh.c
 test.c
+dll.c

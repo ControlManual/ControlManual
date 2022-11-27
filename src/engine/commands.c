@@ -3,15 +3,16 @@
 #include <core/map.h>
 #include <core/object.h>
 #include <core/ui.h>
-#define PARAM(name, desc, tp) param_new(STACK_DATA(#name), STACK_DATA(desc), &tp)
+
 #define COMMAND(name, desc, numargs, ...) map_set(commands, STACK_DATA(#name), HEAP_DATA(command_new( \
         name##_impl, \
         schema_new( \
             STACK_DATA(#name), \
             STACK_DATA(desc), \
-            (param*[]) { __VA_ARGS__ }, \
+            param_array_from((param*[]) { __VA_ARGS__ }), \
             numargs \
-        ) \
+        ), \
+        settings \
     )));
 
 
@@ -39,6 +40,7 @@ object* echo_impl(vector* params) {
 
     if (!parse_args(params, "s", &msg)) return NULL;
     u->print(msg);
+    return NULL;
 }
 
 object* exit_impl(vector* params) {
@@ -49,26 +51,64 @@ object* exit_impl(vector* params) {
     exit(status);
 }
 
-object* help_impl(vector* params) {
+object* help_impl(void) {
     ui* u = UI();
     u->help(commands);
+    return NULL;
 }
 
-param* param_new(data* name, data* description, type* tp) {
+param* param_new(
+    data* name,
+    data* description,
+    type* tp,
+    bool flag,
+    bool keyword,
+    bool required,
+    data* df
+) {
     param* p = safe_malloc(sizeof(param));
     p->name = name;
     p->description = description;
     p->tp = tp;
+    p->flag = flag;
+    p->keyword = keyword;
+    p->required = required;
+    p->df = df;
     return p;
 }
 
+param** param_array_from(param** array) {
+    size_t size = sizeof(array) / sizeof(array[0]);
+    param** a = safe_calloc(size, sizeof(param));
+
+    for (int i = 0; i < size; i++)
+        a[i] = array[i];
+    
+    return a;
+};
+
 void load_commands(void) {
     commands = map_new(1);
-    COMMAND(echo, "Print output", 1, PARAM("msg", "Content to print.", string));
-    COMMAND(exit, "Exit Control Manual.", 1, PARAM("status", "Status code to exit with.", integer))
+    COMMAND(
+        echo,
+        "Print output",
+        1,
+        PARAM("msg", "Content to print.", string)
+    );
+    COMMAND(
+        exit,
+        "Exit Control Manual.",
+        1,
+        PARAM(
+            "status",
+            "Status code to exit with.",
+            integer
+        )
+    )
+    
     COMMAND(help, "Display help menu.", 0);
 }
-#include <stdio.h>
+
 void iter_commands(map* m, commands_iter_func func) {
     for (int i = 0; i < m->capacity; i++) {
         pair* item = m->items[i];

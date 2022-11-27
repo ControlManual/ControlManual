@@ -2,6 +2,7 @@
 #define CM_LEXER_H
 
 #include <core/vector.h>
+#include <core/map.h>
 
 vector* tokenize(const char* str);
 
@@ -11,7 +12,8 @@ typedef enum ENUM_TOKEN_TYPE {
     REFERENCE,
     GROUP_LITERAL,
     INTEGER_LITERAL,
-    CALL
+    CALL,
+    FLAG
 } token_type;
 
 typedef struct STRUCT_TOKEN {
@@ -24,6 +26,12 @@ typedef struct STRUCT_CALLEXPR {
     token* name;
 } callexpr;
 
-vector* params_from_tokens(vector* tokens, char** command_name);
+void params_from_tokens(
+    vector* tokens,
+    char** command_name,
+    vector** params,
+    vector** flags,
+    map** keywords
+);
 
 #endif

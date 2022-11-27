@@ -32,6 +32,11 @@
 #define CATTR_S(o, k) map_get(o->cattributes, k)
 #define CATTR(o, k) map_get(o->cattributes, #k)
 
+#define OBJECT_STR(o) o->to_string(o)
+#define STRING_VALUE(o) o->value
+#define any NULL
+// ^^ for schemas (any is NULL)
+
 typedef struct STRUCT_SCOPE {
     map* global;
     map* local;
@@ -44,6 +49,9 @@ typedef FUNCTYPE(obj_func, object*, (object*, vector*));
 typedef FUNCTYPE(obj_func_noret, void, (object*, vector*));
 typedef FUNCTYPE(obj_func_noargs, object*, (object*));
 
+#define OBJ_FUNCTIONS_SIMPLE obj_func call; \
+    obj_func_noargs to_string; \
+    obj_func_noargs dealloc;
 
 struct STRUCT_TYPE {
     data* name;
@@ -52,9 +60,7 @@ struct STRUCT_TYPE {
     type* parent;
     obj_func_noret iconstruct;
     obj_func_noret construct;
-    obj_func call;
-    obj_func_noargs to_string;
-    obj_func_noargs dealloc;
+    OBJ_FUNCTIONS_SIMPLE;
 };
 
 struct STRUCT_OBJECT {
@@ -62,6 +68,7 @@ struct STRUCT_OBJECT {
     map* attributes;
     map* cattributes;
     void* value;
+    OBJ_FUNCTIONS_SIMPLE;
 };
 
 extern type base;
@@ -102,7 +109,9 @@ object* object_call(object* o, vector* args);
 object* object_callf(object* o, size_t len, ...);
 object* string_from(data* str);
 object* integer_from(int value);
+void* scope_get(scope* s, const char* name);
 
 bool parse_args(vector* params, const char* format, ...);
+bool ensure_derives(object* ob_a, type* tp);
 
 #endif

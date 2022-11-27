@@ -5,13 +5,17 @@
 #include <core/util.h>
 #include <core/object.h>
 #include <core/vector.h>
+#include <engine/context.h>
 #include <stdlib.h> // size_t
-
-typedef FUNCTYPE(command_caller, object*, (vector*));
+#include <stdbool.h>
 
 typedef struct STRUCT_PARAM {
     data* name;
     data* description;
+    bool flag;
+    bool keyword;
+    bool required;
+    data* df;
     type* tp;
 } param;
 
@@ -21,6 +25,8 @@ typedef struct STRUCT_SCHEMA {
     param** params;
     size_t params_len;
 } schema;
+
+typedef FUNCTYPE(command_caller, object*, (context*));
 
 typedef struct STRUCT_COMMAND {
     schema* sc;
@@ -35,5 +41,16 @@ extern map* commands;
 
 typedef FUNCTYPE(commands_iter_func, void, (schema*));
 void iter_commands(map* m, commands_iter_func func);
+
+param* param_new(
+    data* name,
+    data* description,
+    type* tp,
+    bool flag,
+    bool keyword,
+    bool required,
+    data* df
+);
+param** param_array_from(param** array);
 
 #endif

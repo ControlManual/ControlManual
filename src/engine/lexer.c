@@ -9,6 +9,7 @@
 #include <engine/util.h> // char_to_string
 #include <core/object.h>
 #include <core/error.h> // THROW_STATIC
+#include <core/map.h>
 
 #define PARSE_ERROR(content) RETN(parse_error(len, str, content, i))
 #define DUMPBUF() if (strlen(buf)) { \
@@ -35,7 +36,7 @@
 #define WRITE_BUFFER() strcat(buf, btok->content)
 #define CLEAR_BUFFER_NOWRITE() free(buf); buf = safe_malloc(len + 1); strcpy(buf, "");
 #define CLEAR_BUFFER() if (strlen(buf)) { \
-        STACK_PUSH(token_new(is_digit ? INTEGER_LITERAL : STRING_LITERAL, strdup(buf))); \
+        STACK_PUSH(token_new(is_digit ? INTEGER_LITERAL : buf[0] == '-' ? FLAG : STRING_LITERAL, strdup(buf))); \
         is_digit = false; \
     } \
     CLEAR_BUFFER_NOWRITE();
@@ -407,8 +408,13 @@ vector* tokenize(const char* str) {
 }
 
 
-vector* params_from_tokens(vector* tokens, char** command_name) {
-    vector* params = vector_new();
+void params_from_tokens(
+    vector* tokens,
+    char** command_name,
+    vector** params,
+    vector** flags,
+    map** keywords
+) {
     if (VECTOR_LENGTH(tokens) == 0) return NULL;
     data* name = vector_pop(tokens, 0);
     token* t = data_content(name);
@@ -428,6 +434,7 @@ vector* params_from_tokens(vector* tokens, char** command_name) {
                     HEAP_DATA(string_from(NOFREE_DATA(t->content)))
                 );
                 break;
+            
             case INTEGER_LITERAL:
                 // TODO: make sure integer limit isnt hit here
                 int value;
@@ -435,8 +442,10 @@ vector* params_from_tokens(vector* tokens, char** command_name) {
 
                 vector_append(params, HEAP_DATA(integer_from(value)));
                 break;
+            
+            case FLAG:
+                vector_append(flags, HEAP_DATA(string_from(NOFREE_DATA(t->content))));
+                break;
         }
     }
-
-    return params;
 }

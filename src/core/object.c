@@ -14,7 +14,7 @@
 #define BUILTIN(tp) map_set( \
     globals, \
     tp.name, \
-    CUSTOM_DATA(object_from(&tp), object_dealloc) \
+    CUSTOM_DATA(object_from(&tp), base_dealloc) \
 )
 #define VA_VEC(vecname, len) va_list args; \
     va_start(args, len); \
@@ -84,7 +84,7 @@
 
 /* Argument parsing */
 
-static bool ensure_derives(object* ob_a, type* tp) {
+bool ensure_derives(object* ob_a, type* tp) {
     if (!type_derives(ob_a->tp, tp)) {
         char* tp_name = data_content(tp->name);
         char* ob_name = data_content(ob_a->tp->name);
@@ -128,6 +128,11 @@ bool parse_args(vector* params, const char* format, ...) {
             case 's': ARGCON(string, char*);
             case 'B': ARG(boolean);
             case 'b': ARGCON_DRF(boolean, bool);
+            case 'a': {
+                object** ptr = va_arg(args, object**);
+                *ptr = obj;
+                break;
+            }
         };
         index++;
     }
@@ -168,7 +173,7 @@ object* base_call(object* o, vector* args) {
     THROW_HEAP(str, "<calling>");
 }
 
-inline object* base_dealloc(object* o) {
+object* base_dealloc(object* o) {
     map_free(o->attributes);
     map_free(o->cattributes);
     free(o);
@@ -178,7 +183,7 @@ object* base_to_string(object* o) {
     char* content = data_content(o->tp->name);
     char* str = safe_malloc(10 + strlen(content));
     sprintf(str, "[%s object]", content);
-    return string_from(HEAP_DATA(str));
+    return string_from(NOFREE_DATA(str));
 }
 
 static void base_construct(object* o, vector* args) {
@@ -209,7 +214,7 @@ static void string_construct(object* o, vector* args) {
         THROW_STATIC("not enough arguments", "<arguments>");
         return;
     }
-    o->value = o->tp->to_string(o);
+    o->value = o->to_string(o);
 }
 
 static object* string_to_string(object* o) {
@@ -306,6 +311,9 @@ static object* object_alloc(object* tp) {
     obj->attributes = map_copy(tp->attributes);
     obj->cattributes = map_copy(tp->cattributes);
     obj->tp = tp->tp;
+    obj->to_string = tp->tp->to_string;
+    obj->dealloc = tp->tp->dealloc;
+    obj->call = tp->tp->call;
     obj->value = NULL;
 
     return obj;
@@ -355,6 +363,10 @@ object* object_from(type* tp) {
     o->attributes = map_copy(tp->attributes);
     o->cattributes = map_copy(tp->cattributes);
     o->tp = tp;
+    o->to_string = base_to_string;
+    o->call = base_call;
+    o->dealloc = base_dealloc;
+
     return o;
 }
 
@@ -377,25 +389,23 @@ object* object_callf(object* o, size_t len, ...) {
     return obj;
 }
 
-static void object_dealloc(object* obj) {
-    map_free(obj->attributes);
-    map_free(obj->cattributes);
-    free(obj);
-}
-
 /* Scope functions */
 
 /* Create a new scope */
 scope* scope_new(void) {
     scope* s = safe_malloc(sizeof(scope));
-    map* globals = map_new(16);
-    s->global = globals;
-    s->local = map_new(8);
-
+    map* globals = map_new(1);
+    
     BUILTIN(base);
     BUILTIN(integer);
     BUILTIN(func);
-    // unfinished
+    BUILTIN(string);
+    BUILTIN(boolean);
+
+    s->global = globals;
+    s->local = globals;
+
+    return s;
 }
 
 /* Create a new scope using an existing global map. */
@@ -404,6 +414,12 @@ scope* scope_from(map* globals) {
     s->local = map_new(8);
     s->global = globals;
     return s;
+}
+
+void* scope_get(scope* s, const char* name) {
+    void* value = map_get(s->local, name);
+    if (!value) value = map_get(s->global, name);
+    return value;
 }
 
 /* Free a scope (and its objects). */

@@ -23,6 +23,7 @@ static uint64_t hash_key(const char* key) {
 data* map_get_data(map* m, const char* key) {
     uint64_t hash = hash_key(key);
     size_t index = (size_t) (hash & (uint64_t) (m->capacity - 1));
+
     while (m->items[index] != NULL) {
         if (!strcmp(key, data_content(m->items[index]->key)))
             return m->items[index]->value;
