@@ -64,14 +64,12 @@ void list_remove(list* l, size_t index) {
     if (l->first == node) l->first = node->next;
     if (l->last == node) l->last = node->last;
 
-    if (node->next) {
+    if (node->next)
         node->next->last = node->last;
-    }
 
-    if (node->last) {
+    if (node->last)
         node->last->next = node->next;
-    }
-
+    
     list_node_free(node);
     l->len--;
 }

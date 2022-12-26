@@ -13,7 +13,10 @@ typedef enum ENUM_TOKEN_TYPE {
     GROUP_LITERAL,
     INTEGER_LITERAL,
     CALL,
-    FLAG
+    SFLAG_NVAL,
+    KFLAG_NVAL,
+    SFLAG,
+    KFLAG
 } token_type;
 
 typedef struct STRUCT_TOKEN {
@@ -26,12 +29,17 @@ typedef struct STRUCT_CALLEXPR {
     token* name;
 } callexpr;
 
+typedef struct STRUCT_FLAGEXPR {
+    char* name;
+    data* value;
+} flagexpr;
+
 void params_from_tokens(
     vector* tokens,
     char** command_name,
-    vector** params,
-    vector** flags,
-    map** keywords
+    vector* params,
+    vector* flags,
+    map* keywords
 );
 
 #endif

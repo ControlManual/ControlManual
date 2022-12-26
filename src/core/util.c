@@ -5,7 +5,8 @@
 void fail(const char* message, int lineno, const char* file) {
     fprintf(
         stderr,
-        "(%s:%d) fatal control manual error: %s\n", 
+        "(%s:%d) fatal control manual error: %s\n",
+        // NOTE: lineno and file only show where fail was called, not where the problem occured
         file,
         lineno,
         message
@@ -34,6 +35,7 @@ void* safe_calloc(size_t num, size_t size) {
     return m;
 }
 
+/* Use an integer as a pointer by allocating it on the heap.*/
 int* int_convert(int value) {
     int* i = safe_malloc(sizeof(int));
     *i = value;

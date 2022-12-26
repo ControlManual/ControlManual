@@ -23,14 +23,12 @@
         vector_append(v, va_arg(args, data*)); \
     va_end(args)
 #define SETATTR(obj, name) map_set( \
-        obj.cattributes, \
         STACK_DATA(#name), \
         STACK_DATA(obj## name##) \
     )
 #define LOADBUILTIN(nm, str) nm.name = STACK_DATA(str); \
     nm.attributes = map_new(1); \
     nm.parent = &base; \
-    nm.cattributes = map_new(1); \
     nm.construct = nm##_construct; \
     nm.iconstruct = nm##_iconstruct; \
     nm.call = base_call; \
@@ -84,10 +82,11 @@
 
 /* Argument parsing */
 
-bool ensure_derives(object* ob_a, type* tp) {
-    if (!type_derives(ob_a->tp, tp)) {
+bool ensure_derives(object* ob, type* tp) {
+    if (!type_derives(ob->tp, tp)) {
         char* tp_name = data_content(tp->name);
-        char* ob_name = data_content(ob_a->tp->name);
+        puts(STRING_VALUE(ob->tp->to_string(ob)));
+        char* ob_name = data_content(ob->tp->name);
         size_t size = strlen(tp_name) + strlen(ob_name) + 16;
 
         char* str = safe_malloc(size);
@@ -158,6 +157,7 @@ void parse_iargs(vector* params, const char* format, ...) {
             case 'm': IARG(map*)
             case 'b': IARG_DRF(bool)
             case 's': IARG(char*)
+            case 'd': IARG(data*)
         }
     }
 
@@ -171,18 +171,19 @@ object* base_call(object* o, vector* args) {
     char* str = safe_malloc(16 + (strlen(content)));
     sprintf(str, "%s is not callable", content);
     THROW_HEAP(str, "<calling>");
+    return NULL;
 }
 
 object* base_dealloc(object* o) {
     map_free(o->attributes);
-    map_free(o->cattributes);
     free(o);
+    return NULL;
 }
 
 object* base_to_string(object* o) {
-    char* content = data_content(o->tp->name);
-    char* str = safe_malloc(10 + strlen(content));
-    sprintf(str, "[%s object]", content);
+    char* content = data_content(((type*) o->value)->name);
+    char* str = safe_malloc(8 + strlen(content));
+    sprintf(str, "[%s base]", content);
     return string_from(NOFREE_DATA(str));
 }
 
@@ -214,7 +215,7 @@ static void string_construct(object* o, vector* args) {
         THROW_STATIC("not enough arguments", "<arguments>");
         return;
     }
-    o->value = o->to_string(o);
+    o->value = o->tp->to_string(o);
 }
 
 static object* string_to_string(object* o) {
@@ -228,15 +229,15 @@ static object* boolean_to_string(object* o) {
 static object* integer_to_string(object* o) {
     char* str = safe_malloc(sizeof(char) * (int) log10(*((int*) o->value)));
     // ^^ i dont know what the hell the log10 thing does, i stole it from stack overflow
-    sprintf(str, "%d", o->value);
-    return string_from(HEAP_DATA(strdup(o->value)));
+    sprintf(str, "%d", *((int*) o->value));
+    return string_from(NOFREE_DATA(str));
 }
 
 static object* func_to_string(object* o) {
     return string_from(STACK_DATA("[function]"));
 }
 
-ICONSTRUCT_SIMPLE(string, char*, "s")
+ICONSTRUCT_SIMPLE(string, data*, "d")
 ICONSTRUCT_SIMPLE_CON(boolean, bool, "b")
 
 /* Builtin types and objects */
@@ -309,14 +310,31 @@ type* type_new(
 static object* object_alloc(object* tp) {
     object* obj = safe_malloc(sizeof(object));
     obj->attributes = map_copy(tp->attributes);
-    obj->cattributes = map_copy(tp->cattributes);
-    obj->tp = tp->tp;
-    obj->to_string = tp->tp->to_string;
-    obj->dealloc = tp->tp->dealloc;
-    obj->call = tp->tp->call;
+    obj->tp = tp->value;
     obj->value = NULL;
 
     return obj;
+}
+
+bool type_compare(type* a, type* b) {
+    if (a == b) return true; // if they are the exact same pointer, no need to check everything else
+    if (a->attributes != b->attributes) return false;
+    if (a->call != b->call) return false;
+    if (a->dealloc != b->dealloc) return false;
+    if (a->to_string != b->to_string) return false;
+    if (a->construct != b->construct) return false;
+    if (a->iconstruct != b->iconstruct) return false;
+    if (a->parent != b->parent) return false; // we can just compare the pointer here probably
+
+    return true;
+}
+
+bool object_compare(object* a, object* b) {
+    if (a == b) return true;
+    if (a->attributes != b->attributes) return false;
+    if (a->tp != b->tp) return false;
+    if (a->value != b->value) return false;
+    return true;
 }
 
 /*
@@ -326,7 +344,7 @@ Everything in params object should be a Control Manual object.
 */
 object* object_new(object* tp, vector* params) {
     object* obj = object_alloc(tp);
-    obj->tp->construct(obj, params);
+    ((type*) tp->value)->construct(obj, params);
 
     return obj;
 }
@@ -343,7 +361,7 @@ object* object_newf(object* tp, size_t len, ...) {
 /* Create a new object using C value opposed to a Control Manual object. */
 object* object_internal_new(object* tp, vector* params) {
     object* obj = object_alloc(tp);
-    obj->tp->iconstruct(obj, params);
+    ((type*) tp->value)->iconstruct(obj, params);
 
     return obj;
 }
@@ -361,24 +379,15 @@ object* object_internal_newf(object* tp, size_t len, ...) {
 object* object_from(type* tp) {
     object* o = safe_malloc(sizeof(object));
     o->attributes = map_copy(tp->attributes);
-    o->cattributes = map_copy(tp->cattributes);
-    o->tp = tp;
-    o->to_string = base_to_string;
-    o->call = base_call;
-    o->dealloc = base_dealloc;
+    o->tp = &base;
+    o->value = tp;
 
     return o;
 }
 
 /* Call the specified object. Everything in args should be a Control Manual object. */
 object* object_call(object* o, vector* args) {
-    obj_func func = CATTR(o, _caller);
-    if (!func) RETN(THROW_STATIC("object is not callable", "<calling>"))
-    vector* v = args ? args : vector_new();
-    object* res = func(o, v);
-    if (!args) vector_free(v);
-
-    return res;
+    FAIL("not supported as of now");
 }
 
 /* Call an object with a format string. len should match the number of arguments. */
@@ -442,5 +451,5 @@ object* func_from(obj_func function) {
 }
 
 object* string_from(data* value) {
-    return object_internal_newf(string_object, 1, value);
+    return object_internal_newf(string_object, 1, NOFREE_DATA(value));
 }

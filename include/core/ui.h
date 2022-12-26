@@ -25,7 +25,7 @@ typedef struct STRUCT_UI {
     ui_help help;
 } ui;
 
-extern ui* _UI;
+extern ui* cm_impl_ui_wrapper;
 
 void ui_register(
     ui_error error,

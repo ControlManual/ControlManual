@@ -2,10 +2,10 @@
 #define CM_UTIL_H
 
 #include <stdlib.h>
-#define _REALLY_UNPAREN(...) __VA_ARGS__
-#define _INVOKE(expr) expr
-#define _UNPAREN(args) _INVOKE(_REALLY_UNPAREN args)
-#define FUNCTYPE(name, ret, args) ret (*name)(_UNPAREN(args));
+#define REALLY_UNPAREN(...) __VA_ARGS__
+#define INVOKE(expr) expr
+#define UNPAREN(args) INVOKE(REALLY_UNPAREN args)
+#define FUNCTYPE(name, ret, args) ret (*name)(UNPAREN(args));
 #define RETN(expr) { expr; return NULL; }
 
 #if defined(__LINE__) && defined(__FILE__)

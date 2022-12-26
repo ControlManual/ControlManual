@@ -11,6 +11,10 @@ typedef struct STRUCT_VECTOR {
 } vector;
 
 #define VECTOR_LENGTH(v) v->size
+/* Unsafe way for getting a vector item. Only use if you are certain that the index is valid. */
+#define VECTOR_GET(v, i) data_content(v->items[i])
+/* Unsafe way for getting a vector item data object. Only use if you are certain that the index is valid. */
+#define VECTOR_GET_DATA(v, i) v->items[i]
 
 vector* vector_new(void);
 void vector_free(vector* vec);
@@ -22,5 +26,6 @@ extern void* vector_get(vector* vec, size_t index);
 extern void vector_set(vector* vec, size_t index, data* value);
 data* vector_get_data(vector* vec, size_t index);
 vector* vector_copy(const vector* vec);
+extern data* vector_get_data_new(vector* vec, size_t index);
 
 #endif

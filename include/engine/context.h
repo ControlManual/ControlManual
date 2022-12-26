@@ -14,5 +14,6 @@ typedef struct STRUCT_CONTEXT {
 
 context* context_new(command* co, vector* params, vector* flags, map* keywords);
 void context_free(context* c);
+bool parse_context(context* c, ...);
 
 #endif

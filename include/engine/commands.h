@@ -5,7 +5,6 @@
 #include <core/util.h>
 #include <core/object.h>
 #include <core/vector.h>
-#include <engine/context.h>
 #include <stdlib.h> // size_t
 #include <stdbool.h>
 
@@ -17,7 +16,10 @@ typedef struct STRUCT_PARAM {
     bool required;
     data* df;
     type* tp;
+    bool convert;
 } param;
+
+typedef struct STRUCT_CONTEXT context;
 
 typedef struct STRUCT_SCHEMA {
     data* name;
@@ -49,8 +51,30 @@ param* param_new(
     bool flag,
     bool keyword,
     bool required,
-    data* df
+    data* df,
+    bool convert
 );
-param** param_array_from(param** array);
+param** param_array_from(param** array, size_t size);
+
+extern type cm_any_wrapper;
+
+#define any cm_any_wrapper
+
+#define EXPR(value) #value
+#define RAW_FLAG(name, desc, convert) param_new(STACK_DATA(name), STACK_DATA(desc), NULL, true, true, false, NULL, convert)
+#define RAW_KWARG(name, desc, tp, default, convert) param_new(STACK_DATA(name), STACK_DATA(desc), &tp, false, true, false, STACK_DATA(EXPR(KWARG)), convert)
+#define RAW_ARG(name, desc, tp, convert) param_new(STACK_DATA(name), STACK_DATA(desc), &tp, false, false, true, NULL, convert)
+#define RAW_DEFAULT_ARG(name, desc, tp, expr, convert) param_new(STACK_DATA(name), STACK_DATA(desc), &tp, false, false, false, STACK_DATA(EXPR(expr)), convert)
+
+#define FLAG(name, desc) RAW_FLAG(name, desc, true)
+#define KWARG(name, desc, tp, default) RAW_KWARG(name, desc, tp, default, true)
+#define ARG(name, desc, tp) RAW_ARG(name, desc, tp, true)
+#define DEFAULT_ARG(name, desc, tp, expr) RAW_DEFAULT_ARG(name, desc, tp, expr, true)
+
+#define FLAG_NOCONV(name, desc) RAW_FLAG(name, desc, false)
+#define KWARG_NOCONV(name, desc, tp, default) RAW_KWARG(name, desc, tp, default, false)
+#define ARG_NOCONV(name, desc, tp) RAW_ARG(name, desc, tp, false)
+#define DEFAULT_ARG_NOCONV(name, desc, tp, expr) RAW_DEFAULT_ARG(name, desc, tp, expr, false)
+
 
 #endif

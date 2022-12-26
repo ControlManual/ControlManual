@@ -10,7 +10,6 @@
 /* All object attributes should use the following macros incase of an API change in the future. */
 
 #define SET_ATTR(o, k, v) map_set(o->attributes, k, v)
-#define SET_CATTR(o, k, v) map_set(o->cattributes, k, v)
 
 #define SET_ATTR_S_SH(o, k, v) SET_ATTR(o, STACK_DATA(k), HEAP_DATA(v))
 #define SET_ATTR_S_SS(o, k, v) SET_ATTR(o, STACK_DATA(k), STACK_DATA(v))
@@ -19,23 +18,11 @@
 #define SET_ATTR_HS(o, k, v) SET_ATTR(o, HEAP_DATA(k), STACK_DATA(v))
 #define SET_ATTR_HH(o, k, v) SET_ATTR(o, HEAP_DATA(k), HEAP_DATA(v))
 
-#define SET_CATTR_S_SH(o, k, v) SET_CATTR(o, STACK_DATA(k), HEAP_DATA(v))
-#define SET_CATTR_S_SS(o, k, v) SET_CATTR(o, STACK_DATA(k), STACK_DATA(v))
-#define SET_CATTR_SS(o, k, v) SET_CATTR_S_SS(o, #k, v)
-#define SET_CATTR_SH(o, k, v) SET_CATTR_S_SH(o, #k, v)
-#define SET_CATTR_HS(o, k, v) SET_CATTR(o, HEAP_DATA(k), STACK_DATA(v))
-#define SET_CATTR_HH(o, k, v) SET_CATTR(o, HEAP_DATA(k), HEAP_DATA(v))
-
 #define ATTR_S(o, k) map_get(o->attributes, k)
 #define ATTR(o, k) map_get(o->attributes, #k)
 
-#define CATTR_S(o, k) map_get(o->cattributes, k)
-#define CATTR(o, k) map_get(o->cattributes, #k)
-
-#define OBJECT_STR(o) o->to_string(o)
-#define STRING_VALUE(o) o->value
-#define any NULL
-// ^^ for schemas (any is NULL)
+#define OBJECT_STR(o) o->tp->to_string(o)
+#define STRING_VALUE(o) (char*) data_content(o->value)
 
 typedef struct STRUCT_SCOPE {
     map* global;
@@ -56,19 +43,18 @@ typedef FUNCTYPE(obj_func_noargs, object*, (object*));
 struct STRUCT_TYPE {
     data* name;
     map* attributes;
-    map* cattributes;
     type* parent;
     obj_func_noret iconstruct;
     obj_func_noret construct;
-    OBJ_FUNCTIONS_SIMPLE;
+    obj_func call;
+    obj_func_noargs to_string;
+    obj_func_noargs dealloc;
 };
 
 struct STRUCT_OBJECT {
     type* tp;
     map* attributes;
-    map* cattributes;
     void* value;
-    OBJ_FUNCTIONS_SIMPLE;
 };
 
 extern type base;
@@ -113,5 +99,7 @@ void* scope_get(scope* s, const char* name);
 
 bool parse_args(vector* params, const char* format, ...);
 bool ensure_derives(object* ob_a, type* tp);
+bool object_compare(object* a, object* b);
+bool type_compare(type* a, type* b);
 
 #endif

@@ -8,6 +8,10 @@
 
 list* error_stack = NULL;
 
+inline bool error_occurred() {
+    return error_stack->len ? true : false;
+}
+
 bool process_errors(bool should_kill) {
     ui* u = UI();
     if (!error_stack->len) return false;

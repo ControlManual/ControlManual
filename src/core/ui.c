@@ -1,12 +1,14 @@
 #include <core/ui.h>
 #include <core/util.h> // safe_malloc
 #include <stdlib.h> // NULL
+#undef UI
+#define UI cm_impl_ui_wrapper
 
-ui* _UI = NULL;
+ui* UI = NULL;
 
 inline ui* ui_acquire() {
-    if (!_UI) FAIL("UI has not been registered");
-    return _UI;
+    if (!UI) FAIL("UI has not been registered");
+    return UI;
 }
 
 void ui_register(
@@ -30,5 +32,5 @@ void ui_register(
     u->start = start;
     u->help = help;
     u->end = end;
-    _UI = u;
+    UI = u;
 }

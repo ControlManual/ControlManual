@@ -3,18 +3,21 @@
 #include <core/map.h>
 #include <core/object.h>
 #include <core/ui.h>
+#include <engine/context.h> // parse_context
 
 #define COMMAND(name, desc, numargs, ...) map_set(commands, STACK_DATA(#name), HEAP_DATA(command_new( \
         name##_impl, \
         schema_new( \
             STACK_DATA(#name), \
             STACK_DATA(desc), \
-            param_array_from((param*[]) { __VA_ARGS__ }), \
+            param_array_from((param*[]) { __VA_ARGS__ }, numargs), \
             numargs \
-        ), \
-        settings \
+        ) \
     )));
 
+
+/* Dummy type for representing "any" in schemas. Don't use as an actual type. */
+type cm_any_wrapper = {};
 
 map* commands;
 
@@ -33,25 +36,28 @@ command* command_new(command_caller caller, schema* sc) {
     c->sc = sc;
     return c;
 }
-
-object* echo_impl(vector* params) {
+#include <stdio.h>
+object* echo_impl(context* c) {
     ui* u = UI();
-    char* msg;
+    char* test = NULL;
+    object* msg;
+    if (!parse_context(c, &msg, &test)) return NULL;
+    printf("test: %s\n", test ? test : "<null>");
 
-    if (!parse_args(params, "s", &msg)) return NULL;
-    u->print(msg);
+    u->print(STRING_VALUE(OBJECT_STR(msg)));
+
     return NULL;
 }
 
-object* exit_impl(vector* params) {
+object* exit_impl(context* c) {
     ui* u = UI();
     int status = 0;
-    if (!parse_args(params, "|i", &status)) return NULL;
+    if (!parse_context(c, &status)) return NULL;
     if (u->end) u->end();
     exit(status);
 }
 
-object* help_impl(void) {
+object* help_impl(context* c) {
     ui* u = UI();
     u->help(commands);
     return NULL;
@@ -64,7 +70,8 @@ param* param_new(
     bool flag,
     bool keyword,
     bool required,
-    data* df
+    data* df,
+    bool convert
 ) {
     param* p = safe_malloc(sizeof(param));
     p->name = name;
@@ -74,14 +81,13 @@ param* param_new(
     p->keyword = keyword;
     p->required = required;
     p->df = df;
+    p->convert = convert;
     return p;
 }
+param** param_array_from(param** array, size_t size) {
+    param** a = safe_calloc(size, sizeof(param*));
 
-param** param_array_from(param** array) {
-    size_t size = sizeof(array) / sizeof(array[0]);
-    param** a = safe_calloc(size, sizeof(param));
-
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < size; i++) 
         a[i] = array[i];
     
     return a;
@@ -89,20 +95,22 @@ param** param_array_from(param** array) {
 
 void load_commands(void) {
     commands = map_new(1);
+
     COMMAND(
         echo,
         "Print output",
-        1,
-        PARAM("msg", "Content to print.", string)
+        3,
+        ARG("msg", "Content to print.", any),
     );
     COMMAND(
         exit,
         "Exit Control Manual.",
         1,
-        PARAM(
+        DEFAULT_ARG(
             "status",
             "Status code to exit with.",
-            integer
+            integer,
+            1
         )
     )
     

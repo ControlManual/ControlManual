@@ -39,4 +39,6 @@ void throw(
     vector* problems
 );
 
+extern bool error_occurred();
+
 #endif

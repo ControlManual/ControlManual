@@ -18,6 +18,12 @@ data* vector_get_data(vector* vec, size_t index) {
     return vec->items[index];
 }
 
+/* Get the data at the target index and build a new data object. */
+inline data* vector_get_data_new(vector* vec, size_t index) {
+    data* result = vector_get_data(vec, index);
+    return result ? data_from(result) : NULL;
+}
+
 /* Free a vector. */
 void vector_free(vector* vec) {
     for (int i = 0; i < vec->size; i++)
@@ -37,7 +43,10 @@ void vector_append(vector* vec, data* item) {
 void vector_insert(vector* vec, size_t index, data* item) {
     vec->size++;
     data** items = safe_realloc(vec->items, vec->size * sizeof(data*));
+    
     for (int i = vec->size - 1; i >= index; i--)
+        /* i dont really remember why i made this loop backwards, 
+        but its still O(N) so i guess its fine */
         if (i == index) items[i] = item;
         else items[i] = items[i - 1];
     
@@ -80,6 +89,7 @@ inline void vector_set(vector* vec, size_t index, data* value) {
 vector* vector_copy(const vector* vec) {
     vector* new = safe_malloc(sizeof(vector));
     memcpy(new->items, vec->items, sizeof(vec->items));
+    // i have no idea if thats how youre supposed to do this
     new->size = 0;
     return new;
 }

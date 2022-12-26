@@ -22,7 +22,7 @@ data* data_new(void* contents, bool should_free, data_dealloc dealloc) {
 }
 
 data* data_from(data* d) {
-    (*d->refs)++;
+    data_inc(d);
     data* new_d = safe_malloc(sizeof(data));
     new_d->contents = d->contents;
     new_d->should_free = d->should_free;
@@ -32,8 +32,8 @@ data* data_from(data* d) {
 }
 
 inline void data_free(data* d) {
-    (*d->refs)--;
-    if (!(*d->refs)) {
+    data_dec(d);
+    if (!(*d->refs)) { // only free underlying data if there arent any more references to it
         if (d->should_free)
             (d->dealloc ? d->dealloc : free)(d->contents);
         
@@ -57,4 +57,14 @@ inline void* data_content_maybe(data* d) {
 /* Size of data object. */
 inline size_t data_sizeof(void) {
     return sizeof(data);
+}
+
+/* Increment reference count on the data. */
+inline void data_inc(data* d) {
+    ++(*d->refs);
+}
+
+/* Decrement reference count on the data. */
+inline void data_dec(data* d) {
+    --(*d->refs);
 }

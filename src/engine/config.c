@@ -113,7 +113,7 @@ config* load_config(void) {
 
         if (!found) {
             char* tp = safe_malloc(28 + strlen(key->content));
-            sprintf(tp, "invalid configuration key: %s", key->content);
+            sprintf(tp, "invalid configuration key: %s", (char*) key->content);
             u->warn(tp);
             free(tp);
         }

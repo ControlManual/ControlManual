@@ -23,4 +23,7 @@ extern void* data_content(data* d);
 extern void* data_content_maybe(data* d);
 extern size_t data_sizeof(void);
 
+extern void data_inc(data* d);
+extern void data_dec(data* d);
+
 #endif

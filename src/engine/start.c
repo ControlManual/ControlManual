@@ -6,6 +6,9 @@
 #include <engine/commands.h>
 #include <core/object.h>
 #include <stdio.h>
+#include <engine/context.h>
+#include <engine/start.h>
+
 #define PROCESS() if (process_errors(false)) { continue; }
 #define PRINT(o) { \
     object* str = OBJECT_STR(o); \
@@ -13,7 +16,8 @@
     u->print(STRING_VALUE(str)); \
 }
 
-scope* global;
+scope* GLOBAL;
+char* PATH;
 
 void start() {
     ERRSTACK_INIT;
@@ -22,7 +26,8 @@ void start() {
     init_types();
     load_commands();
 
-    global = scope_new();
+    GLOBAL = scope_new();
+    PATH = "/home/zero";
     u->start();
 
     while (true) {
@@ -34,14 +39,14 @@ void start() {
         vector* flags = vector_new();
         map* keywords = map_new(2);
         
-        params_from_tokens(tokens, &command_name, &params, &flags, &keywords);
+        params_from_tokens(tokens, &command_name, params, flags, keywords);
         PROCESS();
         if (!params) continue;
 
         command* c = map_get(commands, command_name);
 
         if (!c) {
-            object* var = scope_get(global, command_name);
+            object* var = scope_get(GLOBAL, command_name);
             if (var) {
                 PRINT(var);
                 continue;
