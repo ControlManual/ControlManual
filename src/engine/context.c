@@ -42,6 +42,7 @@ void context_free(context* c) {
 bool parse_context(context* c, ...) {
     va_list args;
     va_start(args, c);
+    size_t current_pindex = 0;
     
     for (int i = 0; i < c->co->sc->params_len; i++) {
         param* p = c->co->sc->params[i];
@@ -55,13 +56,19 @@ bool parse_context(context* c, ...) {
             for (int x = 0; x < VECTOR_LENGTH(c->flags); x++) {
                 object* ob = VECTOR_GET(c->flags, x);
                 if (!strcmp(STRING_VALUE(ob), name)) found = true;
+                if (!strcmp(STRING_VALUE(ob), data_content(p->shorthand))) found = true;
             }
             
             *ptr = found;
             continue;
         } else {
-            o = vector_get(c->params, i);
+            o = vector_get(c->params, current_pindex);
+            if (o) ++current_pindex;
             if (!o) o = map_get(c->keywords, name);
+            if (!o) {
+                char* shorthand = data_content_maybe(p->shorthand);
+                if (shorthand) o = map_get(c->keywords, shorthand);
+            }
         }
         
         if (!o && p->required) { 

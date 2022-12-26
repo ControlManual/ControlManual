@@ -8,5 +8,6 @@ typedef struct STRUCT_CONFIG {
 } config;
 
 config* load_config(void);
+extern char* cm_dir;
 
 #endif

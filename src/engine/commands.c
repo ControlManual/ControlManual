@@ -4,14 +4,22 @@
 #include <core/object.h>
 #include <core/ui.h>
 #include <engine/context.h> // parse_context
+#include <engine/util.h>
+#include <stdio.h> // sprintf
+#include <engine/config.h>
+#include <string.h> // strlen
 
-#define COMMAND(name, desc, numargs, ...) map_set(commands, STACK_DATA(#name), HEAP_DATA(command_new( \
+#ifdef COMMAND
+#undef COMMAND
+#endif
+
+#define COMMAND(name, desc, ...) map_set(commands, STACK_DATA(#name), HEAP_DATA(command_new( \
         name##_impl, \
         schema_new( \
             STACK_DATA(#name), \
             STACK_DATA(desc), \
-            param_array_from((param*[]) { __VA_ARGS__ }, numargs), \
-            numargs \
+            param_array_from((param*[]) { __VA_ARGS__ }, NUMARGS(__VA_ARGS__)), \
+            NUMARGS(__VA_ARGS__) \
         ) \
     )));
 
@@ -20,6 +28,13 @@
 type cm_any_wrapper = {};
 
 map* commands;
+
+paramcontext* paramcontext_new(param** params, size_t len) {
+    paramcontext* pc = safe_malloc(sizeof(paramcontext));
+    pc->len = len;
+    pc->params = params;
+    return pc;
+}
 
 schema* schema_new(data* name, data* description, param** params, size_t params_len) {
     schema* s = safe_malloc(sizeof(schema));
@@ -36,14 +51,11 @@ command* command_new(command_caller caller, schema* sc) {
     c->sc = sc;
     return c;
 }
-#include <stdio.h>
+
 object* echo_impl(context* c) {
     ui* u = UI();
-    char* test = NULL;
     object* msg;
-    if (!parse_context(c, &msg, &test)) return NULL;
-    printf("test: %s\n", test ? test : "<null>");
-
+    if (!parse_context(c, &msg)) return NULL;
     u->print(STRING_VALUE(OBJECT_STR(msg)));
 
     return NULL;
@@ -71,7 +83,8 @@ param* param_new(
     bool keyword,
     bool required,
     data* df,
-    bool convert
+    bool convert,
+    data* shorthand
 ) {
     param* p = safe_malloc(sizeof(param));
     p->name = name;
@@ -82,6 +95,7 @@ param* param_new(
     p->required = required;
     p->df = df;
     p->convert = convert;
+    p->shorthand = shorthand;
     return p;
 }
 param** param_array_from(param** array, size_t size) {
@@ -93,28 +107,64 @@ param** param_array_from(param** array, size_t size) {
     return a;
 };
 
+void command_loader(char* path) {
+    if (is_file(path)) {
+        library l = OPEN_LIB(path);
+        if (!l) {
+            char* str = safe_malloc(strlen(path) + 28);
+            sprintf(str, "couldn't load library at '%s'", path);
+            THROW_HEAP(str, "<loading>");
+            return;
+        }
+
+        param_construct_func pcf = GET_SYMBOL(l, "cm_param_construct");
+        paramcontext* command_params = pcf();
+        char* name = ((get_str_func) GET_SYMBOL(l, "cm_command_name"))();
+        char* desc = ((get_str_func) GET_SYMBOL(l, "cm_command_description"))();
+        command_caller_func command_impl = GET_SYMBOL(l, "cm_command_caller");
+        
+        map_set(
+            commands,
+            NOFREE_DATA(name),
+            HEAP_DATA(
+                command_new(command_impl, schema_new(
+                    NOFREE_DATA(name),
+                    NOFREE_DATA(desc),
+                    command_params->params,
+                    command_params->len
+                ))
+            )
+        );
+
+        free(command_params);
+    }
+}
+
 void load_commands(void) {
     commands = map_new(1);
 
     COMMAND(
         echo,
-        "Print output",
-        3,
+        "Print output.",
         ARG("msg", "Content to print.", any),
     );
+
     COMMAND(
         exit,
         "Exit Control Manual.",
-        1,
         DEFAULT_ARG(
             "status",
             "Status code to exit with.",
             integer,
-            1
+            0
         )
     )
     
-    COMMAND(help, "Display help menu.", 0);
+    COMMAND(help, "Display help menu.");
+
+    char* p = cat_path(cm_dir, "commands");
+    if (!exists(p)) create_dir(p);
+    else iterate_dir(p, command_loader);
 }
 
 void iter_commands(map* m, commands_iter_func func) {

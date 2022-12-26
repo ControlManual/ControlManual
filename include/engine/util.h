@@ -1,5 +1,6 @@
 #ifndef CM_ENGINE_UTIL_H
 #define CM_ENGINE_UTIL_H
+#include <engine/commands.h>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #define PLATFORM_WIN
@@ -13,13 +14,39 @@
 #error "this platform is not supported"
 #endif
 
-char* char_to_string(char c);
+#include <stdbool.h>
 
-#define COMMAND_NAME(value) const char* cm_command_name = #value;
-#define COMMAND_DESCRIPTION(value) const char* cm_command_description = value;
-#define COMMAND_PARAMS(...) param** cm_param_construct(void) { \
-    return param_array_from((param*[]) { __VA_ARGS__ }); \
+char* char_to_string(char c);
+bool exists(char* path);
+char* home(void);
+char* cat_path(char* a, char* b);
+void create_dir(char* path);
+char* read_file(char* path);
+
+#define COMMAND_NAME(value) char* cm_command_name(void) { return #value; }
+#define COMMAND_DESCRIPTION(value) char* cm_command_description(void) { return value; }
+#define COMMAND_PARAMS(...) paramcontext* cm_param_construct(void) { \
+    return paramcontext_new(param_array_from((param*[]) { __VA_ARGS__ }, NUMARGS(__VA_ARGS__)), NUMARGS(__VA_ARGS__)); \
 }
-#define COMMAND void cm_command_caller
+#define COMMAND object* cm_command_caller
+
+#ifdef PLATFORM_POSIX
+#include <dlfcn.h>
+#include <unistd.h>
+#include <sys/types.h>
+#define OPEN_LIB(path) dlopen(path, RTLD_LAZY)
+#define GET_SYMBOL(handle, sym) dlsym(handle, sym)
+#define CLOSE_LIB(handle) dlclose(handle)
+typedef void* library;
+#else
+#include <windows.h>
+#define OPEN_LIB(path) LoadLibrary(path)
+#define GET_SYMBOL(handle, sym) GetProcAddress(handle, sym)
+#define CLOSE_LIB(handle) FreeLibrary(handle)
+typedef HINSTANCE library;
+#endif
+
+bool iterate_dir(char* path, dir_iter_func func);
+bool is_file(char* path);
 
 #endif

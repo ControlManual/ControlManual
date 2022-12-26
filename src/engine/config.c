@@ -1,4 +1,4 @@
-#include <engine/util.h> // PLATFORM_POSIX
+#include <engine/util.h>
 #include <core/util.h> // FAIL, safe_malloc
 #include <string.h> //strlen
 #include <stdio.h>
@@ -10,72 +10,12 @@
 #include <core/ui.h>
 #include <engine/config.h>
 
-#ifdef PLATFORM_POSIX
-#include <pwd.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#define SEPERATOR '/'
-#else
-#include <windows.h>
-#include <io.h>
-#define F_OK 0
-#define access _access
-#define SEPERATOR '\\'
-#endif
-
-bool exists(char* path) {
-    return access(path, F_OK) == 0;
-}
-
-char* home(void) {
-#ifdef PLATFORM_POSIX
-    struct passwd* p = getpwuid(getuid());
-    if (p) return p->pw_dir;
-    char* d = getenv("HOME");
-    if (!d) FAIL("failed to acquire home directory");
-    return d;
-#else
-    return getenv("USERPROFILE");
-#endif
-}
-
-char* cat_path(char* a, char* b) {
-    char* result = malloc(strlen(a) + strlen(b) + 2);
-    sprintf(result, "%s%c%s", a, SEPERATOR, b);
-    return result;
-}
-
-void create_dir(char* path) {
-#ifdef PLATFORM_POSIX
-    if (mkdir(path, 0777) == -1) FAIL(
-        "failed to create control manual directory"
-    );
-#else
-    if (!CreateDirectory(path, NULL)) FAIL(
-        "failed to create control manual directory"
-    ); 
-#endif
-}
-
-char* read_file(char* path) {
-    FILE* f = fopen(path, "rb");
-    fseek(f, 0, SEEK_END);
-    long fsize = ftell(f);
-    fseek(f, 0, SEEK_SET);
-
-    char* string = safe_malloc(fsize + 1);
-    fread(string, fsize, 1, f);
-    fclose(f);
-
-    string[fsize] = 0;
-    return string;
-}
+char* cm_dir;
 
 config* load_config(void) {
-    char* dir = cat_path(home(), ".controlmanual");
-    if (!exists(dir)) create_dir(dir);
-    char* file = cat_path(dir, ".cmconfig");
+    cm_dir = cat_path(home(), ".controlmanual");
+    if (!exists(cm_dir)) create_dir(cm_dir);
+    char* file = cat_path(cm_dir, ".cmconfig");
 
     if (!exists(file)) {
         fopen(file, "w");
@@ -123,7 +63,6 @@ config* load_config(void) {
         strcpy(buf, "");
     }
     
-    free(dir);
     free(file);
     free(content);
 }

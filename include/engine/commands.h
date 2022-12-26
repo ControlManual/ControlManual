@@ -8,6 +8,8 @@
 #include <stdlib.h> // size_t
 #include <stdbool.h>
 
+#define NUMARGS(...)  (sizeof((param*[]) { __VA_ARGS__ }) / sizeof(param*))
+
 typedef struct STRUCT_PARAM {
     data* name;
     data* description;
@@ -17,6 +19,7 @@ typedef struct STRUCT_PARAM {
     data* df;
     type* tp;
     bool convert;
+    data* shorthand;
 } param;
 
 typedef struct STRUCT_CONTEXT context;
@@ -52,7 +55,8 @@ param* param_new(
     bool keyword,
     bool required,
     data* df,
-    bool convert
+    bool convert,
+    data* shorthand
 );
 param** param_array_from(param** array, size_t size);
 
@@ -61,20 +65,31 @@ extern type cm_any_wrapper;
 #define any cm_any_wrapper
 
 #define EXPR(value) #value
-#define RAW_FLAG(name, desc, convert) param_new(STACK_DATA(name), STACK_DATA(desc), NULL, true, true, false, NULL, convert)
-#define RAW_KWARG(name, desc, tp, default, convert) param_new(STACK_DATA(name), STACK_DATA(desc), &tp, false, true, false, STACK_DATA(EXPR(KWARG)), convert)
-#define RAW_ARG(name, desc, tp, convert) param_new(STACK_DATA(name), STACK_DATA(desc), &tp, false, false, true, NULL, convert)
-#define RAW_DEFAULT_ARG(name, desc, tp, expr, convert) param_new(STACK_DATA(name), STACK_DATA(desc), &tp, false, false, false, STACK_DATA(EXPR(expr)), convert)
+#define RAW_FLAG(name, shorthand, desc, convert) param_new(STACK_DATA(name), STACK_DATA(desc), NULL, true, true, false, NULL, convert, STACK_DATA(shorthand))
+#define RAW_KWARG(name, shorthand, desc, tp, default, convert) param_new(STACK_DATA(name), STACK_DATA(desc), &tp, false, true, false, STACK_DATA(EXPR(default)), convert, STACK_DATA(shorthand))
+#define RAW_ARG(name, desc, tp, convert) param_new(STACK_DATA(name), STACK_DATA(desc), &tp, false, false, true, NULL, convert, NULL)
+#define RAW_DEFAULT_ARG(name, desc, tp, expr, convert) param_new(STACK_DATA(name), STACK_DATA(desc), &tp, false, false, false, STACK_DATA(EXPR(expr)), convert, NULL)
 
-#define FLAG(name, desc) RAW_FLAG(name, desc, true)
-#define KWARG(name, desc, tp, default) RAW_KWARG(name, desc, tp, default, true)
+#define FLAG(name, shorthand, desc) RAW_FLAG(name, shorthand, desc, true)
+#define KWARG(name, shorthand, desc, tp, default) RAW_KWARG(name, shorthand, desc, tp, default, true)
 #define ARG(name, desc, tp) RAW_ARG(name, desc, tp, true)
 #define DEFAULT_ARG(name, desc, tp, expr) RAW_DEFAULT_ARG(name, desc, tp, expr, true)
 
-#define FLAG_NOCONV(name, desc) RAW_FLAG(name, desc, false)
-#define KWARG_NOCONV(name, desc, tp, default) RAW_KWARG(name, desc, tp, default, false)
+#define FLAG_NOCONV(name, shorthand, desc) RAW_FLAG(name, shorthand, desc, false)
+#define KWARG_NOCONV(name, shorthand, desc, tp, default) RAW_KWARG(name, shorthand, desc, tp, default, false)
 #define ARG_NOCONV(name, desc, tp) RAW_ARG(name, desc, tp, false)
 #define DEFAULT_ARG_NOCONV(name, desc, tp, expr) RAW_DEFAULT_ARG(name, desc, tp, expr, false)
 
+typedef struct STRUCT_PARAMCONTEXT {
+    param** params;
+    size_t len;
+} paramcontext;
+
+paramcontext* paramcontext_new(param** params, size_t len);
+
+typedef FUNCTYPE(dir_iter_func, void, (char*));
+typedef FUNCTYPE(param_construct_func, paramcontext*, ());
+typedef FUNCTYPE(command_caller_func, object*, (context*));
+typedef FUNCTYPE(get_str_func, char*, ());
 
 #endif

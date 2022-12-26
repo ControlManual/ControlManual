@@ -338,6 +338,7 @@ vector* tokenize(const char* str) {
     bool is_digit = false;
     token_type flag_push_mark = 0;
     char* flag_push_name = NULL;
+    int removed_index = -1;
 
     for (int i = 0; i < VECTOR_LENGTH(basic); i++) {
         btoken* btok = vector_get(basic, i);
@@ -458,10 +459,13 @@ vector* tokenize(const char* str) {
                         next->index
                     ));
 
-                if (next->type == FLAGC && last->type == FLAGC) RETN(
-                    // we cant have 3+ minuses in flags (---example)
-                    parse_error(VECTOR_LENGTH(basic), str, "unexpected '-'", next->index)
-                );
+                
+                if (next->type == FLAGC && last->type == FLAGC) {
+                    if ((btok->index - 1) != removed_index) RETN(
+                        // we cant have 3+ minuses in flags (---example)
+                        parse_error(VECTOR_LENGTH(basic), str, "unexpected '-'", next->index)
+                    )
+                };
 
                 if (next->type == FLAGC) break;
 
@@ -471,12 +475,14 @@ vector* tokenize(const char* str) {
                 while (true) {
                     btoken* b = vector_get(basic, ++offset_value);
                     if (!b) break;
+                    if (b->type == FLAGC) break; // we dont want to use the next flag as a value
                     if (b->type != WHITESPACE) {
                        value = true;
                        break;
                     }
                 };
 
+                removed_index = next->index;
                 if (!value) {
                     STACK_PUSH(token_new(last && last->type == FLAGC ? KFLAG_NVAL : SFLAG_NVAL, strdup(next->content)));
                     vector_remove(basic, i + 1);

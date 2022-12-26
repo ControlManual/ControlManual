@@ -25,6 +25,7 @@ void start() {
     load_config();
     init_types();
     load_commands();
+    process_errors(false);
 
     GLOBAL = scope_new();
     PATH = "/home/zero";

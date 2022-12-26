@@ -15,5 +15,6 @@
 #include <engine/lexer.h>
 #include <engine/start.h>
 #include <engine/util.h>
+#include <engine/context.h>
 
 #endif
