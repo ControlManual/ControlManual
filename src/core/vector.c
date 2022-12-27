@@ -88,8 +88,12 @@ inline void vector_set(vector* vec, size_t index, data* value) {
 
 vector* vector_copy(const vector* vec) {
     vector* new = safe_malloc(sizeof(vector));
-    memcpy(new->items, vec->items, sizeof(vec->items));
-    // i have no idea if thats how youre supposed to do this
-    new->size = 0;
+    new->items = safe_calloc(VECTOR_LENGTH(vec), data_sizeof());
+    new->size = vec->size;
+
+    for (int i = 0; i < VECTOR_LENGTH(vec); i++) {
+        new->items[i] = data_from(VECTOR_GET_DATA(new, i));
+    }
+
     return new;
 }

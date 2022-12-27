@@ -10,6 +10,7 @@
 #include <core/object.h>
 #include <core/error.h> // THROW_STATIC
 #include <core/map.h>
+#include <engine/start.h>
 
 #define PARSE_ERROR(content) RETN(parse_error(len, str, content, i))
 #define DUMPBUF() if (strlen(buf)) { \
@@ -354,7 +355,8 @@ vector* tokenize(const char* str) {
                 STACK_PUSH(token_new(REFERENCE, strdup(buf)));
                 CLEAR_BUFFER_NOWRITE();
                 break;
-                
+            
+            case BRACKET_OPEN:
             case WHITESPACE:
             case COMMA:
             case DSTRING_OPEN:
@@ -532,6 +534,40 @@ void params_from_tokens(
         token* t = vector_get(tokens, i);
 
         switch (t->type) {
+            case REFERENCE: {
+                char* token;
+                object* last = NULL;
+
+                while ((token = strsep(&t->content, "."))) {
+                    if (!last) {
+                        last = scope_get(GLOBAL, token);
+                        if (!last) {
+                            char* str = safe_malloc(19 + strlen(token));
+                            sprintf(str, "unknown variable: %s", token);
+                            THROW_HEAP(str, "<lookup>");
+                            return;
+                        }
+                    }
+                    else {
+                        last = map_get(last->attributes, token);
+                        if (!last) {
+                            char* str = safe_malloc(15 + strlen(token));
+                            sprintf(str, "no attribute: %s", token);
+                            THROW_HEAP(str, "<lookup>");
+                            return;
+                        }
+                    }
+                }
+
+                vector_append(params, NOFREE_DATA(last));
+                break;
+            }
+
+            case GROUP_LITERAL:
+            case ARRAY_LITERAL:
+                vector_append(params, HEAP_DATA(t->content));
+                break;
+
             case STRING_LITERAL:
                 vector_append(
                     params,

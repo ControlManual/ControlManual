@@ -33,6 +33,8 @@
     nm.iconstruct = nm##_iconstruct; \
     nm.call = base_call; \
     nm.to_string = nm##_to_string; \
+    nm.iter = nm##_iter; \
+    nm.dealloc = nm##_dealloc;\
     BUILDOBJ(nm);
 #define IARG(tp) { \
                 tp* ptr = va_arg(args, tp*); \
@@ -79,6 +81,7 @@
     parse_iargs(args, fmtc, &value); \
     o->value = int_convert((int) value); \
 }
+#define ITER_SIMPLE(nm) static object* nm##_iter(object* o) { THROW_STATIC("object is not iterable", "<iterating>"); return NULL; }
 
 /* Argument parsing */
 
@@ -174,10 +177,9 @@ object* base_call(object* o, vector* args) {
     return NULL;
 }
 
-object* base_dealloc(object* o) {
+void base_dealloc(object* o) {
     map_free(o->attributes);
     free(o);
-    return NULL;
 }
 
 object* base_to_string(object* o) {
@@ -196,12 +198,62 @@ static void base_iconstruct(object* o, vector* args) {
 }
 
 
+typedef struct STRUCT_FUNC_DATA {
+    char** commands;
+    size_t len;
+    obj_func caller;
+} func_data;
+
+typedef struct STRUCT_ITER {
+    vector* values;
+    size_t pos;
+} iter;
+
 static object* func_call(object* o, vector* args) {
-    
+    for (int i = 0; i < ((func_data*) o->value)->len; i++) {
+        command_exec(((func_data*) o->value)->commands[i]);
+        if (process_errors(false)) break;
+    }
 }
 
 static void func_construct(object* o, vector* args) {
-    
+    func_data* fd = safe_malloc(sizeof(func_data));
+    fd->caller = func_call;
+    fd->commands = safe_calloc(VECTOR_LENGTH(args), sizeof(char*));
+    fd->len = VECTOR_LENGTH(args);
+
+    for (int i = 0; i < VECTOR_LENGTH(args); i++) {
+        object* str = OBJECT_STR(((object*) vector_get(args, i)));
+        if (process_errors(false)) return;
+        fd->commands[i] = STRING_VALUE(str);
+    }
+}
+
+static void func_dealloc(object* o) {
+    if (((func_data*) o->value)->commands) free(((func_data*) o->value)->commands);
+    map_free(o->attributes);
+    free(o);
+}
+
+static void iterator_iconstruct(object* o, vector* args) {
+    iter* i = safe_malloc(sizeof(iter));
+    i->pos = 0;
+    i->values = vector_copy(args);
+    o->value = i;
+}
+
+static void iterator_dealloc(object* o) {
+    map_free(o->attributes);
+    vector_free(((iter*) o)->values);
+    free(o->value);
+    free(o);
+}
+
+static object* iterator_next(object* o) {
+    if (++((iter*) o)->pos >= VECTOR_LENGTH(((iter*) o)->values)) RETN(
+        THROW_STATIC("reached end of iteration", "<iterating>");
+    );
+    return vector_get(((iter*) o)->values, ((iter*) o)->pos);
 }
 
 ICONSTRUCT_SIMPLE(func, obj_func, "f")
@@ -209,13 +261,17 @@ ICONSTRUCT_SIMPLE_CON(integer, int, "i")
 CONSTRUCT_SIMPLE(integer, "i")
 CONSTRUCT_SIMPLE(boolean, "b")
 
+static void array_construct(object* o, vector* args) {
+    o->value = vector_copy(args);
+}
+
 static void string_construct(object* o, vector* args) {
     object* ob = vector_get(args, 0);
     if (!ob) {
         THROW_STATIC("not enough arguments", "<arguments>");
         return;
     }
-    o->value = o->tp->to_string(o);
+    o->value = OBJECT_STR(o);
 }
 
 static object* string_to_string(object* o) {
@@ -237,8 +293,79 @@ static object* func_to_string(object* o) {
     return string_from(STACK_DATA("[function]"));
 }
 
+static void array_iconstruct(object* o, vector* args) {
+    o->value = vector_copy(args);
+}
+
+static void array_dealloc(object* o) {
+    map_free(o->attributes);
+    vector_free(o->value);
+    free(o);
+}
+
+static object* array_to_string(object* o) {
+    size_t size = 3;
+    char* str = safe_malloc(size);
+    size_t len = VECTOR_LENGTH(((vector*) o->value));
+    str[0] = '[';
+
+    for (int i = 0; i < len; i++) {
+        object* current = vector_get(o->value, i);
+        char* s = STRING_VALUE(OBJECT_STR(current));
+        bool trailing_comma = (i + 1) != len;
+        char* push_str = safe_malloc(strlen(s) + (trailing_comma ? 3 : 1));
+        sprintf(push_str, "%s%s", s, trailing_comma ? ", " : "");
+        str = safe_realloc(str, size + strlen(push_str));
+        strcat(str, push_str);
+    }
+
+    str[size - 2] = ']';
+    str[size - 1] = '\0';
+
+    return string_from(HEAP_DATA(str));
+}
+
+static void string_dealloc(object* o) {
+    data_free(o->value);
+    map_free(o->attributes);
+    free(o);
+}
+
+static object* string_iter(object* o) {
+    vector* v = vector_new();
+    for (int i = 0; i < strlen(data_content(o->value)); i++) {
+        char* str = safe_malloc(2);
+        str[0] = ((char*) data_content(o->value))[i];
+        str[1] = '\0';
+        vector_append(v, HEAP_DATA(str));
+    }
+
+    return iterator_from(v);
+}
+
+static object* array_iter(object* o) {
+    return iterator_from(o->value);
+}
+
+static void integer_dealloc(object* o) {
+    map_free(o->attributes);
+    free(o->value);
+    free(o);
+}
+
+static void boolean_dealloc(object* o) {
+    map_free(o->attributes);
+    free(o->value);
+    free(o);
+}
+
 ICONSTRUCT_SIMPLE(string, data*, "d")
 ICONSTRUCT_SIMPLE_CON(boolean, bool, "b")
+
+ITER_SIMPLE(boolean)
+ITER_SIMPLE(base)
+ITER_SIMPLE(func)
+ITER_SIMPLE(integer)
 
 /* Builtin types and objects */
 
@@ -247,12 +374,16 @@ type integer;
 type func;
 type string;
 type boolean;
+type array;
+type iterator;
 
 object* integer_object;
 object* func_object;
 object* boolean_object;
 object* string_object;
 object* base_object;
+object* array_object;
+object* iterator_object;
 
 /* Type functions */
 
@@ -264,6 +395,7 @@ void init_types(void) {
     func.call = func_call;
     LOADBUILTIN(boolean, "bool");
     LOADBUILTIN(string, "str");
+    LOADBUILTIN(array, "array");
 }
 
 /* Free builtin types. */
@@ -349,7 +481,7 @@ object* object_new(object* tp, vector* params) {
     return obj;
 }
 
-/* New object from a format string. len should match the number of arguments. */
+/* New object from a format. len should match the number of arguments. */
 object* object_newf(object* tp, size_t len, ...) {
     VA_VEC(v, len);
     object* obj = object_new(tp, v);
@@ -366,7 +498,7 @@ object* object_internal_new(object* tp, vector* params) {
     return obj;
 }
 
-/* Create a new internal object from a format string. len should match the number of argument. */
+/* Create a new internal object from a format. len should match the number of argument. */
 object* object_internal_newf(object* tp, size_t len, ...) {
     VA_VEC(v, len);
     object* obj = object_internal_new(tp, v);
@@ -452,4 +584,12 @@ object* func_from(obj_func function) {
 
 object* string_from(data* value) {
     return object_internal_newf(string_object, 1, NOFREE_DATA(value));
+}
+
+object* iterator_from(vector* values) {
+    return object_internal_newf(iterator_object, 1, NOFREE_DATA(values));
+}
+
+object* array_from(vector* value) {
+    return object_internal_newf(array_object, 1, NOFREE_DATA(value));
 }

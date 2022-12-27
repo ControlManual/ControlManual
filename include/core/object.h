@@ -7,6 +7,9 @@
 #include <core/vector.h>
 #include <stdlib.h> // size_t
 
+extern void command_exec(char* str);
+// we really shouldn't try and access the engine from the core, but we have to make an exception here
+
 /* All object attributes should use the following macros incase of an API change in the future. */
 
 #define SET_ATTR(o, k, v) map_set(o->attributes, k, v)
@@ -35,6 +38,7 @@ typedef struct STRUCT_OBJECT object;
 typedef FUNCTYPE(obj_func, object*, (object*, vector*));
 typedef FUNCTYPE(obj_func_noret, void, (object*, vector*));
 typedef FUNCTYPE(obj_func_noargs, object*, (object*));
+typedef FUNCTYPE(obj_dealloc, void, (object*));
 
 #define OBJ_FUNCTIONS_SIMPLE obj_func call; \
     obj_func_noargs to_string; \
@@ -48,7 +52,8 @@ struct STRUCT_TYPE {
     obj_func_noret construct;
     obj_func call;
     obj_func_noargs to_string;
-    obj_func_noargs dealloc;
+    obj_dealloc dealloc;
+    obj_func_noargs iter;
 };
 
 struct STRUCT_OBJECT {
@@ -101,5 +106,7 @@ bool parse_args(vector* params, const char* format, ...);
 bool ensure_derives(object* ob_a, type* tp);
 bool object_compare(object* a, object* b);
 bool type_compare(type* a, type* b);
+object* iterator_from(vector* values);
+object* array_from(vector* value);
 
 #endif

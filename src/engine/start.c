@@ -10,6 +10,7 @@
 #include <engine/start.h>
 
 #define PROCESS() if (process_errors(false)) { continue; }
+#define PROCESS_EXEC() if (error_occurred()) return;
 #define PRINT(o) { \
     object* str = OBJECT_STR(o); \
     PROCESS(); \
@@ -18,6 +19,33 @@
 
 scope* GLOBAL;
 char* PATH;
+
+void command_exec(char* str) {
+    vector* tokens = tokenize(str);
+    PROCESS_EXEC();
+    char* command_name;
+    
+    vector* params = vector_new();
+    vector* flags = vector_new();
+    map* keywords = map_new(2);
+    
+    params_from_tokens(tokens, &command_name, params, flags, keywords);
+    PROCESS_EXEC();
+    if (!params) return;
+
+    command* c = map_get(commands, command_name);
+
+    if (!c) {
+        THROW_STATIC("unknown command", "<main>");
+        process_errors(false);
+        return;
+    }
+
+    context* co = context_new(c, params, flags, keywords);
+    object* result = c->caller(co);
+    context_free(co);
+    process_errors(false);
+}
 
 void start() {
     ERRSTACK_INIT;
