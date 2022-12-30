@@ -3,13 +3,14 @@
 
 #include <stdbool.h>
 #include <stdlib.h> // size_t
-#include <core/util.h> // safe_malloc
+#include <controlmanual/core/util.h> // safe_malloc
 
 #define HEAP_DATA(d) data_new(d, true, NULL)
 #define CUSTOM_DATA(d, dealloc) data_new(d, true, (data_dealloc) dealloc)
 #define STACK_DATA(d) data_new(d, false, NULL)
 // Same as STACK_DATA, but sometimes saying something is on the stack can be misleading
 #define NOFREE_DATA(d) data_new(d, false, NULL)
+#define DATA_FREE_MAYBE(d) do { if (d) data_free(d) } while (0)
 
 typedef void (*data_dealloc)(void*);
 

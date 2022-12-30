@@ -1,9 +1,9 @@
-#include <engine/util.h>
-#include <core/util.h> // safe_malloc, FUNCTYPE
+#include <controlmanual/core/error.h>
+#include <controlmanual/engine/util.h>
+#include <controlmanual/core/util.h> // safe_malloc, FUNCTYPE
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <core/error.h>
 
 #ifdef PLATFORM_POSIX
 #include <pwd.h>
@@ -25,16 +25,15 @@
         THROW_HEAP(str, "<native code>"); \
         return false;
 
+bool exists(char* path) {
+    return access(path, F_OK) == 0;
+}
+
 char* char_to_string(char c) {
     char* str = safe_malloc(2);
     str[0] = c;
     str[1] = '\0';
     return str;
-}
-
-
-bool exists(char* path) {
-    return access(path, F_OK) == 0;
 }
 
 char* home(void) {

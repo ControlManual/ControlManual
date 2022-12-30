@@ -1,13 +1,13 @@
-#include <engine/context.h>
-#include <core/map.h>
-#include <core/vector.h>
-#include <engine/commands.h>
-#include <core/util.h> // safe_malloc
+#include <controlmanual/engine/context.h>
+#include <controlmanual/core/map.h>
+#include <controlmanual/core/vector.h>
+#include <controlmanual/engine/commands.h>
+#include <controlmanual/core/util.h> // safe_malloc
+#include <controlmanual/core/object.h>
+#include <controlmanual/core/error.h> // THROW_STATIC
+#include <controlmanual/engine/lexer.h>
 #include <stdarg.h>
-#include <core/object.h>
-#include <core/error.h> // THROW_STATIC
 #include <stdio.h> // sprintf
-#include <engine/lexer.h>
 #include <string.h> // strlen
 
 #define COMPARE(otp, ctp) if (type_compare(p->tp, &otp)) { \

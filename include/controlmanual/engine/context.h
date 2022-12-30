@@ -1,9 +1,9 @@
 #ifndef CM_CONTEXT_H
 #define CM_CONTEXT_H
 
-#include <engine/commands.h>
-#include <core/vector.h>
-#include <core/map.h>
+#include <controlmanual/engine/commands.h>
+#include <controlmanual/core/vector.h>
+#include <controlmanual/core/map.h>
 
 typedef struct STRUCT_CONTEXT {
     command* co;

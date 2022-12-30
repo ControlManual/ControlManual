@@ -1,13 +1,15 @@
-#include <engine/lexer.h>
-#include <core/ui.h>
-#include <core/error.h>
-#include <core/vector.h>
-#include <engine/config.h>
-#include <engine/commands.h>
-#include <core/object.h>
+#include <controlmanual/engine/lexer.h>
+#include <controlmanual/core/ui.h>
+#include <controlmanual/core/error.h>
+#include <controlmanual/core/vector.h>
+#include <controlmanual/engine/config.h>
+#include <controlmanual/engine/commands.h>
+#include <controlmanual/core/object.h>
+#include <controlmanual/engine/context.h>
+#include <controlmanual/engine/start.h>
+#include <string.h> // strdup
 #include <stdio.h>
-#include <engine/context.h>
-#include <engine/start.h>
+#include <signal.h>
 
 #define PROCESS() if (process_errors(false)) { continue; }
 #define PROCESS_EXEC() if (error_occurred()) return;
@@ -19,6 +21,23 @@
 
 scope* GLOBAL;
 char* PATH;
+
+void unload() {
+    ui* u = UI();
+    scope_free(GLOBAL, false);
+    unload_types();
+    free(PATH);
+    free(cm_dir);
+    map_free(commands);
+    ERRSTACK_FREE;
+    if (u->end) u->end();
+    free(u);
+}
+
+void sigint(int signum) {
+    unload();
+    exit(0);
+}
 
 void command_exec(char* str) {
     vector* tokens = tokenize(str);
@@ -42,7 +61,7 @@ void command_exec(char* str) {
     }
 
     context* co = context_new(c, params, flags, keywords);
-    object* result = c->caller(co);
+    c->caller(co);
     context_free(co);
     process_errors(false);
 }
@@ -52,17 +71,18 @@ void start() {
     ui* u = UI();
     load_config();
     init_types();
-    load_commands();
     process_errors(false);
 
     GLOBAL = scope_new();
-    PATH = "/home/zero";
+    PATH = strdup("/home/zero");
     u->start();
+    load_commands();
+    signal(SIGINT, sigint);
 
     while (true) {
         vector* tokens = tokenize(u->input());
         PROCESS();
-        char* command_name;
+        char* command_name = NULL;
         
         vector* params = vector_new();
         vector* flags = vector_new();
@@ -70,16 +90,19 @@ void start() {
         
         params_from_tokens(tokens, &command_name, params, flags, keywords);
         PROCESS();
-        if (!params) continue;
+        if (!command_name) continue;
 
         command* c = map_get(commands, command_name);
 
         if (!c) {
+            DISALLOW_ERRORS;
             object* var = scope_get(GLOBAL, command_name);
             if (var) {
                 PRINT(var);
                 continue;
             }
+            ALLOW_ERRORS;
+
             THROW_STATIC("unknown command", "<main>");
             process_errors(false);
             continue;
@@ -90,6 +113,6 @@ void start() {
         context_free(co);
         process_errors(false);
         if (result) PRINT(result);
+        command_name = NULL;
     }
-    ERRSTACK_FREE;
 }

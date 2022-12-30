@@ -2,7 +2,7 @@
 #define CM_VECTOR_H
 
 #include <stdlib.h>
-#include <core/data.h>
+#include <controlmanual/core/data.h>
 
 /* Dynamic array that may hold any type. */
 typedef struct STRUCT_VECTOR {

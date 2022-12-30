@@ -1,7 +1,7 @@
 #ifndef CM_MAP_H
 #define CM_MAP_H
 
-#include <core/data.h>
+#include <controlmanual/core/data.h>
 #include <stdlib.h>
 
 typedef struct STRUCT_MAP_PAIR {

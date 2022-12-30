@@ -1,7 +1,7 @@
+#include <controlmanual/core/util.h>
+#include <controlmanual/core/ui.h>
 #include <stdlib.h>
 #include <stdio.h> // fprintf, stderr
-#include <core/util.h>
-#include <core/ui.h>
 
 void fail(const char* message, int lineno, const char* file) {
     fprintf(

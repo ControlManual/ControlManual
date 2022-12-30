@@ -1,12 +1,13 @@
-#include <core/error.h>
-#include <core/list.h>
-#include <core/data.h>
-#include <core/util.h> // safe_malloc
-#include <core/ui.h>
+#include <controlmanual/core/vector.h>
+#include <controlmanual/core/error.h>
+#include <controlmanual/core/list.h>
+#include <controlmanual/core/data.h>
+#include <controlmanual/core/util.h> // safe_malloc
+#include <controlmanual/core/ui.h>
 #include <stdbool.h>
-#include <core/vector.h>
 
 list* error_stack = NULL;
+bool errors_suppressed = false;
 
 inline bool error_occurred() {
     return error_stack->len ? true : false;
@@ -39,6 +40,7 @@ void throw(
     data* expr,
     vector* problems
 ) {
+    if (errors_suppressed) return;
     error* e = safe_malloc(sizeof(error));
     e->content = content;
     e->origin = origin;

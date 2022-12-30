@@ -1,10 +1,10 @@
 #ifndef CM_OBJECT_H
 #define CM_OBJECT_H
-#include <core/data.h>
-#include <core/map.h>
+#include <controlmanual/core/data.h>
+#include <controlmanual/core/map.h>
 #include <stdbool.h>
-#include <core/util.h> // FUNCTYPE
-#include <core/vector.h>
+#include <controlmanual/core/util.h> // FUNCTYPE
+#include <controlmanual/core/vector.h>
 #include <stdlib.h> // size_t
 
 extern void command_exec(char* str);
@@ -100,7 +100,7 @@ object* object_call(object* o, vector* args);
 object* object_callf(object* o, size_t len, ...);
 object* string_from(data* str);
 object* integer_from(int value);
-void* scope_get(scope* s, const char* name);
+object* scope_get(scope* s, char* name);
 
 bool parse_args(vector* params, const char* format, ...);
 bool ensure_derives(object* ob_a, type* tp);

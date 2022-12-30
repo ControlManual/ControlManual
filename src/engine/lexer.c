@@ -1,16 +1,17 @@
-#include <core/vector.h>
-#include <engine/lexer.h>
-#include <core/data.h>
-#include <core/error.h> // throw
+#include <controlmanual/core/vector.h>
+#include <controlmanual/engine/lexer.h>
+#include <controlmanual/core/data.h>
+#include <controlmanual/core/error.h> // throw
+#include <controlmanual/engine/util.h> // char_to_string
+#include <controlmanual/core/object.h>
+#include <controlmanual/core/error.h> // THROW_STATIC
+#include <controlmanual/core/map.h>
+#include <controlmanual/engine/start.h>
+#include <controlmanual/engine/context.h>
+#include <controlmanual/core/util.h> // safe_malloc, RETN
 #include <stdlib.h> // size_t
 #include <string.h>
-#include <core/util.h> // safe_malloc, RETN
 #include <stdio.h> // sprintf
-#include <engine/util.h> // char_to_string
-#include <core/object.h>
-#include <core/error.h> // THROW_STATIC
-#include <core/map.h>
-#include <engine/start.h>
 
 #define PARSE_ERROR(content) RETN(parse_error(len, str, content, i))
 #define DUMPBUF() if (strlen(buf)) { \
@@ -510,7 +511,6 @@ vector* tokenize(const char* str) {
     return tokens;
 }
 
-
 void params_from_tokens(
     vector* tokens,
     char** command_name,
@@ -534,39 +534,58 @@ void params_from_tokens(
         token* t = vector_get(tokens, i);
 
         switch (t->type) {
-            case REFERENCE: {
-                char* token;
-                object* last = NULL;
+            case CALL: {
+                callexpr* c = t->content;
+                vector* tks = c->tokens;
+                vector* p = vector_new();
+                vector* f = vector_new();
+                map* k = map_new(1);
+                vector_insert(tks, 0, NOFREE_DATA(c->name));
 
-                while ((token = strsep(&t->content, "."))) {
-                    if (!last) {
-                        last = scope_get(GLOBAL, token);
-                        if (!last) {
-                            char* str = safe_malloc(19 + strlen(token));
-                            sprintf(str, "unknown variable: %s", token);
-                            THROW_HEAP(str, "<lookup>");
-                            return;
-                        }
-                    }
-                    else {
-                        last = map_get(last->attributes, token);
-                        if (!last) {
-                            char* str = safe_malloc(15 + strlen(token));
-                            sprintf(str, "no attribute: %s", token);
-                            THROW_HEAP(str, "<lookup>");
-                            return;
-                        }
-                    }
+                for (int i = 0; i < VECTOR_LENGTH(tks); i++) {
+                    token* tkn = VECTOR_GET(tks, i);
+                    printf("tkn->type: %d\n", tkn->type);
                 }
 
-                vector_append(params, NOFREE_DATA(last));
+                params_from_tokens(tks, NULL, p, f, k);
+                if (error_occurred()) return;
+                command* comm = map_get(commands, c->name->content);
+
+                if (!comm) {
+                    object* var = scope_get(GLOBAL, c->name->content);
+                    if (!var) return;
+                    if (VECTOR_LENGTH(f) || k->len) {
+                        THROW_STATIC("object call can only have positional arguments", "<call>");
+                        return;
+                    }
+                    object* res = object_call(var, p);
+                    if (res) vector_append(params, HEAP_DATA(res));
+                    break;
+                }
+
+                context* ctx = context_new(comm, p, f, k);
+                object* ob = comm->caller(ctx);
+                context_free(ctx);
+
+                if (ob) vector_append(params, HEAP_DATA(ob));
+                break;
+            }
+
+            case REFERENCE: {
+                object* ob = scope_get(GLOBAL, t->content);
+                if (error_occurred()) return;
+                vector_append(params, NOFREE_DATA(ob));
                 break;
             }
 
             case GROUP_LITERAL:
-            case ARRAY_LITERAL:
-                vector_append(params, HEAP_DATA(t->content));
+            case ARRAY_LITERAL: {
+                vector* result = vector_new();
+                vector_insert(t->content, 0, HEAP_DATA(token_new(STRING_LITERAL, "")));
+                params_from_tokens(t->content, NULL, result, flags, keywords);
+                vector_append(params, HEAP_DATA(array_from(t->content)));
                 break;
+            }
 
             case STRING_LITERAL:
                 vector_append(
@@ -592,7 +611,9 @@ void params_from_tokens(
                             string_from(
                                 HEAP_DATA(
                                     char_to_string(
-                                        ((char*) t->content)[i]
+                                        (
+                                            (char*) t->content
+                                        )[i]
                                     )
                                 )
                             )
@@ -633,6 +654,7 @@ void params_from_tokens(
                 for (int i = 0; i < len; i++) {
                     if (i == (len - 1)) {
                         // reusing method from above
+
                         vector* dummy_vector = vector_new();
                         vector* dummy_result = vector_new();
                         vector_append(dummy_vector, token_new(STRING_LITERAL, ""));

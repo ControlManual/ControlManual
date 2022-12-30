@@ -1,5 +1,5 @@
-#include <core/ui.h>
-#include <core/util.h> // safe_malloc
+#include <controlmanual/core/ui.h>
+#include <controlmanual/core/util.h> // safe_malloc
 #include <stdlib.h> // NULL
 #undef UI
 #define UI cm_impl_ui_wrapper
@@ -33,4 +33,11 @@ void ui_register(
     u->help = help;
     u->end = end;
     UI = u;
+}
+
+void print_obj(object* o) {
+    ui* u = ui_acquire();
+    object* str = OBJECT_STR(o);
+    if (process_errors(false)) return;
+    u->print(STRING_VALUE(str));
 }

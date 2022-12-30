@@ -1,7 +1,7 @@
+#include <controlmanual/core/vector.h>
+#include <controlmanual/core/util.h>
+#include <controlmanual/core/data.h>
 #include <stdlib.h> // size_t
-#include <core/vector.h>
-#include <core/util.h>
-#include <core/data.h>
 #include <string.h> // memcpy
 
 /* Create a new vector. */
@@ -38,19 +38,22 @@ void vector_append(vector* vec, data* item) {
     vec->items = safe_realloc(vec->items, vec->size * sizeof(data*));
     vec->items[vec->size - 1] = item;
 };
-
+#include <stdio.h>
 /* Insert a value at the target index. */
 void vector_insert(vector* vec, size_t index, data* item) {
     vec->size++;
     data** items = safe_realloc(vec->items, vec->size * sizeof(data*));
     
-    for (int i = vec->size - 1; i >= index; i--)
+    for (int i = vec->size - 1; i >= index; i--) {
         /* i dont really remember why i made this loop backwards, 
         but its still O(N) so i guess its fine */
-        if (i == index) items[i] = item;
+        if (i == index) {
+            items[i] = item;
+            break;
+        }
         else items[i] = items[i - 1];
+    }
     
-    free(vec->items);
     vec->items = items;
 };
 
@@ -92,7 +95,7 @@ vector* vector_copy(const vector* vec) {
     new->size = vec->size;
 
     for (int i = 0; i < VECTOR_LENGTH(vec); i++) {
-        new->items[i] = data_from(VECTOR_GET_DATA(new, i));
+        new->items[i] = data_from(VECTOR_GET_DATA(vec, i));
     }
 
     return new;

@@ -1,10 +1,10 @@
 #ifndef CM_UI_H
 #define CM_UI_H
 
-#include <core/util.h>
-#include <core/data.h>
-#include <core/error.h>
-#include <engine/commands.h>
+#include <controlmanual/core/util.h>
+#include <controlmanual/core/data.h>
+#include <controlmanual/core/error.h>
+#include <controlmanual/engine/commands.h>
 #define UI() ui_acquire();
 
 typedef FUNCTYPE(ui_onearg, void, (char*));

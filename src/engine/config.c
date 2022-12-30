@@ -1,14 +1,14 @@
-#include <engine/util.h>
-#include <core/util.h> // FAIL, safe_malloc
+#include <controlmanual/engine/lexer.h> // tokenize
+#include <controlmanual/core/error.h> // process_errors
+#include <controlmanual/core/map.h>
+#include <controlmanual/core/ui.h>
+#include <controlmanual/engine/config.h>
+#include <controlmanual/engine/util.h>
+#include <controlmanual/core/util.h> // FAIL, safe_malloc
 #include <string.h> //strlen
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <engine/lexer.h> // tokenize
-#include <core/error.h> // process_errors
-#include <core/map.h>
-#include <core/ui.h>
-#include <engine/config.h>
 
 char* cm_dir;
 
@@ -63,6 +63,7 @@ config* load_config(void) {
         strcpy(buf, "");
     }
     
+    free(buf);
     free(file);
     free(content);
 }

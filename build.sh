@@ -5,4 +5,4 @@ if [[ $? -ne 0 ]]; then
 fi
 
 sudo cp libcontrolmanual.so /usr/lib/libcontrolmanual.so
-sudo cp include/controlmanual.h /usr/include/controlmanual.h
+sudo cp include/controlmanual /usr/include/controlmanual -r

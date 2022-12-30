@@ -1,19 +1,20 @@
-#include <engine/commands.h>
-#include <core/data.h>
-#include <core/map.h>
-#include <core/object.h>
-#include <core/ui.h>
-#include <engine/context.h> // parse_context
-#include <engine/util.h>
+#include <controlmanual/engine/commands.h>
+#include <controlmanual/core/data.h>
+#include <controlmanual/core/map.h>
+#include <controlmanual/core/object.h>
+#include <controlmanual/core/ui.h>
+#include <controlmanual/engine/context.h> // parse_context
+#include <controlmanual/engine/util.h>
+#include <controlmanual/engine/config.h>
+#include <controlmanual/engine/start.h>
 #include <stdio.h> // sprintf
-#include <engine/config.h>
 #include <string.h> // strlen
 
 #ifdef COMMAND
 #undef COMMAND
 #endif
 
-#define COMMAND(name, desc, ...) map_set(commands, STACK_DATA(#name), HEAP_DATA(command_new( \
+#define COMMAND(name, desc, ...) map_set(commands, STACK_DATA(#name), CUSTOM_DATA(command_new( \
         name##_impl, \
         schema_new( \
             STACK_DATA(#name), \
@@ -21,7 +22,7 @@
             param_array_from((param*[]) { __VA_ARGS__ }, NUMARGS(__VA_ARGS__)), \
             NUMARGS(__VA_ARGS__) \
         ) \
-    )));
+    ), command_dealloc));
 
 
 /* Dummy type for representing "any" in schemas. Don't use as an actual type. */
@@ -62,10 +63,9 @@ object* echo_impl(context* c) {
 }
 
 object* exit_impl(context* c) {
-    ui* u = UI();
     int status = 0;
     if (!parse_context(c, &status)) return NULL;
-    if (u->end) u->end();
+    unload();
     exit(status);
 }
 
@@ -98,6 +98,7 @@ param* param_new(
     p->shorthand = shorthand;
     return p;
 }
+
 param** param_array_from(param** array, size_t size) {
     param** a = safe_calloc(size, sizeof(param*));
 
@@ -106,6 +107,20 @@ param** param_array_from(param** array, size_t size) {
     
     return a;
 };
+
+void command_dealloc(command* c) {
+    data_free(c->sc->description);
+    data_free(c->sc->name);
+    for (int i = 0; i < c->sc->params_len; i++) {
+        data_free(c->sc->params[i]->name);
+        data_free(c->sc->params[i]->description);
+        DATA_FREE_MAYBE(c->sc->params[i]->df);
+        DATA_FREE_MAYBE(c->sc->params[i]->shorthand);
+    }
+    free(c->sc->params);
+    free(c->sc);
+    free(c);
+}
 
 void command_loader(char* path) {
     if (is_file(path)) {
@@ -126,13 +141,14 @@ void command_loader(char* path) {
         map_set(
             commands,
             NOFREE_DATA(name),
-            HEAP_DATA(
+            CUSTOM_DATA(
                 command_new(command_impl, schema_new(
                     NOFREE_DATA(name),
                     NOFREE_DATA(desc),
                     command_params->params,
                     command_params->len
-                ))
+                )),
+                command_dealloc
             )
         );
 

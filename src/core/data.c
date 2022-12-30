@@ -1,5 +1,5 @@
-#include <core/util.h> // safe_malloc
-#include <core/data.h>
+#include <controlmanual/core/util.h> // safe_malloc
+#include <controlmanual/core/data.h>
 #include <stdbool.h>
 #include <stdlib.h>
 

@@ -1,14 +1,14 @@
-#include <core/object.h>
-#include <core/util.h> // safe_malloc, FAIL, RETN, int_convert
+#include <controlmanual/core/data.h> // STACK_DATA
+#include <controlmanual/core/map.h>
+#include <controlmanual/core/vector.h>
+#include <controlmanual/core/list.h>
+#include <controlmanual/core/error.h>
+#include <controlmanual/core/object.h>
+#include <controlmanual/core/util.h> // safe_malloc, FAIL, RETN, int_convert
 #include <stdlib.h> // NULL
-#include <core/data.h> // STACK_DATA
-#include <core/map.h>
 #include <stdbool.h>
 #include <string.h> // strlen
 #include <stdio.h> // snprintf, sprintf
-#include <core/vector.h>
-#include <core/list.h>
-#include <core/error.h>
 #include <stdarg.h>
 #include <math.h> // log10
 #define BUILTIN(tp) map_set( \
@@ -311,7 +311,13 @@ static object* array_to_string(object* o) {
 
     for (int i = 0; i < len; i++) {
         object* current = vector_get(o->value, i);
-        char* s = STRING_VALUE(OBJECT_STR(current));
+        printf("%p\n", current);
+        object* os = OBJECT_STR(current);
+
+        if (error_occurred()) return NULL;
+
+        char* s = STRING_VALUE(os);
+        puts("hi");
         bool trailing_comma = (i + 1) != len;
         char* push_str = safe_malloc(strlen(s) + (trailing_comma ? 3 : 1));
         sprintf(push_str, "%s%s", s, trailing_comma ? ", " : "");
@@ -557,10 +563,38 @@ scope* scope_from(map* globals) {
     return s;
 }
 
-void* scope_get(scope* s, const char* name) {
+static object* scope_map_get(scope* s, char* name) {
     void* value = map_get(s->local, name);
     if (!value) value = map_get(s->global, name);
     return value;
+}
+
+object* scope_get(scope* s, char* name) {
+    char* token;
+    object* last = NULL;
+
+    while ((token = strsep(&name, "."))) {
+        if (!last) {
+            last = scope_map_get(s, token);
+            if (!last) {
+                char* str = safe_malloc(19 + strlen(token));
+                sprintf(str, "unknown variable: %s", token);
+                THROW_HEAP(str, "<lookup>");
+                return NULL;
+            }
+        }
+        else {
+            last = map_get(last->attributes, token);
+            if (!last) {
+                char* str = safe_malloc(15 + strlen(token));
+                sprintf(str, "no attribute: %s", token);
+                THROW_HEAP(str, "<lookup>");
+                return NULL;
+            }
+        }
+    }
+
+    return last;
 }
 
 /* Free a scope (and its objects). */

@@ -1,6 +1,6 @@
-#include <core/list.h>
-#include <core/util.h> // safe_malloc
-#include <core/data.h>
+#include <controlmanual/core/list.h>
+#include <controlmanual/core/util.h> // safe_malloc
+#include <controlmanual/core/data.h>
 #include <stdio.h>
 
 static list_node* list_node_new(

@@ -1,8 +1,8 @@
 #ifndef CM_LEXER_H
 #define CM_LEXER_H
 
-#include <core/vector.h>
-#include <core/map.h>
+#include <controlmanual/core/vector.h>
+#include <controlmanual/core/map.h>
 
 vector* tokenize(const char* str);
 

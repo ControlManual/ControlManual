@@ -1,7 +1,7 @@
 #ifndef CM_LIST_H
 #define CM_LIST_H
 
-#include <core/data.h>
+#include <controlmanual/core/data.h>
 #include <stdlib.h> // size_t
 
 typedef struct STRUCT_LIST_NODE list_node;

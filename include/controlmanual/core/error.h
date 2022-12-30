@@ -1,8 +1,8 @@
 #ifndef CM_ERROR_H
 #define CM_ERROR_H
-#include <core/data.h>
-#include <core/list.h>
-#include <core/vector.h>
+#include <controlmanual/core/data.h>
+#include <controlmanual/core/list.h>
+#include <controlmanual/core/vector.h>
 #include <stdbool.h>
 #include <stdlib.h> // NULL
 #define ERRSTACK_INIT error_stack = list_new()
@@ -29,6 +29,7 @@ struct STRUCT_ERROR {
 };
 
 extern list* error_stack;
+extern bool errors_suppressed;
 
 bool process_errors(bool should_kill);
 void throw(
@@ -40,5 +41,8 @@ void throw(
 );
 
 extern bool error_occurred();
+
+#define DISALLOW_ERRORS { errors_suppressed = true
+#define ALLOW_ERRORS errors_suppressed = false; }
 
 #endif

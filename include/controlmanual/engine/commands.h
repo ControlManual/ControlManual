@@ -1,10 +1,10 @@
 #ifndef CM_COMMAND_H
 #define CM_COMMAND_H
 
-#include <core/data.h>
-#include <core/util.h>
-#include <core/object.h>
-#include <core/vector.h>
+#include <controlmanual/core/data.h>
+#include <controlmanual/core/util.h>
+#include <controlmanual/core/object.h>
+#include <controlmanual/core/vector.h>
 #include <stdlib.h> // size_t
 #include <stdbool.h>
 

@@ -1,6 +1,6 @@
-#include <core/data.h>
-#include <core/map.h>
-#include <core/util.h> // safe_malloc
+#include <controlmanual/core/data.h>
+#include <controlmanual/core/map.h>
+#include <controlmanual/core/util.h> // safe_malloc
 #include <stdlib.h> // size_t
 #include <stdint.h> // uint64_t
 #include <string.h> // strdup
