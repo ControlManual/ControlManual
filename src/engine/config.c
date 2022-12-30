@@ -5,7 +5,7 @@
 #include <controlmanual/engine/config.h>
 #include <controlmanual/engine/util.h>
 #include <controlmanual/core/util.h> // FAIL, safe_malloc
-#include <string.h> //strlen
+#include <string.h> // strlen
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -17,9 +17,8 @@ config* load_config(void) {
     if (!exists(cm_dir)) create_dir(cm_dir);
     char* file = cat_path(cm_dir, ".cmconfig");
 
-    if (!exists(file)) {
-        fopen(file, "w");
-    }
+    if (!exists(file))
+        fclose(fopen(file, "w"));
    
     char* content = read_file(file);
 
@@ -30,7 +29,9 @@ config* load_config(void) {
     for (int i = 0; i < len; i++) {
         char c = content[i];
         if (c != ';') {
-            strcat(buf, char_to_string(c));
+            char* charstr = char_to_string(c);
+            strcat(buf, charstr);
+            free(charstr);
             continue;
         }
         
@@ -61,6 +62,7 @@ config* load_config(void) {
         free(buf);
         buf = safe_malloc(len + 1);
         strcpy(buf, "");
+        vector_free(tokens);
     }
     
     free(buf);

@@ -14,7 +14,7 @@
 #define BUILTIN(tp) map_set( \
     globals, \
     tp.name, \
-    CUSTOM_DATA(object_from(&tp), base_dealloc) \
+    OBJECT_DATA(object_from(&tp)) \
 )
 #define VA_VEC(vecname, len) va_list args; \
     va_start(args, len); \
@@ -82,6 +82,8 @@
     o->value = int_convert((int) value); \
 }
 #define ITER_SIMPLE(nm) static object* nm##_iter(object* o) { THROW_STATIC("object is not iterable", "<iterating>"); return NULL; }
+#define UNLOAD(tp) map_free(tp.attributes); \
+    data_free(tp.name); \
 
 /* Argument parsing */
 
@@ -406,7 +408,12 @@ void init_types(void) {
 
 /* Free builtin types. */
 void unload_types(void) {
-    
+    UNLOAD(base);
+    UNLOAD(integer);
+    UNLOAD(func);
+    UNLOAD(boolean);
+    UNLOAD(string);
+    UNLOAD(array);
 }
 
 /* Does the source type derive from the target. */
@@ -444,6 +451,10 @@ type* type_new(
 }
 
 /* Object functions */
+
+inline object* object_dealloc(object* ob) {
+    ob->tp->dealloc(ob);
+}
 
 static object* object_alloc(object* tp) {
     object* obj = safe_malloc(sizeof(object));

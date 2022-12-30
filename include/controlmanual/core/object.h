@@ -27,6 +27,8 @@ extern void command_exec(char* str);
 #define OBJECT_STR(o) o->tp->to_string(o)
 #define STRING_VALUE(o) (char*) data_content(o->value)
 
+#define OBJECT_DATA(o) CUSTOM_DATA(o, object_dealloc)
+
 typedef struct STRUCT_SCOPE {
     map* global;
     map* local;
@@ -108,5 +110,6 @@ bool object_compare(object* a, object* b);
 bool type_compare(type* a, type* b);
 object* iterator_from(vector* values);
 object* array_from(vector* value);
+extern object* object_dealloc(object* ob);
 
 #endif

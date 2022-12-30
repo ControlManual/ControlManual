@@ -116,6 +116,7 @@ void command_dealloc(command* c) {
         data_free(c->sc->params[i]->description);
         DATA_FREE_MAYBE(c->sc->params[i]->df);
         DATA_FREE_MAYBE(c->sc->params[i]->shorthand);
+        free(c->sc->params[i]);
     }
     free(c->sc->params);
     free(c->sc);
@@ -153,6 +154,7 @@ void command_loader(char* path) {
         );
 
         free(command_params);
+        CLOSE_LIB(l);
     }
 }
 
@@ -181,6 +183,7 @@ void load_commands(void) {
     char* p = cat_path(cm_dir, "commands");
     if (!exists(p)) create_dir(p);
     else iterate_dir(p, command_loader);
+    free(p);
 }
 
 void iter_commands(map* m, commands_iter_func func) {

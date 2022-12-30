@@ -10,7 +10,7 @@
 #define STACK_DATA(d) data_new(d, false, NULL)
 // Same as STACK_DATA, but sometimes saying something is on the stack can be misleading
 #define NOFREE_DATA(d) data_new(d, false, NULL)
-#define DATA_FREE_MAYBE(d) do { if (d) data_free(d) } while (0)
+#define DATA_FREE_MAYBE(d) { if (d) data_free(d); }
 
 typedef void (*data_dealloc)(void*);
 

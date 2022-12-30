@@ -36,7 +36,6 @@ inline void data_free(data* d) {
     if (!(*d->refs)) { // only free underlying data if there arent any more references to it
         if (d->should_free)
             (d->dealloc ? d->dealloc : free)(d->contents);
-        
         free(d->refs);
     }
 
