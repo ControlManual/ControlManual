@@ -65,7 +65,6 @@ object* echo_impl(context* c) {
 object* exit_impl(context* c) {
     int status = 0;
     if (!parse_context(c, &status)) return NULL;
-    unload();
     exit(status);
 }
 
@@ -135,17 +134,17 @@ void command_loader(char* path) {
 
         param_construct_func pcf = GET_SYMBOL(l, "cm_param_construct");
         paramcontext* command_params = pcf();
-        char* name = ((get_str_func) GET_SYMBOL(l, "cm_command_name"))();
-        char* desc = ((get_str_func) GET_SYMBOL(l, "cm_command_description"))();
+        data* name = ((get_str_func) GET_SYMBOL(l, "cm_command_name"))();
+        data* desc = ((get_str_func) GET_SYMBOL(l, "cm_command_description"))();
         command_caller_func command_impl = GET_SYMBOL(l, "cm_command_caller");
         
         map_set(
             commands,
-            NOFREE_DATA(name),
+            data_from(name),
             CUSTOM_DATA(
                 command_new(command_impl, schema_new(
-                    NOFREE_DATA(name),
-                    NOFREE_DATA(desc),
+                    name,
+                    desc,
                     command_params->params,
                     command_params->len
                 )),

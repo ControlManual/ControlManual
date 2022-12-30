@@ -38,7 +38,7 @@ void vector_append(vector* vec, data* item) {
     vec->items = safe_realloc(vec->items, vec->size * sizeof(data*));
     vec->items[vec->size - 1] = item;
 };
-#include <stdio.h>
+
 /* Insert a value at the target index. */
 void vector_insert(vector* vec, size_t index, data* item) {
     vec->size++;

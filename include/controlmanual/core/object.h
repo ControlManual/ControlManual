@@ -25,7 +25,8 @@ extern void command_exec(char* str);
 #define ATTR(o, k) map_get(o->attributes, #k)
 
 #define OBJECT_STR(o) o->tp->to_string(o)
-#define STRING_VALUE(o) (char*) data_content(o->value)
+#define STRING_VALUE(o) ((char*) data_content(o->value))
+#define TYPE(o) ((type*) o->tp)
 
 #define OBJECT_DATA(o) CUSTOM_DATA(o, object_dealloc)
 
@@ -70,18 +71,11 @@ extern type func;
 extern type string;
 extern type boolean;
 
-extern object* integer_object;
-extern object* func_object;
-extern object* boolean_object;
-extern object* string_object;
-extern object* base_object;
-
 void init_types(void);
-void unload_types(void);
 extern object* object_get_attr(object* ob, const char* name);
 object* object_new(object* tp, vector* params);
 object* object_newf(object* tp, size_t len, ...);
-object* object_from(type* tp);
+object* object_from(data* tp);
 type* type_new(
     data* name,
     map* attributes,
@@ -111,5 +105,8 @@ bool type_compare(type* a, type* b);
 object* iterator_from(vector* values);
 object* array_from(vector* value);
 extern object* object_dealloc(object* ob);
+
+#define GLOBAL cm_global_scope
+extern scope* cm_global_scope;
 
 #endif

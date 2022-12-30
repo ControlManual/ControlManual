@@ -19,13 +19,11 @@
     u->print(STRING_VALUE(str)); \
 }
 
-scope* GLOBAL;
 char* PATH;
 
 void unload() {
     ui* u = UI();
     scope_free(GLOBAL, false);
-    unload_types();
     free(PATH);
     free(cm_dir);
     map_free(commands);
@@ -35,7 +33,6 @@ void unload() {
 }
 
 void sigint(int signum) {
-    unload();
     exit(0);
 }
 
@@ -77,10 +74,12 @@ void start() {
     PATH = strdup("/home/zero");
     u->start();
     load_commands();
+    atexit(unload);
     signal(SIGINT, sigint);
 
     while (true) {
-        vector* tokens = tokenize(u->input());
+        data* d = u->input();
+        vector* tokens = tokenize(data_content(d));
         PROCESS();
         char* command_name = NULL;
         
@@ -114,5 +113,6 @@ void start() {
         process_errors(false);
         if (result) PRINT(result);
         command_name = NULL;
+        data_free(d);
     }
 }

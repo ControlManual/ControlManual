@@ -23,8 +23,8 @@ char* cat_path(char* a, char* b);
 void create_dir(char* path);
 char* read_file(char* path);
 
-#define COMMAND_NAME(value) char* cm_command_name(void) { return #value; }
-#define COMMAND_DESCRIPTION(value) char* cm_command_description(void) { return value; }
+#define COMMAND_NAME(value) data* cm_command_name(void) { return STACK_DATA(#value); }
+#define COMMAND_DESCRIPTION(value) data* cm_command_description(void) { return STACK_DATA(value); }
 #define COMMAND_PARAMS(...) paramcontext* cm_param_construct(void) { \
     return paramcontext_new(param_array_from((param*[]) { __VA_ARGS__ }, NUMARGS(__VA_ARGS__)), NUMARGS(__VA_ARGS__)); \
 }

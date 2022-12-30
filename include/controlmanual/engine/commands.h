@@ -90,6 +90,6 @@ paramcontext* paramcontext_new(param** params, size_t len);
 typedef FUNCTYPE(dir_iter_func, void, (char*));
 typedef FUNCTYPE(param_construct_func, paramcontext*, ());
 typedef FUNCTYPE(command_caller_func, object*, (context*));
-typedef FUNCTYPE(get_str_func, char*, ());
+typedef FUNCTYPE(get_str_func, data*, ());
 
 #endif

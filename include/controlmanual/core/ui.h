@@ -9,7 +9,7 @@
 
 typedef FUNCTYPE(ui_onearg, void, (char*));
 typedef FUNCTYPE(ui_twoargs, void, (char*, char*));
-typedef FUNCTYPE(ui_input, char*, ());
+typedef FUNCTYPE(ui_input, data*, ());
 typedef FUNCTYPE(ui_none, void, ());
 typedef FUNCTYPE(ui_help, void, (map*))
 

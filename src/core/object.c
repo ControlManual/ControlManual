@@ -14,7 +14,7 @@
 #define BUILTIN(tp) map_set( \
     globals, \
     tp.name, \
-    OBJECT_DATA(object_from(&tp)) \
+    OBJECT_DATA(object_from(STACK_DATA(&tp))) \
 )
 #define VA_VEC(vecname, len) va_list args; \
     va_start(args, len); \
@@ -34,8 +34,7 @@
     nm.call = base_call; \
     nm.to_string = nm##_to_string; \
     nm.iter = nm##_iter; \
-    nm.dealloc = nm##_dealloc;\
-    BUILDOBJ(nm);
+    nm.dealloc = nm##_dealloc;
 #define IARG(tp) { \
                 tp* ptr = va_arg(args, tp*); \
                 *ptr = obj; \
@@ -65,7 +64,6 @@
     *ptr = *((ctp*) obj->value); \
     break; \
 }
-#define BUILDOBJ(nm) nm##_object = object_from(&nm);
 #define CONSTRUCT_SIMPLE(nm, fmtc) static void nm##_construct(object* o, vector* args) { \
     object* value; \
     if (!parse_args(args, fmtc, &value)) return; \
@@ -82,8 +80,10 @@
     o->value = int_convert((int) value); \
 }
 #define ITER_SIMPLE(nm) static object* nm##_iter(object* o) { THROW_STATIC("object is not iterable", "<iterating>"); return NULL; }
-#define UNLOAD(tp) map_free(tp.attributes); \
-    data_free(tp.name); \
+#define GETOBJ(tp) ((object*) scope_get(GLOBAL, data_content(tp.name)))
+
+scope* GLOBAL = NULL;
+
 
 /* Argument parsing */
 
@@ -180,12 +180,16 @@ object* base_call(object* o, vector* args) {
 }
 
 void base_dealloc(object* o) {
+    type* tp = data_content(o->value);
+    //data_free(tp->name);
+    map_free(tp->attributes);
+    data_free(o->value);
     map_free(o->attributes);
     free(o);
 }
 
 object* base_to_string(object* o) {
-    char* content = data_content(((type*) o->value)->name);
+    char* content = data_content(((type*) data_content(o->value))->name);
     char* str = safe_malloc(8 + strlen(content));
     sprintf(str, "[%s base]", content);
     return string_from(NOFREE_DATA(str));
@@ -199,6 +203,7 @@ static void base_iconstruct(object* o, vector* args) {
     FAIL("base is not constructable");
 }
 
+ITER_SIMPLE(base)
 
 typedef struct STRUCT_FUNC_DATA {
     char** commands;
@@ -237,6 +242,16 @@ static void func_dealloc(object* o) {
     free(o);
 }
 
+static object* func_to_string(object* o) {
+    return string_from(STACK_DATA("[function]"));
+}
+
+ITER_SIMPLE(func)
+ICONSTRUCT_SIMPLE(func, obj_func, "f")
+
+static object* iterator_construct(object* o, vector* args) {}
+static object* iterator_to_string(object* o) {}
+
 static void iterator_iconstruct(object* o, vector* args) {
     iter* i = safe_malloc(sizeof(iter));
     i->pos = 0;
@@ -258,14 +273,11 @@ static object* iterator_next(object* o) {
     return vector_get(((iter*) o)->values, ((iter*) o)->pos);
 }
 
-ICONSTRUCT_SIMPLE(func, obj_func, "f")
-ICONSTRUCT_SIMPLE_CON(integer, int, "i")
-CONSTRUCT_SIMPLE(integer, "i")
-CONSTRUCT_SIMPLE(boolean, "b")
-
-static void array_construct(object* o, vector* args) {
-    o->value = vector_copy(args);
+static object* iterator_iter(object* o) {
+    return o;
 }
+
+ICONSTRUCT_SIMPLE(string, data*, "d")
 
 static void string_construct(object* o, vector* args) {
     object* ob = vector_get(args, 0);
@@ -280,19 +292,26 @@ static object* string_to_string(object* o) {
     return o;
 }
 
-static object* boolean_to_string(object* o) {
-    return string_from(STACK_DATA(o->value ? "true" : "false"));
+static void string_dealloc(object* o) {
+    data_free(o->value);
+    map_free(o->attributes);
+    free(o);
 }
 
-static object* integer_to_string(object* o) {
-    char* str = safe_malloc(sizeof(char) * (int) log10(*((int*) o->value)));
-    // ^^ i dont know what the hell the log10 thing does, i stole it from stack overflow
-    sprintf(str, "%d", *((int*) o->value));
-    return string_from(NOFREE_DATA(str));
+static object* string_iter(object* o) {
+    vector* v = vector_new();
+    for (int i = 0; i < strlen(data_content(o->value)); i++) {
+        char* str = safe_malloc(2);
+        str[0] = ((char*) data_content(o->value))[i];
+        str[1] = '\0';
+        vector_append(v, HEAP_DATA(str));
+    }
+
+    return iterator_from(v);
 }
 
-static object* func_to_string(object* o) {
-    return string_from(STACK_DATA("[function]"));
+static void array_construct(object* o, vector* args) {
+    o->value = vector_copy(args);
 }
 
 static void array_iconstruct(object* o, vector* args) {
@@ -333,32 +352,15 @@ static object* array_to_string(object* o) {
     return string_from(HEAP_DATA(str));
 }
 
-static void string_dealloc(object* o) {
-    data_free(o->value);
-    map_free(o->attributes);
-    free(o);
-}
-
-static object* string_iter(object* o) {
-    vector* v = vector_new();
-    for (int i = 0; i < strlen(data_content(o->value)); i++) {
-        char* str = safe_malloc(2);
-        str[0] = ((char*) data_content(o->value))[i];
-        str[1] = '\0';
-        vector_append(v, HEAP_DATA(str));
-    }
-
-    return iterator_from(v);
-}
-
 static object* array_iter(object* o) {
     return iterator_from(o->value);
 }
 
-static void integer_dealloc(object* o) {
-    map_free(o->attributes);
-    free(o->value);
-    free(o);
+CONSTRUCT_SIMPLE(boolean, "b")
+ITER_SIMPLE(boolean)
+
+static object* boolean_to_string(object* o) {
+    return string_from(STACK_DATA(o->value ? "true" : "false"));
 }
 
 static void boolean_dealloc(object* o) {
@@ -367,13 +369,26 @@ static void boolean_dealloc(object* o) {
     free(o);
 }
 
-ICONSTRUCT_SIMPLE(string, data*, "d")
 ICONSTRUCT_SIMPLE_CON(boolean, bool, "b")
 
-ITER_SIMPLE(boolean)
-ITER_SIMPLE(base)
-ITER_SIMPLE(func)
+
 ITER_SIMPLE(integer)
+
+ICONSTRUCT_SIMPLE_CON(integer, int, "i")
+CONSTRUCT_SIMPLE(integer, "i")
+
+static void integer_dealloc(object* o) {
+    map_free(o->attributes);
+    free(o->value);
+    free(o);
+}
+
+static object* integer_to_string(object* o) {
+    char* str = safe_malloc(sizeof(char) * (int) log10(*((int*) o->value)));
+    // ^^ i dont know what the hell the log10 thing does, i stole it from stack overflow
+    sprintf(str, "%d", *((int*) o->value));
+    return string_from(NOFREE_DATA(str));
+}
 
 /* Builtin types and objects */
 
@@ -385,13 +400,99 @@ type boolean;
 type array;
 type iterator;
 
-object* integer_object;
-object* func_object;
-object* boolean_object;
-object* string_object;
-object* base_object;
-object* array_object;
-object* iterator_object;
+/* Scope functions */
+
+/* Create a new scope */
+scope* scope_new(void) {
+    scope* s = safe_malloc(sizeof(scope));
+    map* globals = map_new(1);
+    
+    BUILTIN(base);
+    BUILTIN(integer);
+    BUILTIN(func);
+    BUILTIN(string);
+    BUILTIN(boolean);
+    BUILTIN(array);
+    BUILTIN(iterator);
+
+    s->global = globals;
+    s->local = globals;
+
+    return s;
+}
+
+/* Create a new scope using an existing global map. */
+scope* scope_from(map* globals) {
+    scope* s = safe_malloc(sizeof(scope));
+    s->local = map_new(8);
+    s->global = globals;
+    return s;
+}
+
+static object* scope_map_get(scope* s, char* name) {
+    void* value = map_get(s->local, name);
+    if (!value) value = map_get(s->global, name);
+    return value;
+}
+
+object* scope_get(scope* s, char* name) {
+    char* token;
+    object* last = NULL;
+
+    while ((token = strsep(&name, "."))) {
+        if (!last) {
+            last = scope_map_get(s, token);
+            if (!last) {
+                char* str = safe_malloc(19 + strlen(token));
+                sprintf(str, "unknown variable: %s", token);
+                THROW_HEAP(str, "<lookup>");
+                return NULL;
+            }
+        }
+        else {
+            last = map_get(last->attributes, token);
+            if (!last) {
+                char* str = safe_malloc(15 + strlen(token));
+                sprintf(str, "no attribute: %s", token);
+                THROW_HEAP(str, "<lookup>");
+                return NULL;
+            }
+        }
+    }
+
+    return last;
+}
+
+static void scope_free_map(map* m) {
+    map* types = map_new(m->capacity);
+    data* b = NULL;
+
+    for (int i = 0; i < m->capacity; i++) {
+        pair* p = m->items[i];
+        if (p) {
+            if (type_compare(((object*) data_content(p->value))->tp, &base)) {
+                if (!strcmp(data_content(p->key), "base")) {
+                    b = data_from(p->value);
+                } else map_set(types, data_from(p->key), data_from(p->value));
+            }
+        }
+    }
+
+    if (!b) FAIL("base object not found");
+
+    map_free(m);
+    map_free(types);
+    
+    data_free(b);
+}
+
+/* Free a scope (and its objects). */
+void scope_free(scope* s, bool free_globals) {
+    scope_free_map(s->local);
+    if (free_globals) scope_free_map(s->global);
+    free(s);
+}
+
 
 /* Type functions */
 
@@ -404,16 +505,7 @@ void init_types(void) {
     LOADBUILTIN(boolean, "bool");
     LOADBUILTIN(string, "str");
     LOADBUILTIN(array, "array");
-}
-
-/* Free builtin types. */
-void unload_types(void) {
-    UNLOAD(base);
-    UNLOAD(integer);
-    UNLOAD(func);
-    UNLOAD(boolean);
-    UNLOAD(string);
-    UNLOAD(array);
+    LOADBUILTIN(iterator, "iterator");
 }
 
 /* Does the source type derive from the target. */
@@ -465,9 +557,24 @@ static object* object_alloc(object* tp) {
     return obj;
 }
 
+static bool attributes_compare(map* a, map* b) {
+    if (a == b) return true;
+    if (a->capacity != b->capacity) return false;
+    
+    for (int i = 0; i < a->capacity; i++) {
+        pair* p = a->items[i];
+        pair* p2 = b->items[i];
+        if (!(p && p2)) return false;
+        if (strcmp(data_content(p->key), data_content(p2->key))) return false;
+        if (!object_compare(data_content(p->value), data_content(p2->value))) return false;
+    }
+
+    return true;
+}
+
 bool type_compare(type* a, type* b) {
     if (a == b) return true; // if they are the exact same pointer, no need to check everything else
-    if (a->attributes != b->attributes) return false;
+    if (!attributes_compare(a->attributes, b->attributes)) return false;
     if (a->call != b->call) return false;
     if (a->dealloc != b->dealloc) return false;
     if (a->to_string != b->to_string) return false;
@@ -480,7 +587,7 @@ bool type_compare(type* a, type* b) {
 
 bool object_compare(object* a, object* b) {
     if (a == b) return true;
-    if (a->attributes != b->attributes) return false;
+    if (!attributes_compare(a->attributes, b->attributes)) return false;
     if (a->tp != b->tp) return false;
     if (a->value != b->value) return false;
     return true;
@@ -525,21 +632,20 @@ object* object_internal_newf(object* tp, size_t len, ...) {
 }
 
 /* Create an object from a type. NOT INSTANTIATING. */
-object* object_from(type* tp) {
+object* object_from(data* tp) {
     object* o = safe_malloc(sizeof(object));
-    o->attributes = map_copy(tp->attributes);
+    o->attributes = map_copy(((type*) data_content(tp))->attributes);
     o->tp = &base;
     o->value = tp;
-
     return o;
 }
 
-/* Call the specified object. Everything in args should be a Control Manual object. */
+/* Call the specified object. */
 object* object_call(object* o, vector* args) {
     FAIL("not supported as of now");
 }
 
-/* Call an object with a format string. len should match the number of arguments. */
+/* Call an object with a format string. */
 object* object_callf(object* o, size_t len, ...) {
     VA_VEC(v, len);
     object* obj = object_call(o, v);
@@ -547,94 +653,26 @@ object* object_callf(object* o, size_t len, ...) {
     return obj;
 }
 
-/* Scope functions */
-
-/* Create a new scope */
-scope* scope_new(void) {
-    scope* s = safe_malloc(sizeof(scope));
-    map* globals = map_new(1);
-    
-    BUILTIN(base);
-    BUILTIN(integer);
-    BUILTIN(func);
-    BUILTIN(string);
-    BUILTIN(boolean);
-
-    s->global = globals;
-    s->local = globals;
-
-    return s;
-}
-
-/* Create a new scope using an existing global map. */
-scope* scope_from(map* globals) {
-    scope* s = safe_malloc(sizeof(scope));
-    s->local = map_new(8);
-    s->global = globals;
-    return s;
-}
-
-static object* scope_map_get(scope* s, char* name) {
-    void* value = map_get(s->local, name);
-    if (!value) value = map_get(s->global, name);
-    return value;
-}
-
-object* scope_get(scope* s, char* name) {
-    char* token;
-    object* last = NULL;
-
-    while ((token = strsep(&name, "."))) {
-        if (!last) {
-            last = scope_map_get(s, token);
-            if (!last) {
-                char* str = safe_malloc(19 + strlen(token));
-                sprintf(str, "unknown variable: %s", token);
-                THROW_HEAP(str, "<lookup>");
-                return NULL;
-            }
-        }
-        else {
-            last = map_get(last->attributes, token);
-            if (!last) {
-                char* str = safe_malloc(15 + strlen(token));
-                sprintf(str, "no attribute: %s", token);
-                THROW_HEAP(str, "<lookup>");
-                return NULL;
-            }
-        }
-    }
-
-    return last;
-}
-
-/* Free a scope (and its objects). */
-void scope_free(scope* s, bool free_globals) {
-    map_free(s->local);
-    if (free_globals) map_free(s->global);
-    free(s);
-}
-
 /* Utilities */
 
 /* Integer from a C integer. */
 object* integer_from(int value) {
-    return object_internal_newf(integer_object, 1, HEAP_DATA(int_convert(value)));
+    return object_internal_newf(GETOBJ(integer), 1, HEAP_DATA(int_convert(value)));
 }
 
 /* Function from a C function. */
 object* func_from(obj_func function) {
-    return object_internal_newf(func_object, 1, STACK_DATA(function));
+    return object_internal_newf(GETOBJ(func), 1, STACK_DATA(function));
 }
 
 object* string_from(data* value) {
-    return object_internal_newf(string_object, 1, NOFREE_DATA(value));
+    return object_internal_newf(GETOBJ(string), 1, NOFREE_DATA(value));
 }
 
 object* iterator_from(vector* values) {
-    return object_internal_newf(iterator_object, 1, NOFREE_DATA(values));
+    return object_internal_newf(GETOBJ(iterator), 1, NOFREE_DATA(values));
 }
 
 object* array_from(vector* value) {
-    return object_internal_newf(array_object, 1, NOFREE_DATA(value));
+    return object_internal_newf(GETOBJ(array), 1, NOFREE_DATA(value));
 }
