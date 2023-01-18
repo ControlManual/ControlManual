@@ -16,8 +16,6 @@ typedef FUNCTYPE(ui_help, void, (map*))
 typedef struct STRUCT_UI {
     ui_error error;
     ui_onearg warn;
-    ui_twoargs log;
-    ui_twoargs notify;
     ui_onearg print;
     ui_input input;
     ui_none start;
@@ -30,8 +28,6 @@ extern ui* cm_impl_ui_wrapper;
 void ui_register(
     ui_error error,
     ui_onearg warn,
-    ui_twoargs log,
-    ui_twoargs notify,
     ui_onearg print,
     ui_input input,
     ui_none start,

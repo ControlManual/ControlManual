@@ -544,7 +544,7 @@ vector* tokenize(const char* str) {
 
 void params_from_tokens(
     vector* tokens,
-    char** command_name,
+    data** command_name,
     vector* params,
     vector* flags,
     map* keywords
@@ -558,7 +558,7 @@ void params_from_tokens(
         return;
     }
     
-    if (command_name) *command_name = t->content;
+    if (command_name) *command_name = data_from(name);
     data_free(name);
 
     for (int i = 0; i < VECTOR_LENGTH(tokens); i++) {

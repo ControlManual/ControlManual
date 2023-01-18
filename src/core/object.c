@@ -181,7 +181,6 @@ object* base_call(object* o, vector* args) {
 
 void base_dealloc(object* o) {
     type* tp = data_content(o->value);
-    //data_free(tp->name);
     map_free(tp->attributes);
     data_free(o->value);
     map_free(o->attributes);
@@ -249,7 +248,7 @@ static object* func_to_string(object* o) {
 ITER_SIMPLE(func)
 ICONSTRUCT_SIMPLE(func, obj_func, "f")
 
-static object* iterator_construct(object* o, vector* args) {}
+static void iterator_construct(object* o, vector* args) {}
 static object* iterator_to_string(object* o) {}
 
 static void iterator_iconstruct(object* o, vector* args) {
@@ -478,12 +477,10 @@ static void scope_free_map(map* m) {
         }
     }
 
-    if (!b) FAIL("base object not found");
-
     map_free(m);
     map_free(types);
     
-    data_free(b);
+    if (b) data_free(b);
 }
 
 /* Free a scope (and its objects). */
@@ -551,7 +548,7 @@ inline object* object_dealloc(object* ob) {
 static object* object_alloc(object* tp) {
     object* obj = safe_malloc(sizeof(object));
     obj->attributes = map_copy(tp->attributes);
-    obj->tp = tp->value;
+    obj->tp = data_content(tp->value);
     obj->value = NULL;
 
     return obj;
@@ -617,7 +614,7 @@ object* object_newf(object* tp, size_t len, ...) {
 /* Create a new object using C value opposed to a Control Manual object. */
 object* object_internal_new(object* tp, vector* params) {
     object* obj = object_alloc(tp);
-    ((type*) tp->value)->iconstruct(obj, params);
+    ((type*) data_content(tp->value))->iconstruct(obj, params);
 
     return obj;
 }

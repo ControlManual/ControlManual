@@ -14,7 +14,7 @@
 
 typedef void (*data_dealloc)(void*);
 
-/* Data that can have its contents freed accordingly. This should always be stored on the heap. */
+/* A reference to arbitrary data that may be stored on the stack or heap. */
 typedef struct STRUCT_DATA data;
 
 data* data_new(void* contents, bool should_free, data_dealloc dealloc);

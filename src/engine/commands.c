@@ -9,6 +9,13 @@
 #include <controlmanual/engine/start.h>
 #include <stdio.h> // sprintf
 #include <string.h> // strlen
+#define LOAD_ERROR(msg) { \
+    char* str = safe_malloc(strlen(path) + (sizeof(msg) - 2)); \
+    sprintf(str, msg, path); \
+    THROW_HEAP(str, "<loading>"); \
+    return; \
+}
+#define NOSYMBOL(sym) LOAD_ERROR(sym " is not exported by '%s'")
 
 #ifdef COMMAND
 #undef COMMAND
@@ -55,7 +62,7 @@ command* command_new(command_caller caller, schema* sc) {
 
 object* echo_impl(context* c) {
     ui* u = UI();
-    object* msg;
+    object* msg = NULL;
     if (!parse_context(c, &msg)) return NULL;
     u->print(STRING_VALUE(OBJECT_STR(msg)));
 
@@ -125,18 +132,20 @@ void command_dealloc(command* c) {
 void command_loader(char* path) {
     if (is_file(path)) {
         library l = OPEN_LIB(path);
-        if (!l) {
-            char* str = safe_malloc(strlen(path) + 28);
-            sprintf(str, "couldn't load library at '%s'", path);
-            THROW_HEAP(str, "<loading>");
-            return;
-        }
+        if (!l) LOAD_ERROR("couldn't load library at '%s'");
 
         param_construct_func pcf = GET_SYMBOL(l, "cm_param_construct");
+        if (!pcf) NOSYMBOL("cm_param_construct")
         paramcontext* command_params = pcf();
-        data* name = ((get_str_func) GET_SYMBOL(l, "cm_command_name"))();
-        data* desc = ((get_str_func) GET_SYMBOL(l, "cm_command_description"))();
+        get_str_func name_func = GET_SYMBOL(l, "cm_command_name");
+        if (!name_func) NOSYMBOL("cm_command_name")
+        get_str_func desc_func = GET_SYMBOL(l, "cm_command_description");
+        if (!desc_func) NOSYMBOL("cm_command_description")
         command_caller_func command_impl = GET_SYMBOL(l, "cm_command_caller");
+        if (!command_impl) NOSYMBOL("cm_command_caller")
+
+        data* name = name_func();
+        data* desc = desc_func();
         
         map_set(
             commands,

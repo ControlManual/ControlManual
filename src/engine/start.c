@@ -39,16 +39,17 @@ void sigint(int signum) {
 void command_exec(char* str) {
     vector* tokens = tokenize(str);
     PROCESS_EXEC();
-    char* command_name;
+    data* command_name_data;
     
     vector* params = vector_new();
     vector* flags = vector_new();
     map* keywords = map_new(2);
     
-    params_from_tokens(tokens, &command_name, params, flags, keywords);
+    params_from_tokens(tokens, &command_name_data, params, flags, keywords);
     PROCESS_EXEC();
     if (!params) return;
 
+    char* command_name = ((token*) data_content(command_name_data))->content;
     command* c = map_get(commands, command_name);
 
     if (!c) {
@@ -71,25 +72,27 @@ void start() {
     process_errors(false);
 
     GLOBAL = scope_new();
-    PATH = strdup("/home/zero");
+    PATH = strdup(home());
     u->start();
     load_commands();
     atexit(unload);
     signal(SIGINT, sigint);
+    process_errors(false);
 
     while (true) {
         data* d = u->input();
         vector* tokens = tokenize(data_content(d));
         PROCESS();
-        char* command_name = NULL;
+        data* command_name_data = NULL;
         
         vector* params = vector_new();
         vector* flags = vector_new();
         map* keywords = map_new(2);
         
-        params_from_tokens(tokens, &command_name, params, flags, keywords);
+        params_from_tokens(tokens, &command_name_data, params, flags, keywords);
         PROCESS();
-        if (!command_name) continue;
+        if (!command_name_data) continue;
+        char* command_name = ((token*) data_content(command_name_data))->content;
 
         command* c = map_get(commands, command_name);
 
@@ -114,5 +117,6 @@ void start() {
         if (result) PRINT(result);
         command_name = NULL;
         data_free(d);
+        data_free(command_name_data);
     }
 }

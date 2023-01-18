@@ -14,8 +14,6 @@ inline ui* ui_acquire() {
 void ui_register(
     ui_error error,
     ui_onearg warn,
-    ui_twoargs log,
-    ui_twoargs notify,
     ui_onearg print,
     ui_input input,
     ui_none start,
@@ -25,8 +23,6 @@ void ui_register(
     ui* u = safe_malloc(sizeof(ui));
     u->error = error;
     u->warn = warn;
-    u->log = log;
-    u->notify = notify;
     u->print = print;
     u->input = input;
     u->start = start;
