@@ -39,18 +39,19 @@ void list_append(list* l, data* value) {
 }
 
 static list_node* list_get_node(list* l, size_t index) {
-    if (index >= l->len) return NULL;
+    if (index >= l->len || index < 0) return NULL;
     list_node* node = l->first;
-    
-    for (int i = 0; i < index; i++) {
+
+    for (int i = 0; i < index; i++)
         node = node->next;
-    }
 
     return node;
 }
 
 inline void* list_get(list* l, size_t index) {
-    return data_content_maybe(list_get_node(l, index)->value);
+    list_node* node = list_get_node(l, index);
+    if (!node) return NULL;
+    return data_content_maybe(node->value);
 }
 
 static inline void list_node_free(list_node* node) {
@@ -60,6 +61,7 @@ static inline void list_node_free(list_node* node) {
 
 void list_remove(list* l, size_t index) {
     list_node* node = list_get_node(l, index);
+    if (!node) FAIL("list index out of range");
 
     if (l->first == node) l->first = node->next;
     if (l->last == node) l->last = node->last;
@@ -69,15 +71,14 @@ void list_remove(list* l, size_t index) {
 
     if (node->last)
         node->last->next = node->next;
-    
+
     list_node_free(node);
     l->len--;
 }
 
 void list_free(list* l) {
-    for (int i = 0; i < l->len; i++) {
+    for (int i = 0; i < l->len; i++)
         list_node_free(list_get_node(l, i));
-    }
 
     free(l);
 }

@@ -1,5 +1,5 @@
-#ifndef CM_MAIN_H
-#define CM_MAIN_H
+#ifndef CM_H
+#define CM_H
 
 #include <controlmanual/core/data.h>
 #include <controlmanual/core/error.h>
@@ -10,10 +10,11 @@
 #include <controlmanual/core/util.h>
 #include <controlmanual/core/vector.h>
 #include <controlmanual/core/version.h>
-#include <controlmanual/engine/commands.h>
+#include <controlmanual/core/tcontext.h>
+#include <controlmanual/engine/loader.h>
 #include <controlmanual/engine/config.h>
 #include <controlmanual/engine/lexer.h>
-#include <controlmanual/engine/start.h>
+#include <controlmanual/engine/main.h>
 #include <controlmanual/engine/util.h>
 #include <controlmanual/engine/context.h>
 

@@ -1,9 +1,12 @@
 #include <controlmanual/core/error.h>
 #include <controlmanual/engine/util.h>
 #include <controlmanual/core/util.h> // safe_malloc, FUNCTYPE
+#include <controlmanual/core/object.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
+#include <math.h>
 
 #ifdef PLATFORM_POSIX
 #include <pwd.h>
@@ -20,16 +23,16 @@
 #define SEPERATOR '\\'
 #endif
 
-#define ITERDIR_ERR char* str = safe_malloc(27 + strlen(path)); \
+#define ITERDIR_ERR() char* str = safe_malloc(27 + strlen(path)); \
         sprintf(str, "couldn't open directory '%s'", path); \
         THROW_HEAP(str, "<native code>"); \
         return false;
 
-bool exists(char* path) {
+bool exists(const char* path) {
     return access(path, F_OK) == 0;
 }
 
-char* char_to_string(char c) {
+char* char_to_string(const char c) {
     char* str = safe_malloc(2);
     str[0] = c;
     str[1] = '\0';
@@ -50,13 +53,13 @@ char* home(void) {
 #endif
 }
 
-char* cat_path(char* a, char* b) {
+char* cat_path(const char* a, const char* b) {
     char* result = malloc(strlen(a) + strlen(b) + 2);
     sprintf(result, "%s%c%s", a, SEPERATOR, b);
     return result;
 }
 
-void create_dir(char* path) {
+void create_dir(const char* path) {
 #ifdef PLATFORM_POSIX
     if (mkdir(path, 0777) == -1) FAIL(
         "failed to create directory"
@@ -68,7 +71,7 @@ void create_dir(char* path) {
 #endif
 }
 
-char* read_file(char* path) {
+char* read_file(const char* path) {
     FILE* f = fopen(path, "rb");
     fseek(f, 0, SEEK_END);
     long fsize = ftell(f);
@@ -82,7 +85,7 @@ char* read_file(char* path) {
     return string;
 }
 
-bool iterate_dir(char* path, dir_iter_func func) {
+bool iterate_dir(const char* path, dir_iter_func func) {
 #ifdef PLATFORM_POSIX
     DIR* dir;
     struct dirent* ent;
@@ -95,13 +98,13 @@ bool iterate_dir(char* path, dir_iter_func func) {
         closedir(dir);
         return true;
     } else {
-        ITERDIR_ERR;
+        ITERDIR_ERR();
     }
 #else
     WIN32_FIND_DATA data;
     HANDLE find = FindFirstFile(path, &data);
     if (find == INVALID_HANDLE_VALUE) {
-        ITERDIR_ERR;
+        ITERDIR_ERR();
     } 
 
     do {
@@ -113,13 +116,15 @@ bool iterate_dir(char* path, dir_iter_func func) {
 }
 
 /* This assumes that the path exists. */
-bool is_file(char* path) {
+bool is_file(const char* path) {
 #ifdef PLATFORM_POSIX
     struct stat path_stat;
     stat(path, &path_stat);
     return S_ISREG(path_stat.st_mode);
 #else
     DWORD attributes = GetFileAttributesA(path);
-    return !(attributes & FILE_ATTRIBUTE_DIRECTORY)
+    return !(
+        (attributes & FILE_ATTRIBUTE_DIRECTORY) == (FILE_ATTRIBUTE_DIRECTORY)
+    )
 #endif
 }

@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+    font-family: "Rubik", sans-serif;
+}
+
+h1 {
+    @apply text-xl md:text-4xl font-bold md:font-thin py-4;
+}
+
+h2 {
+    @apply text-lg md:text-3xl font-bold md:font-thin py-3;
+}
+
+h3 {
+    @apply text-lg md:text-2xl font-bold md:font-thin py-2;
+}
+
+p {
+    @apply py-2;
+}
+
+pre {
+    @apply rounded p-2 drop-shadow-md;
+}
+
+a {
+    @apply transition-opacity hover:opacity-50 duration-75 cursor-pointer text-sky-600;
+}
+
+code {
+    @apply text-rose-700 p-1 rounded bg-zinc-100;
+}
+
+ul {
+    @apply list-disc pl-12;
+}

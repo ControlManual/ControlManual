@@ -2,6 +2,7 @@
 #define CM_LIST_H
 
 #include <controlmanual/core/data.h>
+#include <controlmanual/core/util.h>
 #include <stdlib.h> // size_t
 
 typedef struct STRUCT_LIST_NODE list_node;
@@ -18,10 +19,10 @@ typedef struct STRUCT_LIST {
     size_t len;
 } list;
 
-list* list_new(void);
-void list_append(list* l, data* value);
-extern void* list_get(list* l, size_t index);
-void list_remove(list* l, size_t index);
-void list_free(list* l);
+API list* list_new(void);
+API void list_append(list* l, data* value);
+API extern void* list_get(list* l, size_t index);
+API void list_remove(list* l, size_t index);
+API void list_free(list* l);
 
 #endif

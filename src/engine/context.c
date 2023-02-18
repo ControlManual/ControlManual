@@ -1,7 +1,7 @@
 #include <controlmanual/engine/context.h>
 #include <controlmanual/core/map.h>
 #include <controlmanual/core/vector.h>
-#include <controlmanual/engine/commands.h>
+#include <controlmanual/engine/loader.h>
 #include <controlmanual/core/util.h> // safe_malloc
 #include <controlmanual/core/object.h>
 #include <controlmanual/core/error.h> // THROW_STATIC
@@ -9,6 +9,8 @@
 #include <stdarg.h>
 #include <stdio.h> // sprintf
 #include <string.h> // strlen
+#include <setjmp.h>
+#define EXIT() longjmp(*c->buf, 1)
 
 #define COMPARE(otp, ctp) if (type_compare(p->tp, &otp)) { \
             ctp* v = va_arg(args, ctp*); \
@@ -22,12 +24,19 @@
             continue; \
         }
 
-context* context_new(command* co, vector* params, vector* flags, map* keywords) {
+context* context_new(
+    command* co,
+    vector* params,
+    vector* flags,
+    map* keywords,
+    jmp_buf* buf
+) {
     context* c = safe_malloc(sizeof(context));
     c->co = co;
     c->params = params;
     c->flags = flags;
     c->keywords = keywords;
+    c->buf = buf;
 
     return c;
 }
@@ -39,15 +48,53 @@ void context_free(context* c) {
     free(c);
 }
 
-bool parse_context(context* c, ...) {
+inline void context_abort(context* c) {
+    EXIT();
+}
+
+void process_context_errors(context* c) {
+    if (process_errors()) context_abort(c);
+}
+
+void parse_context(context* c, ...) {
     va_list args;
     va_start(args, c);
     size_t current_pindex = 0;
-    
+
     for (int i = 0; i < c->co->sc->params_len; i++) {
         param* p = c->co->sc->params[i];
         object* o = NULL;
-        char* name = data_content(p->name);
+        char* name = data_content_maybe(p->name);
+
+        if (p->option) {
+            unsigned int* ptr = va_arg(args, unsigned int*);
+            o = vector_get(c->params, current_pindex);
+            if (!o) {
+                THROW_STATIC(
+                    "missing required choice",
+                    "<arguments>"
+                );
+                EXIT();
+            } else ++current_pindex;
+            if (!ensure_derives(o, &string)) EXIT();
+            int op_index = -1;
+
+            for (int i = 0; i < p->options_size; i++) {
+                if (!strcmp(p->options[i], STRING_VALUE(o))) {
+                    op_index = i;
+                    break;
+                };
+            }
+
+            if (op_index == -1) {
+                char* str = safe_malloc(28 + strlen(STRING_VALUE(o)));
+                sprintf(str, "invalid option for choice: %s", STRING_VALUE(o));
+                THROW_HEAP(str, "<arguments>");
+                EXIT();
+            };
+            *ptr = op_index;
+            continue;
+        }
 
         if (p->flag) {
             bool* ptr = va_arg(args, bool*);
@@ -56,9 +103,12 @@ bool parse_context(context* c, ...) {
             for (int x = 0; x < VECTOR_LENGTH(c->flags); x++) {
                 object* ob = VECTOR_GET(c->flags, x);
                 if (!strcmp(STRING_VALUE(ob), name)) found = true;
-                if (!strcmp(STRING_VALUE(ob), data_content(p->shorthand))) found = true;
+                if (!strcmp(
+                    STRING_VALUE(ob),
+                    data_content(p->shorthand)
+                )) found = true;
             }
-            
+
             *ptr = found;
             continue;
         } else {
@@ -70,7 +120,7 @@ bool parse_context(context* c, ...) {
                 if (shorthand) o = map_get(c->keywords, shorthand);
             }
         }
-        
+
         if (!o && p->required) { 
             char* str = safe_malloc(28 + strlen(name));
             sprintf(str, "missing required argument: %s", name);
@@ -78,9 +128,9 @@ bool parse_context(context* c, ...) {
                 str,
                 "<arguments>"
             );
-            return false;
+            EXIT();
         }
-        
+
         if (!o && !p->required)
             // its up to the user to define a default value
             continue;
@@ -91,7 +141,7 @@ bool parse_context(context* c, ...) {
             continue;
         };
 
-        if (!ensure_derives(o, p->tp)) return false;
+        if (!ensure_derives(o, p->tp)) EXIT();
         if (!p->convert) {
             object** ob = va_arg(args, object**);
             *ob = o;
@@ -108,9 +158,8 @@ bool parse_context(context* c, ...) {
         COMPARE_DRF(boolean, bool);
 
         THROW_STATIC("unknown parameter type in schema", "<internal>");
-        return false;
+        EXIT();
     }
 
     va_end(args);
-    return true;
 }

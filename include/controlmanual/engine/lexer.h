@@ -4,6 +4,7 @@
 #include <controlmanual/core/vector.h>
 #include <controlmanual/core/map.h>
 #include <controlmanual/core/data.h>
+#include <controlmanual/core/util.h>
 
 vector* tokenize(const char* str);
 
@@ -35,7 +36,7 @@ typedef struct STRUCT_FLAGEXPR {
     data* value;
 } flagexpr;
 
-void params_from_tokens(
+API void params_from_tokens(
     vector* tokens,
     data** command_name,
     vector* params,

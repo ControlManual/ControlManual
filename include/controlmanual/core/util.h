@@ -2,6 +2,7 @@
 #define CM_UTIL_H
 
 #include <stdlib.h>
+#include <stdarg.h> // va_list
 #define REALLY_UNPAREN(...) __VA_ARGS__
 #define INVOKE(expr) expr
 #define UNPAREN(args) INVOKE(REALLY_UNPAREN args)
@@ -41,11 +42,35 @@
 #define FAIL(message) fail(message, 0, "<unknown>.c")
 #endif
 
-void* safe_malloc(size_t bytes);
-void* safe_realloc(void* ptr, size_t nbytes);
-void* safe_calloc(size_t num, size_t size);
-void fail(const char* message, int lineno, const char* file);
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+#define PLATFORM_POSIX
+#endif
 
-int* int_convert(int value);
+#if !defined(PLATFORM_POSIX) && !defined(PLATFORM_WIN)
+#error "this platform is not supported"
+#endif
+
+#ifdef __GNUC__
+#define UNUSED __attribute__ ((unused))
+#else
+#define UNUSED
+#endif
+
+#ifdef CM_COMPILING
+#define API EXPORT
+#else
+#define API IMPORT
+#endif
+
+API void* safe_malloc(size_t bytes);
+API void* safe_realloc(void* ptr, size_t nbytes);
+API void* safe_calloc(size_t num, size_t size);
+API void fail(const char* message, int lineno, const char* file);
+
+API int* int_convert(int value);
+API char* format_size_va(const char* fmt, size_t* bufsize_target, va_list vargs, ...);
+API char* format_size(const char* fmt, size_t* bufsize, ...);
+API char* format(const char* fmt, ...);
+API extern char* format_va(const char* fmt, va_list vargs);
 
 #endif

@@ -8,3 +8,7 @@ dll.c
 esh
 *.so
 buildesh.sh
+package-lock.json
+node_modules/
+output.css
+.venv/

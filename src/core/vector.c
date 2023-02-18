@@ -2,7 +2,6 @@
 #include <controlmanual/core/util.h>
 #include <controlmanual/core/data.h>
 #include <stdlib.h> // size_t
-#include <string.h> // memcpy
 
 /* Create a new vector. */
 vector* vector_new(void) {
@@ -43,7 +42,7 @@ void vector_append(vector* vec, data* item) {
 void vector_insert(vector* vec, size_t index, data* item) {
     vec->size++;
     data** items = safe_realloc(vec->items, vec->size * sizeof(data*));
-    
+
     for (int i = vec->size - 1; i >= index; i--) {
         /* i dont really remember why i made this loop backwards, 
         but its still O(N) so i guess its fine */
@@ -53,7 +52,7 @@ void vector_insert(vector* vec, size_t index, data* item) {
         }
         else items[i] = items[i - 1];
     }
-    
+
     vec->items = items;
 };
 
@@ -94,9 +93,8 @@ vector* vector_copy(const vector* vec) {
     new->items = safe_calloc(VECTOR_LENGTH(vec), data_sizeof());
     new->size = vec->size;
 
-    for (int i = 0; i < VECTOR_LENGTH(vec); i++) {
+    for (int i = 0; i < VECTOR_LENGTH(vec); i++)
         new->items[i] = data_from(VECTOR_GET_DATA(vec, i));
-    }
 
     return new;
 }

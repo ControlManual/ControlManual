@@ -6,30 +6,49 @@
 #include <controlmanual/core/object.h>
 #include <controlmanual/core/error.h> // THROW_STATIC
 #include <controlmanual/core/map.h>
-#include <controlmanual/engine/start.h>
+#include <controlmanual/engine/main.h>
 #include <controlmanual/engine/context.h>
 #include <controlmanual/core/util.h> // safe_malloc, RETN
+#include <controlmanual/core/tcontext.h>
 #include <stdlib.h> // size_t
 #include <string.h>
 #include <stdio.h> // sprintf
+#include <setjmp.h>
 
 #define PARSE_ERROR(content) RETN(parse_error(len, str, content, i))
 #define DUMPBUF() if (strlen(buf)) { \
-            vector_append(tokens, CUSTOM_DATA(btoken_new(NOTOK, strdup(buf), i), btoken_dealloc)); \
+            vector_append( \
+                tokens, \
+                CUSTOM_DATA( \
+                    btoken_new(NOTOK, strdup(buf), i), \
+                    btoken_dealloc \
+                ) \
+            ); \
             free(buf); \
             buf = safe_malloc(len + 1); \
             strcpy(buf, ""); \
 }
-        
 #define DUMP(tok) DUMPBUF(); \
         vector_append(tokens, HEAP_DATA(btoken_new(tok, NULL, i))); \
         vector_remove(stack, VECTOR_LENGTH(stack) - 1); \
 
-#define PUSH(flags, tok) vector_append(stack, HEAP_DATA(stackitem_new(flags, i))); \
+#define PUSH(flags, tok) vector_append( \
+        stack, \
+        HEAP_DATA(stackitem_new(flags, i)) \
+    ); \
     DUMPBUF(); \
-    vector_append(tokens, CUSTOM_DATA(btoken_new(tok, NULL, i), btoken_dealloc));
+    vector_append( \
+        tokens, \
+        CUSTOM_DATA(btoken_new(tok, NULL, i), btoken_dealloc) \
+    );
 #define PUSH_AND_DUMP(tok) DUMPBUF(); \
-    vector_append(tokens, CUSTOM_DATA(btoken_new(tok, char_to_string(c), i), btoken_dealloc));
+    vector_append( \
+        tokens, \
+        CUSTOM_DATA( \
+            btoken_new(tok, char_to_string(c), i), \
+            btoken_dealloc \
+        ) \
+    );
 #define CHECK(flags) ((current_flags & (flags)) == (flags))
 #define WRITE() { \
     char* charstr = char_to_string(c); \
@@ -41,14 +60,26 @@
                     item \
                 )
 #define STACK_PUSH(item) if (flag_push_mark) { \
-        RAW_STACK_PUSH(token_new(flag_push_mark, flagexpr_new(flag_push_name, item))); \
+        RAW_STACK_PUSH( \
+            token_new( \
+                flag_push_mark, \
+                flagexpr_new(flag_push_name, item) \
+            ) \
+        ); \
         flag_push_mark = 0; \
         flag_push_name = NULL; \
     } else RAW_STACK_PUSH(item)
 #define WRITE_BUFFER() strcat(buf, btok->content)
-#define CLEAR_BUFFER_NOWRITE() free(buf); buf = safe_malloc(len + 1); strcpy(buf, "");
+#define CLEAR_BUFFER_NOWRITE() free(buf); \
+    buf = safe_malloc(len + 1); strcpy(buf, "");
 #define CLEAR_BUFFER() if (strlen(buf)) { \
-        STACK_PUSH(token_new(is_digit ? INTEGER_LITERAL : STRING_LITERAL, strdup(buf))); \
+        STACK_PUSH( \
+            token_new(is_digit ? \
+                INTEGER_LITERAL : \
+                STRING_LITERAL, \
+                strdup(buf) \
+            ) \
+        ); \
         is_digit = false; \
     } \
     CLEAR_BUFFER_NOWRITE();
@@ -127,11 +158,16 @@ static inline void btoken_dealloc(btoken* tok) {
     free(tok);
 }
 
-static void parse_error(size_t len, const char* str, char* er_str, size_t pos) {
+static void parse_error(
+    size_t len,
+    const char* str,
+    char* er_str,
+    size_t pos
+) {
     vector* v = vector_new();
     vector_append(v, HEAP_DATA(int_convert(pos))); // "problems" vector
 
-    throw(
+    throw_error(
         STACK_DATA(er_str),
         STACK_DATA("<parsing>"),
         NULL,
@@ -159,7 +195,7 @@ vector* tokenize_basic(const char* str) {
                     DUMP(DSTRING_CLOSE);
                     break;
                 }
-                
+
                 PUSH(ignore_toks | is_dquote, DSTRING_OPEN);
                 break;
             }
@@ -183,7 +219,7 @@ vector* tokenize_basic(const char* str) {
                 } else WRITE();
                 break;
             }
-            
+
             case '[': {
                 if (CHECK(ignore_toks) == 0) {
                     PUSH(is_array, ARRAY_OPEN);
@@ -329,16 +365,16 @@ static void token_dealloc(token* tok) {
         case STRING_LITERAL:
             free(tok->content);
             break;
-        
+
         case CALL:
             vector_free(((callexpr*) tok->content)->tokens);
             break;
-        
+
         case GROUP_LITERAL:
         case ARRAY_LITERAL:
             vector_free(tok->content);
             break;
-        
+
         case SFLAG:
         case KFLAG:
             free(((flagexpr*) tok->content)->name);
@@ -383,7 +419,7 @@ vector* tokenize(const char* str) {
                 STACK_PUSH(token_new(REFERENCE, strdup(buf)));
                 CLEAR_BUFFER_NOWRITE();
                 break;
-            
+
             case BRACKET_OPEN:
             case WHITESPACE:
             case COMMA:
@@ -391,7 +427,7 @@ vector* tokenize(const char* str) {
             case SSTRING_OPEN:
                 CLEAR_BUFFER();
                 break;
-           
+
             case DIGIT:
                 if (!strlen(buf) && !is_digit) is_digit = true;
                 WRITE_BUFFER();
@@ -402,7 +438,7 @@ vector* tokenize(const char* str) {
                 CLEAR_BUFFER();
                 vector_append(token_stack, HEAP_DATA(vector_new()));
                 break;
-            
+
             case PAREN_CLOSE:
                 CLEAR_BUFFER();
                 vector* group = (vector*) data_content(
@@ -421,14 +457,16 @@ vector* tokenize(const char* str) {
                     )
                 )->type == STRING_LITERAL ? CALL : GROUP_LITERAL;
                 // parens dont always mean a function call
-                
+
                 void* content;
 
                 if (tp == CALL) {
                     content = callexpr_new(
                         group,
                         data_content(
-                            data_from(vector_pop(tstack, VECTOR_LENGTH(tstack) - 1))
+                            data_from(
+                                vector_pop(tstack, VECTOR_LENGTH(tstack) - 1)
+                            )
                         )
                     );
                 }  else {
@@ -449,14 +487,16 @@ vector* tokenize(const char* str) {
                     token_stack,
                     VECTOR_LENGTH(token_stack) - 1
                 );
-                STACK_PUSH(token_new(ARRAY_LITERAL, data_content(data_from(array))));
+                STACK_PUSH(
+                    token_new(ARRAY_LITERAL, data_content(data_from(array)))
+                );
                 break;
 
             case NOTOK:
                 is_digit = false;
                 WRITE_BUFFER();
                 break;
-            
+
             case FLAGC: {
                 CLEAR_BUFFER();
                 btoken* last = NULL;
@@ -481,7 +521,7 @@ vector* tokenize(const char* str) {
                         "expected value after '-'",
                         btok->index
                     ));
-                
+
                 if (next->type == WHITESPACE) RETN(parse_error(
                         VECTOR_LENGTH(basic),
                         str,
@@ -489,11 +529,15 @@ vector* tokenize(const char* str) {
                         next->index
                     ));
 
-                
                 if (next->type == FLAGC && last->type == FLAGC) {
                     if ((btok->index - 1) != removed_index) RETN(
                         // we cant have 3+ minuses in flags (---example)
-                        parse_error(VECTOR_LENGTH(basic), str, "unexpected '-'", next->index)
+                        parse_error(
+                            VECTOR_LENGTH(basic),
+                            str,
+                            "unexpected '-'",
+                            next->index
+                        )
                     )
                 };
 
@@ -505,10 +549,11 @@ vector* tokenize(const char* str) {
                 while (true) {
                     btoken* b = vector_get(basic, ++offset_value);
                     if (!b) break;
-                    if (b->type == FLAGC) break; // we dont want to use the next flag as a value
+                    if (b->type == FLAGC) break;
+                    // we dont want to use the next flag as a value
                     if (b->type != WHITESPACE) {
-                       value = true;
-                       break;
+                        value = true;
+                        break;
                     }
                 };
 
@@ -516,7 +561,9 @@ vector* tokenize(const char* str) {
                 if (!value) {
                     STACK_PUSH(
                         token_new(
-                            last && last->type == FLAGC ? KFLAG_NVAL : SFLAG_NVAL,
+                            last && last->type == FLAGC ?
+                                KFLAG_NVAL :
+                                SFLAG_NVAL,
                             strdup(next->content)
                         )
                     );
@@ -552,12 +599,12 @@ void params_from_tokens(
     if (VECTOR_LENGTH(tokens) == 0) return;
     data* name = vector_pop(tokens, 0);
     token* t = data_content(name);
-    
+
     if (t->type != STRING_LITERAL) {
         THROW_STATIC("command name must be a string", "<parsing>");
         return;
     }
-    
+
     if (command_name) *command_name = data_from(name);
     data_free(name);
 
@@ -573,30 +620,56 @@ void params_from_tokens(
                 map* k = map_new(1);
                 vector_insert(tks, 0, NOFREE_DATA(c->name));
 
-                for (int i = 0; i < VECTOR_LENGTH(tks); i++) {
-                    token* tkn = VECTOR_GET(tks, i);
-                    printf("tkn->type: %d\n", tkn->type);
-                }
-
                 params_from_tokens(tks, NULL, p, f, k);
                 if (error_occurred()) return;
                 command* comm = map_get(commands, c->name->content);
 
                 if (!comm) {
+                    ADVANCE_DEFAULT(
+                        NOFREE_DATA(c->name->content),
+                        params_from_tokens,
+                        OBJECT_EXEC
+                    );
                     object* var = scope_get(GLOBAL, c->name->content);
                     if (!var) return;
                     if (VECTOR_LENGTH(f) || k->len) {
-                        THROW_STATIC("object call can only have positional arguments", "<call>");
+                        THROW_STATIC(
+                            "object call can only have positional arguments",
+                            "<call>"
+                        );
                         return;
                     }
                     object* res = object_call(var, p);
+                    if (error_occurred()) return;
                     if (res) vector_append(params, OBJECT_DATA(res));
                     break;
                 }
 
-                context* ctx = context_new(comm, p, f, k);
+                jmp_buf buf;
+                context* ctx = NULL;
+
+                if (setjmp(buf)) {
+                    if (!error_occurred()) {
+                        THROW_STATIC(
+                            "jump occurred in call without exception set",
+                            "<call>"
+                        );
+                        return;
+                    };
+                    context_free(ctx);
+                    return;
+                }
+
+                ctx = context_new(comm, p, f, k, &buf);
+                ADVANCE_DEFAULT_CTX(
+                    NOFREE_DATA(c->name->content),
+                    params_from_tokens,
+                    ctx,
+                    COMMAND_EXEC
+                );
                 object* ob = comm->caller(ctx);
                 context_free(ctx);
+                tcontext_pop();
 
                 if (ob) vector_append(params, OBJECT_DATA(ob));
                 break;
@@ -612,7 +685,11 @@ void params_from_tokens(
             case GROUP_LITERAL:
             case ARRAY_LITERAL: {
                 vector* result = vector_new();
-                vector_insert(t->content, 0, HEAP_DATA(token_new(STRING_LITERAL, "")));
+                vector_insert(
+                    t->content,
+                    0,
+                    HEAP_DATA(token_new(STRING_LITERAL, ""))
+                );
                 params_from_tokens(t->content, NULL, result, flags, keywords);
                 vector_append(params, OBJECT_DATA(array_from(t->content)));
                 break;
@@ -624,14 +701,12 @@ void params_from_tokens(
                     OBJECT_DATA(string_from(HEAP_DATA(t->content)))
                 );
                 break;
-            
+
             case INTEGER_LITERAL:
-                // TODO: make sure integer limit isnt hit here
-                int value;
-                sscanf(t->content, "%d", &value);
-                vector_append(params, HEAP_DATA(integer_from(value)));
+                long long value = strtoll(t->content, NULL, 10);
+                vector_append(params, OBJECT_DATA(integer_from(value)));
                 break;
-            
+
             case SFLAG_NVAL: {
                 size_t len = strlen(t->content);
                 for (int i = 0; i < len; i++)
@@ -650,12 +725,15 @@ void params_from_tokens(
                             )
                         )
                     );
-                
+
                 break;
             }
 
             case KFLAG_NVAL:
-                vector_append(flags, HEAP_DATA(string_from(HEAP_DATA(t->content))));
+                vector_append(
+                    flags,
+                    HEAP_DATA(string_from(HEAP_DATA(t->content)))
+                );
                 break;
 
             case KFLAG:
@@ -664,7 +742,13 @@ void params_from_tokens(
                 vector_append(dummy_vector, token_new(STRING_LITERAL, ""));
                 token* fvalue = data_content(((flagexpr*) t->content)->value);
                 vector_append(dummy_vector, NOFREE_DATA(fvalue));
-                params_from_tokens(dummy_vector, NULL, dummy_result, flags, keywords);
+                params_from_tokens(
+                    dummy_vector,
+                    NULL,
+                    dummy_result,
+                    flags,
+                    keywords
+                );
 
                 // defer error to caller function
                 if (error_occurred()) return;
@@ -677,7 +761,7 @@ void params_from_tokens(
                 vector_free(dummy_result);
                 vector_free(dummy_vector);
                 break;
-            
+
             case SFLAG: {
                 flagexpr* f = t->content;
                 size_t len = strlen(f->name);
@@ -688,10 +772,19 @@ void params_from_tokens(
 
                         vector* dummy_vector = vector_new();
                         vector* dummy_result = vector_new();
-                        vector_append(dummy_vector, token_new(STRING_LITERAL, ""));
+                        vector_append(
+                            dummy_vector,
+                            token_new(STRING_LITERAL, "")
+                        );
                         token* fvalue = data_content(f->value);
                         vector_append(dummy_vector, NOFREE_DATA(fvalue));
-                        params_from_tokens(dummy_vector, NULL, dummy_result, flags, keywords);
+                        params_from_tokens(
+                            dummy_vector,
+                            NULL,
+                            dummy_result,
+                            flags,
+                            keywords
+                        );
 
                         // defer error to caller function
                         if (error_occurred()) return;
@@ -705,7 +798,7 @@ void params_from_tokens(
                         vector_free(dummy_vector);
                         continue;
                     }
-                    
+
                     vector_append(
                         flags,
                         OBJECT_DATA(
@@ -719,7 +812,7 @@ void params_from_tokens(
                         )
                     );
                 }
-                
+
                 break;
             }
         }

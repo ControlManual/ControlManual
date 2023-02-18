@@ -1,24 +1,16 @@
 #ifndef CM_ENGINE_UTIL_H
 #define CM_ENGINE_UTIL_H
-#include <controlmanual/engine/commands.h>
 #include <controlmanual/core/util.h>
-
-#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
-#define PLATFORM_POSIX
-#endif
-
-#if !defined(PLATFORM_POSIX) && !defined(PLATFORM_WIN)
-#error "this platform is not supported"
-#endif
-
 #include <stdbool.h>
 
-char* char_to_string(char c);
-bool exists(char* path);
-char* home(void);
-char* cat_path(char* a, char* b);
-void create_dir(char* path);
-char* read_file(char* path);
+API char* char_to_string(const char c);
+API bool exists(const char* path);
+API char* home(void);
+API char* cat_path(const char* a, const char* b);
+API void create_dir(const char* path);
+API char* read_file(const char* path);
+
+typedef FUNCTYPE(dir_iter_func, void, (char*));
 
 #define COMMAND_NAME(value) EXPORT data* cm_command_name(void) { return STACK_DATA(#value); }
 #define COMMAND_DESCRIPTION(value) EXPORT data* cm_command_description(void) { return STACK_DATA(value); }
@@ -26,6 +18,19 @@ char* read_file(char* path);
     return paramcontext_new(param_array_from((param*[]) { __VA_ARGS__ }, NUMARGS(__VA_ARGS__)), NUMARGS(__VA_ARGS__)); \
 }
 #define COMMAND EXPORT object* cm_command_caller
+#define COMMAND_INIT EXPORT void cm_command_init
+
+#define PLUGIN_NAME(value) EXPORT data* cm_plugin_name(void) { return STACK_DATA(#value); }
+#define PLUGIN EXPORT void cm_plugin_func
+
+#define MIDDLEWARE EXPORT void cm_middleware_func
+
+#define IS_COMMAND (1UL << 1)
+#define IS_PLUGIN (1UL << 2)
+#define IS_MIDDLEWARE (1UL << 3)
+#define FLAGS(flags) EXPORT size_t cm_symbol_flags(void) { \
+    return (0) | (flags); \
+}
 
 #ifdef PLATFORM_POSIX
 #include <dlfcn.h>
@@ -43,7 +48,7 @@ typedef void* library;
 typedef HINSTANCE library;
 #endif
 
-bool iterate_dir(char* path, dir_iter_func func);
-bool is_file(char* path);
+API bool iterate_dir(const char* path, dir_iter_func func);
+API bool is_file(const char* path);
 
 #endif

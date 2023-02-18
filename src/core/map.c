@@ -41,6 +41,7 @@ inline void* map_get(map* m, const char* key) {
 }
 
 map* map_new(size_t inital_capacity) {
+    if (!inital_capacity) FAIL("initalial map capacity cannot be 0");
     map* m = safe_malloc(sizeof(map));
     m->len = 0;
     m->capacity = inital_capacity;
@@ -76,7 +77,7 @@ static void set_entry(
 
     if (!items[index])
         items[index] = safe_malloc(sizeof(pair));
-    
+
     items[index]->key = key;
     items[index]->value = value;
 }
@@ -99,7 +100,6 @@ static void expand(map* m) {
             );
             free(item);
         }
-        
     }
 
     free(m->items);
@@ -116,7 +116,7 @@ void map_free(map* m) {
             free(item);
         }
     }
-    
+
     free(m->items);
     free(m);
 }

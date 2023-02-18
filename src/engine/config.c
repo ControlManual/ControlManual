@@ -19,7 +19,7 @@ config* load_config(void) {
 
     if (!exists(file))
         fclose(fopen(file, "w"));
-   
+
     char* content = read_file(file);
 
     size_t len = strlen(content);
@@ -34,7 +34,7 @@ config* load_config(void) {
             free(charstr);
             continue;
         }
-        
+
         vector* tokens = tokenize(buf);
         process_errors(true);
         token* key = vector_get(tokens, 0);
@@ -64,7 +64,7 @@ config* load_config(void) {
         strcpy(buf, "");
         vector_free(tokens);
     }
-    
+
     free(buf);
     free(file);
     free(content);

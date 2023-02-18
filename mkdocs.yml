@@ -1,0 +1,23 @@
+site_name: Control Manual
+site_url: https://docs.controlmanual.xyz
+repo_url: https://github.com/ZeroIntensity/controlmanual
+repo_name: ZeroIntensity/controlmanual
+
+nav:
+    - Home: index.md
+    - "Release Notes": release_notes.md
+    - Commands: commands.md
+    - "Public API":
+          - "Data API": public-api/data.md
+          - "Datastructures": public-api/datastructures.md
+          - "The UI": public-api/ui.md
+          - "Object API": public-api/objects.md
+    - "Internal API":
+          - "Style Guide": internal-api/style_guide.md
+          - "Top Context's": internal-api/tcontext.md
+          - "Useful Utilities": internal-api/utilities.md
+          - "UI Implementation": internal-api/ui_impl.md
+
+theme:
+    name: null
+    custom_dir: "html/"
