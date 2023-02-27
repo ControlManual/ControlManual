@@ -1,13 +1,13 @@
-#include <controlmanual/engine/loader.h>
 #include <controlmanual/core/data.h>
 #include <controlmanual/core/map.h>
 #include <controlmanual/core/object.h>
 #include <controlmanual/core/ui.h>
+#include <controlmanual/core/tcontext.h>
 #include <controlmanual/engine/context.h> // parse_context
+#include <controlmanual/engine/loader.h>
 #include <controlmanual/engine/util.h>
 #include <controlmanual/engine/config.h>
 #include <controlmanual/engine/main.h>
-#include <controlmanual/core/tcontext.h>
 #include <stdio.h> // sprintf
 #include <string.h> // strlen
 #define LOAD_ERROR(msg) { \

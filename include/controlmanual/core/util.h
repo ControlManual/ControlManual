@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdarg.h> // va_list
+#include <stdnoreturn.h>
 #define REALLY_UNPAREN(...) __VA_ARGS__
 #define INVOKE(expr) expr
 #define UNPAREN(args) INVOKE(REALLY_UNPAREN args)
@@ -51,7 +52,27 @@
 #endif
 
 #ifdef __GNUC__
-#define UNUSED __attribute__ ((unused))
+#define COMPILER_GNU
+#endif
+
+#ifdef __clang__
+#define COMPILER_CLANG
+#endif
+
+#ifdef _MSC_VER
+#define COMPILER_MSVC
+#endif
+
+#if !defined(COMPILER_GNU) && !defined(COMPILER_CLANG) && !defined(COMPILER_MSVC)
+#warning "this compiler is not gcc, clang, or msvc"
+#endif
+
+#if defined(COMPILER_GNU) || defined(COMPILER_CLANG)
+#define COMPILER_GCC_LIKE
+#endif
+
+#ifdef COMPILER_GCC_LIKE
+#define UNUSED __attribute__((unused))
 #else
 #define UNUSED
 #endif
@@ -65,7 +86,7 @@
 API void* safe_malloc(size_t bytes);
 API void* safe_realloc(void* ptr, size_t nbytes);
 API void* safe_calloc(size_t num, size_t size);
-API void fail(const char* message, int lineno, const char* file);
+API noreturn void fail(const char* message, int lineno, const char* file);
 
 API int* int_convert(int value);
 API char* format_size_va(const char* fmt, size_t* bufsize_target, va_list vargs, ...);

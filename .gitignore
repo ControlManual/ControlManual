@@ -12,3 +12,6 @@ package-lock.json
 node_modules/
 output.css
 .venv/
+compile_flags.txt
+build/
+*.egg-info/

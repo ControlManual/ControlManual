@@ -1,8 +1,19 @@
 #include <controlmanual/core/tcontext.h>
 #include <controlmanual/core/error.h>
+#include <stdbool.h>
+#define ENUMNAME(name) case name: return #name;
+#ifdef CM_DEBUG
+#include <string.h>
+#include <stdio.h>
+#include <controlmanual/core/ui.h>
+#endif
 
 list* cm_tcontext_stack = NULL;
 tcontext* cm_runtime_tcontext = NULL;
+
+#ifdef CM_DEBUG
+bool cm_show_tcontext = false;
+#endif
 
 static tcontext* tcontext_new(
     data* name,
@@ -44,12 +55,29 @@ void tcontext_init() {
     );
 }
 
+const char* tcontext_state_name(tcontext_state state) {
+    switch (state) {
+        ENUMNAME(INITALIZING)
+        ENUMNAME(COMMAND_LOAD)
+        ENUMNAME(MIDDLEWARE_LOAD)
+        ENUMNAME(PLUGIN_LOAD)
+        ENUMNAME(COMMAND_LOOP)
+        ENUMNAME(MIDDLEWARE_EXEC)
+        ENUMNAME(COMMAND_EXEC)
+        ENUMNAME(OBJECT_EXEC)
+        ENUMNAME(FINALIZING)
+    }
+
+    return "<UNKNOWN>";
+}
+
 void tcontext_advance(
     data* name,
     data* origin,
     context* ctx,
     tcontext_state state
 ) {
+
     cm_runtime_tcontext = tcontext_new(
         name,
         origin,
@@ -57,6 +85,32 @@ void tcontext_advance(
         ctx,
         state
     );
+
+    #ifdef CM_DEBUG
+    if (cm_show_tcontext) {
+        ui* u = ui_acquire();
+        size_t len = snprintf(
+            NULL,
+            0,
+            "advanced tcontext: (origin %s) (name %s) (address %p)",
+            CONTENT_STR(origin),
+            name ? CONTENT_STR(name) : "<null>",
+            cm_runtime_tcontext
+        );
+        char* message = safe_malloc(len);
+        sprintf(
+            message,
+            "advanced tcontext: (origin %s) (name %s) (address %p)",
+            CONTENT_STR(origin),
+            name ? CONTENT_STR(name) : "<null>",
+            cm_runtime_tcontext
+        );
+
+        u->log(message, "tcontext_advance");
+        free(message);
+    }
+    #endif
+
     list_append(
         cm_tcontext_stack,
         CUSTOM_DATA(cm_runtime_tcontext, tcontext_free)
@@ -65,6 +119,30 @@ void tcontext_advance(
 
 
 void tcontext_pop() {
+    #ifdef CM_DEBUG
+    if (cm_show_tcontext) {
+        ui* u = ui_acquire();
+        size_t len = snprintf(
+            NULL,
+            0,
+            "popped tcontext: (origin %s) (name %s) (address %p)",
+            CONTENT_STR(cm_runtime_tcontext->origin),
+            cm_runtime_tcontext->name ? CONTENT_STR(cm_runtime_tcontext->name) : "<null>",
+            cm_runtime_tcontext
+        );
+        char* message = safe_malloc(len);
+        sprintf(
+            message,
+            "popped tcontext: (origin %s) (name %s) (address %p)",
+            CONTENT_STR(cm_runtime_tcontext->origin),
+            cm_runtime_tcontext->name ? CONTENT_STR(cm_runtime_tcontext->name) : "<null>",
+            cm_runtime_tcontext
+        );
+
+        u->log(message, "tcontext_pop");
+        free(message);
+    }
+    #endif
     process_errors();
     /*
         errors hold a reference to the tcontext,

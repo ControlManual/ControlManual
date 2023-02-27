@@ -20,6 +20,6 @@ API void context_free(context* c);
 API void parse_context(context* c, ...);
 API extern void context_abort(context* c);
 API void process_context_errors(context* c);
-
+API void missing(context* c, const char* name);
 
 #endif

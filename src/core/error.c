@@ -35,7 +35,6 @@ inline error* error_pop(void) {
 void throw_error(
     data* content,
     data* origin,
-    error* cause,
     data* expr,
     vector* problems
 ) {
@@ -44,7 +43,6 @@ void throw_error(
     tcontext* tc = TC();
     e->content = content;
     e->origin = origin;
-    e->cause = cause;
     e->expr = expr;
     e->problems = problems;
     e->tc = tc;

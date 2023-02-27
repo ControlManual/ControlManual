@@ -13,10 +13,9 @@
     STACK_DATA(content), \
     STACK_DATA(where), \
     NULL, \
-    NULL, \
     NULL \
 )
-#define THROW_HEAP(content, where) throw_error(HEAP_DATA(content), STACK_DATA(where), NULL, NULL, NULL)
+#define THROW_HEAP(content, where) throw_error(HEAP_DATA(content), STACK_DATA(where), NULL, NULL)
 
 typedef struct STRUCT_ERROR error;
 typedef FUNCTYPE(ui_error, void, (error*, tcontext*));
@@ -25,7 +24,6 @@ typedef FUNCTYPE(ui_error, void, (error*, tcontext*));
 struct STRUCT_ERROR {
     data* content;
     data* origin;
-    error* cause;
     data* expr;
     vector* problems;
     tcontext* tc;
@@ -38,7 +36,6 @@ API bool process_errors();
 API void throw_error(
     data* content,
     data* origin,
-    error* cause,
     data* expr,
     vector* problems
 );

@@ -1,15 +1,16 @@
 #include <controlmanual/core/vector.h>
-#include <controlmanual/engine/lexer.h>
 #include <controlmanual/core/data.h>
 #include <controlmanual/core/error.h> // throw
-#include <controlmanual/engine/util.h> // char_to_string
 #include <controlmanual/core/object.h>
 #include <controlmanual/core/error.h> // THROW_STATIC
 #include <controlmanual/core/map.h>
+#include <controlmanual/core/util.h> // safe_malloc, RETN
+#include <controlmanual/core/ui.h>
+#include <controlmanual/core/tcontext.h>
 #include <controlmanual/engine/main.h>
 #include <controlmanual/engine/context.h>
-#include <controlmanual/core/util.h> // safe_malloc, RETN
-#include <controlmanual/core/tcontext.h>
+#include <controlmanual/engine/util.h> // char_to_string
+#include <controlmanual/engine/lexer.h>
 #include <stdlib.h> // size_t
 #include <string.h>
 #include <stdio.h> // sprintf
@@ -100,6 +101,7 @@ typedef enum ENUM_BTOKEN_TYPE {
     BRACKET_OPEN,
     BRACKET_CLOSE,
     FLAGC,
+    OPERATORC
 } btoken_type;
 
 typedef struct STRUCT_BTOKEN {
@@ -170,7 +172,6 @@ static void parse_error(
     throw_error(
         STACK_DATA(er_str),
         STACK_DATA("<parsing>"),
-        NULL,
         NOFREE_DATA((char*) str),
         v
     );
@@ -190,6 +191,18 @@ vector* tokenize_basic(const char* str) {
         current_flags = item ? item->flags : 0;
 
         switch (c) {
+            case '+':
+            case '/':
+            case '*': {
+                if (CHECK(ignore_toks) == 0 || CHECK(is_bracket)) {
+                    PUSH_AND_DUMP(OPERATORC);
+                    break;
+                }
+                
+                WRITE();
+                break;
+            }
+            
             case '"': {
                 if (CHECK(is_dquote)) {
                     DUMP(DSTRING_CLOSE);
@@ -318,6 +331,9 @@ vector* tokenize_basic(const char* str) {
                 if (CHECK(ignore_toks) == 0) {
                     PUSH_AND_DUMP(FLAGC);
                     break;
+                } else if (CHECK(is_bracket)) {
+                    PUSH_AND_DUMP(OPERATORC);
+                    break;
                 }
                 WRITE();
                 break;
@@ -414,13 +430,38 @@ vector* tokenize(const char* str) {
                 STACK_PUSH(token_new(STRING_LITERAL, strdup(buf)));
                 CLEAR_BUFFER();
                 break;
-
-            case BRACKET_CLOSE:
-                STACK_PUSH(token_new(REFERENCE, strdup(buf)));
-                CLEAR_BUFFER_NOWRITE();
+            
+            case BRACKET_OPEN:
+                CLEAR_BUFFER();
+                vector_append(token_stack, HEAP_DATA(vector_new()));
                 break;
 
-            case BRACKET_OPEN:
+            case BRACKET_CLOSE: {
+                data* array = vector_pop(
+                    token_stack,
+                    VECTOR_LENGTH(token_stack) - 1
+                );
+                STACK_PUSH(
+                    token_new(REFERENCE, data_content(data_from(array)))
+                );
+                break;
+            }
+
+            case OPERATORC: {
+                if (!strcmp(btok->content, "*")) {
+                    
+                } else if (!strcmp(btok->content, "+")) {
+
+                } else if (!strcmp(btok->content, "-")) {
+
+                } else if (!strcmp(btok->content, "/")) {
+                    
+                } else {
+                    FAIL("invalid operatorc");
+                }
+                break;
+            }
+
             case WHITESPACE:
             case COMMA:
             case DSTRING_OPEN:
@@ -676,9 +717,18 @@ void params_from_tokens(
             }
 
             case REFERENCE: {
-                object* ob = scope_get(GLOBAL, t->content);
+                vector* result = vector_new();
+                vector_insert(
+                    t->content,
+                    0,
+                    HEAP_DATA(token_new(STRING_LITERAL, ""))
+                );
+                params_from_tokens(t->content, NULL, result, NULL, NULL);
                 if (error_occurred()) return;
-                vector_append(params, NOFREE_DATA(ob));
+                for (int i = 0; i < VECTOR_LENGTH(result); i++) {
+                    object* o = VECTOR_GET(result, i); 
+                    print_obj(o);
+                }
                 break;
             }
 
@@ -690,7 +740,8 @@ void params_from_tokens(
                     0,
                     HEAP_DATA(token_new(STRING_LITERAL, ""))
                 );
-                params_from_tokens(t->content, NULL, result, flags, keywords);
+                params_from_tokens(t->content, NULL, result, NULL, NULL);
+                if (error_occurred()) return;
                 vector_append(params, OBJECT_DATA(array_from(t->content)));
                 break;
             }
@@ -702,10 +753,11 @@ void params_from_tokens(
                 );
                 break;
 
-            case INTEGER_LITERAL:
-                long long value = strtoll(t->content, NULL, 10);
+            case INTEGER_LITERAL: {
+                long value = strtol(t->content, NULL, 10);
                 vector_append(params, OBJECT_DATA(integer_from(value)));
                 break;
+            }
 
             case SFLAG_NVAL: {
                 size_t len = strlen(t->content);
@@ -736,7 +788,7 @@ void params_from_tokens(
                 );
                 break;
 
-            case KFLAG:
+            case KFLAG: {
                 vector* dummy_vector = vector_new();
                 vector* dummy_result = vector_new();
                 vector_append(dummy_vector, token_new(STRING_LITERAL, ""));
@@ -761,6 +813,7 @@ void params_from_tokens(
                 vector_free(dummy_result);
                 vector_free(dummy_vector);
                 break;
+            }
 
             case SFLAG: {
                 flagexpr* f = t->content;

@@ -2,6 +2,7 @@
 #define CM_ENGINE_UTIL_H
 #include <controlmanual/core/util.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 API char* char_to_string(const char c);
 API bool exists(const char* path);
@@ -50,5 +51,12 @@ typedef HINSTANCE library;
 
 API bool iterate_dir(const char* path, dir_iter_func func);
 API bool is_file(const char* path);
+
+#ifdef CM_LARGE_OPTION_SIZE
+typedef uint16_t option;
+#else
+typedef uint8_t option;
+#endif
+
 
 #endif

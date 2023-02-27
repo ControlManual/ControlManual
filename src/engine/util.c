@@ -1,7 +1,7 @@
 #include <controlmanual/core/error.h>
-#include <controlmanual/engine/util.h>
 #include <controlmanual/core/util.h> // safe_malloc, FUNCTYPE
 #include <controlmanual/core/object.h>
+#include <controlmanual/engine/util.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>

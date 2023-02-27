@@ -40,6 +40,11 @@ struct STRUCT_TCONTEXT {
 extern list* cm_tcontext_stack;
 extern tcontext* cm_runtime_tcontext;
 
+#ifdef CM_DEBUG
+#include <stdbool.h>
+extern bool cm_show_tcontext;
+#endif
+
 API void tcontext_init();
 API void tcontext_free(tcontext* tc);
 API void tcontext_advance(
@@ -53,5 +58,6 @@ API extern tcontext* tcontext_acquire();
 
 API void tcontext_add_finalizer(tcontext* tc, tcontext_finalizer finalizer);
 API void tcontext_add_finalizer_inplace(tcontext_finalizer finalizer);
+API const char* tcontext_state_name(tcontext_state state);
 
 #endif

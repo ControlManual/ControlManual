@@ -70,7 +70,6 @@ API param* param_new(
 API param** param_array_from(param** array, size_t size);
 
 extern type cm_any_wrapper;
-
 #define any cm_any_wrapper
 
 #define EXPR(value) #value
@@ -93,7 +92,7 @@ extern type cm_any_wrapper;
 #define ARG_NOCONV(name, desc, tp) RAW_ARG(name, desc, tp, false)
 #define DEFAULT_ARG_NOCONV(name, desc, tp, expr) RAW_DEFAULT_ARG(name, desc, tp, expr, false)
 
-#define OPTION(...) param_new(NULL, NULL, NULL, false, false, true, NULL, true, NULL, true, (sizeof((const char*[]) { __VA_ARGS__ }) / sizeof(const char*)), (const char*[]) { __VA_ARGS__ })
+#define OPTION(name, ...) param_new(STACK_DATA(#name), NULL, NULL, false, false, true, NULL, true, NULL, true, (sizeof((const char*[]) { __VA_ARGS__ }) / sizeof(const char*)), (const char*[]) { __VA_ARGS__ })
 
 typedef struct STRUCT_PARAMCONTEXT {
     param** params;

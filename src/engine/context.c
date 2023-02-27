@@ -1,11 +1,11 @@
-#include <controlmanual/engine/context.h>
 #include <controlmanual/core/map.h>
 #include <controlmanual/core/vector.h>
-#include <controlmanual/engine/loader.h>
 #include <controlmanual/core/util.h> // safe_malloc
 #include <controlmanual/core/object.h>
 #include <controlmanual/core/error.h> // THROW_STATIC
 #include <controlmanual/engine/lexer.h>
+#include <controlmanual/engine/context.h>
+#include <controlmanual/engine/loader.h>
 #include <stdarg.h>
 #include <stdio.h> // sprintf
 #include <string.h> // strlen
@@ -64,18 +64,22 @@ void parse_context(context* c, ...) {
     for (int i = 0; i < c->co->sc->params_len; i++) {
         param* p = c->co->sc->params[i];
         object* o = NULL;
-        char* name = data_content_maybe(p->name);
+        char* name = data_content(p->name);
 
         if (p->option) {
-            unsigned int* ptr = va_arg(args, unsigned int*);
+            option* ptr = va_arg(args, option*);
             o = vector_get(c->params, current_pindex);
+            if (!o) o = map_get(c->keywords, name);
+            else ++current_pindex;
             if (!o) {
-                THROW_STATIC(
-                    "missing required choice",
+                char* s = safe_malloc(26 + strlen(name));
+                sprintf(s, "missing required argument: %s", name);
+                THROW_HEAP(
+                    s,
                     "<arguments>"
                 );
                 EXIT();
-            } else ++current_pindex;
+            };
             if (!ensure_derives(o, &string)) EXIT();
             int op_index = -1;
 
@@ -162,4 +166,23 @@ void parse_context(context* c, ...) {
     }
 
     va_end(args);
+}
+
+void missing(context* c, const char* name) {
+    char* str = safe_malloc(28 + strlen(name));
+    sprintf(str, "missing required argument: %s", name);
+    THROW_HEAP(
+        str,
+        "<arguments>"
+    );
+    EXIT();
+}
+
+void abort_ctx(context* c) {
+    EXIT();
+}
+
+void throw_ctx(context* c, data* content, data* origin) {
+    throw_error(content, origin, NULL, NULL);
+    EXIT();
 }

@@ -6,6 +6,7 @@
 #include <controlmanual/core/error.h>
 #include <controlmanual/engine/loader.h>
 #define UI() ui_acquire();
+#define LOG(msg) write_log(msg, __func__)
 
 typedef enum ENUM_INPUT_SCOPE {
     GLOBAL_ACCESS,
@@ -24,6 +25,8 @@ typedef FUNCTYPE(ui_confirm, bool, (const char*))
 typedef FUNCTYPE(ui_window, windowid, (const char*));
 typedef FUNCTYPE(ui_window_close, void, (windowid));
 typedef FUNCTYPE(ui_window_write, void, (windowid, const char*));
+typedef FUNCTYPE(ui_choose, size_t, (const char*, const char*[], size_t))
+typedef FUNCTYPE(ui_list, void, (const char*[], size_t))
 
 typedef struct STRUCT_UI {
     ui_error error;
@@ -39,6 +42,9 @@ typedef struct STRUCT_UI {
     ui_window_close window_close;
     ui_window_write window_write;
     ui_none clear;
+    ui_choose choose;
+    ui_list list;
+    ui_twoargs log;
 } ui;
 
 extern ui* cm_impl_ui_wrapper;
@@ -56,7 +62,10 @@ API void ui_register(
     ui_window window,
     ui_window_close window_close,
     ui_window_write window_write,
-    ui_none clear 
+    ui_none clear,
+    ui_choose choose,
+    ui_list list,
+    ui_twoargs log
 );
 
 API extern ui* ui_acquire();
@@ -70,6 +79,7 @@ API windowid window(const char* name);
 API void window_close(windowid id);
 API void window_write(windowid id, const char* message);
 API void clear();
+API void write_log(const char* message, const char* funcname);
 API void print_fmt(const char* fmt, ...);
 API void alert_fmt(const char* fmt, ...);
 API void warn_fmt(const char* fmt, ...);

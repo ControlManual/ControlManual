@@ -1,13 +1,13 @@
-#include <controlmanual/engine/lexer.h>
 #include <controlmanual/core/ui.h>
 #include <controlmanual/core/error.h>
 #include <controlmanual/core/vector.h>
+#include <controlmanual/core/object.h>
+#include <controlmanual/core/tcontext.h>
+#include <controlmanual/engine/context.h>
+#include <controlmanual/engine/lexer.h>
+#include <controlmanual/engine/main.h>
 #include <controlmanual/engine/config.h>
 #include <controlmanual/engine/loader.h>
-#include <controlmanual/core/object.h>
-#include <controlmanual/engine/context.h>
-#include <controlmanual/engine/main.h>
-#include <controlmanual/core/tcontext.h>
 #include <string.h> // strdup
 #include <stdio.h>
 #include <signal.h>
@@ -23,6 +23,7 @@
 }
 
 char* PATH;
+char* cm_dir;
 
 void unload() {
     ADVANCE_DEFAULT(NULL, unload, FINALIZING);
@@ -103,8 +104,9 @@ end:
 void start() {
     ERRSTACK_INIT;
     ui* u = UI();
+    cm_dir = cat_path(home(), ".controlmanual");
+    if (!exists(cm_dir)) create_dir(cm_dir);
     tcontext_init();
-    load_config();
     init_types();
     process_errors();
 
@@ -119,6 +121,7 @@ void start() {
     load_commands();
     load_middleware();
     load_plugins();
+    load_config();
     process_errors();
 
     ADVANCE_DEFAULT(NULL, start, COMMAND_LOOP);

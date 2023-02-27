@@ -20,6 +20,7 @@
 
 ui* UI = NULL;
 
+
 inline ui* ui_acquire() {
     if (!UI) FAIL("UI has not been registered");
     return UI;
@@ -38,7 +39,10 @@ void ui_register(
     ui_window window,
     ui_window_close window_close,
     ui_window_write window_write,
-    ui_none clear 
+    ui_none clear,
+    ui_choose choose,
+    ui_list list,
+    ui_twoargs log
 ) {
     ui* u = safe_malloc(sizeof(ui));
     u->error = error;
@@ -54,6 +58,9 @@ void ui_register(
     u->window_close = window_close;
     u->window_write = window_write;
     u->clear = clear;
+    u->choose = choose;
+    u->list = list;
+    u->log = log;
     UI = u;
 }
 
@@ -107,6 +114,11 @@ void window_write(windowid id, const char* message) {
 void clear() {
     ui* u = ui_acquire();
     u->clear();
+}
+
+void write_log(const char* message, const char* funcname) {
+    ui* u = ui_acquire();
+    u->log(message, funcname);
 }
 
 void print_fmt(const char* fmt, ...) FMT(print)

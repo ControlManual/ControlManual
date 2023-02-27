@@ -7,12 +7,13 @@
 #include <errno.h>
 #include <string.h> // strerror
 #include <math.h> // log10, ceil
-#define ENUMNAME(name) case name: return #name;
+#include <signal.h>
+#include <stdnoreturn.h>
 #define STR_OR_NULL(d) d ? CONTENT_STR(d) : "<null>"
 #define INCBUF(amount) do { bufsize += amount; str = safe_realloc(str, bufsize); } while (0);
 #define CATSTR(s) do { \
     INCBUF(strlen(s)); \
-    strcat(str, s); \
+    strcat(str, strdup(s)); \
 } while (0);
 #define INTFMT(tp, fmt) { \
                     tp i = va_arg(vargs, tp); \
@@ -22,23 +23,12 @@
                     break; \
                 }
 
-static char* tcontext_state_name(tcontext_state state) {
-    switch (state) {
-        ENUMNAME(INITALIZING)
-        ENUMNAME(COMMAND_LOAD)
-        ENUMNAME(MIDDLEWARE_LOAD)
-        ENUMNAME(PLUGIN_LOAD)
-        ENUMNAME(COMMAND_LOOP)
-        ENUMNAME(MIDDLEWARE_EXEC)
-        ENUMNAME(COMMAND_EXEC)
-        ENUMNAME(OBJECT_EXEC)
-        ENUMNAME(FINALIZING)
-    }
 
-    return "<UNKNOWN>";
-}
-
-void fail(const char* message, int lineno, const char* file) {
+noreturn void fail(const char* message, int lineno, const char* file) {
+#ifdef CM_DEBUG
+    signal(SIGSEGV, SIG_DFL);
+    /* we need to reset the signal handler in case something goes wrong in this function */
+#endif
     fprintf(
         stderr,
         "(%s:%d) fatal control manual error: %s\n\n"
@@ -115,10 +105,16 @@ int* int_convert(int value) {
     return i;
 }
 
-char* format_size_va(const char* fmt, size_t* bufsize_target, va_list vargs, ...) {
+char* format_size_va(
+    const char* fmt,
+    size_t* bufsize_target,
+    va_list vargs,
+    ...
+) {
     size_t len = strlen(fmt);
     size_t bufsize = 1;
     char* str = safe_malloc(1);
+    strcpy(str, "");
 
     for (int i = 0; i < len; i++) {
         char c = fmt[i];

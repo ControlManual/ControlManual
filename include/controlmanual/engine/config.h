@@ -4,11 +4,14 @@
 #include <controlmanual/core/map.h>
 #include <controlmanual/core/util.h>
 
-typedef struct STRUCT_CONFIG {
-    map* aliases;
-} config;
+typedef struct STRUCT_SETTINGS {
+    bool use_ui_options;
+    bool ctrl_c_kill;
+} settings;
 
-API config* load_config(void);
-extern char* cm_dir;
+API void load_config(void);
+extern settings cm_settings;
+
+#define SETTINGS cm_settings
 
 #endif
