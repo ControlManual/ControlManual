@@ -25,12 +25,9 @@
 #define STRING_VALUE(o) ((char*) data_content(o->value))
 #define TYPE(o) ((type*) o->tp)
 
-#define OBJECT_DATA(o) CUSTOM_DATA(o, object_dealloc)
-
-typedef struct STRUCT_SCOPE {
-    map* global;
-    map* local;
-} scope;
+#define OBJECT_DATA(o) object_ref(o)
+#define SET_VAR(name, value) map_set(cm_current_scope, name, value)
+#define CURRENT_SCOPE cm_current_scope
 
 typedef struct STRUCT_TYPE type;
 typedef struct STRUCT_OBJECT object;
@@ -50,12 +47,14 @@ struct STRUCT_TYPE {
     obj_func_noargs iter;
     data* name;
     map* methods;
+    object* base;
 };
 
 struct STRUCT_OBJECT {
     type* tp;
     map* attributes;
     void* value;
+    data* ref;
 };
 
 extern type base;
@@ -75,9 +74,9 @@ API extern object* object_get_attr(object* ob, const char* name);
 API object* object_new(object* tp, vector* params);
 API object* object_newf(object* tp, size_t len, ...);
 API object* object_from(data* tp);
-API scope* scope_new(void);
-API scope* scope_from(map* globals);
-API void scope_free(scope* s, bool free_globals);
+API map* scope_new(void);
+API map* scope_from(map* globals);
+API void scope_free(map* s);
 API bool type_derives(type* src, type* tp);
 API object* object_internal_new(object* tp, vector* params);
 API object* object_internal_newf(object* tp, size_t len, ...);
@@ -85,7 +84,7 @@ API object* object_call(object* o, vector* args);
 API object* object_callf(object* o, size_t len, ...);
 API object* string_from(data* str);
 API object* integer_from(int value);
-API object* scope_get(scope* s, char* name);
+API object* scope_get(map* s, char* name);
 
 API bool parse_vargs(vector* params, const char* format, va_list args);
 API bool parse_args(vector* params, const char* format, ...);
@@ -96,12 +95,15 @@ API bool type_compare(type* a, type* b);
 API object* iterator_from(vector* values);
 API object* array_from(vector* value);
 API extern void object_dealloc(object* ob);
-API object* string_fmt(const char* fmt, ...) ;
+API object* string_fmt(const char* fmt, ...);
 
 #define GLOBAL cm_global_scope
-extern scope* cm_global_scope;
+extern map* cm_global_scope;
+extern map* cm_current_scope;
 
 API object* func_from(obj_func func);
 API object* object_to_string(object* o);
+API data* object_ref(object* o);
+API extern data* scope_get_data(map* s, char* name);
 
 #endif

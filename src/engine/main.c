@@ -19,16 +19,17 @@
 #define PRINT(o) { \
     object* str = object_to_string(o); \
     PROCESS(); \
-    u->print(STRING_VALUE(str)); \
+    u->print(STRING_VALUE(str), true); \
 }
 
-char* PATH;
+char* cm_current_path;
 char* cm_dir;
+map* cm_current_scope;
 
 void unload() {
-    ADVANCE_DEFAULT(NULL, unload, FINALIZING);
+    ADVANCE_DEFAULT(NULL, FINALIZING);
     ui* u = UI();
-    scope_free(GLOBAL, false);
+    scope_free(GLOBAL);
     free(PATH);
     free(cm_dir);
     map_free(commands);
@@ -83,7 +84,6 @@ object* command_exec(const char* str) {
     context* co = context_new(c, params, flags, keywords, &buf);
     ADVANCE_DEFAULT_CTX(
         NOFREE_DATA(command_name),
-        command_exec,
         co,
         COMMAND_EXEC
     );
@@ -111,6 +111,7 @@ void start() {
     process_errors();
 
     GLOBAL = scope_new();
+    CURRENT_SCOPE = GLOBAL;
     PATH = strdup(home());
     if (u->start) u->start();
     atexit(unload);
@@ -124,7 +125,7 @@ void start() {
     load_config();
     process_errors();
 
-    ADVANCE_DEFAULT(NULL, start, COMMAND_LOOP);
+    ADVANCE_DEFAULT(NULL, COMMAND_LOOP);
     while (true) {
         data* d = u->input(GLOBAL_ACCESS, NULL);
         vector* tokens = tokenize(data_content(d));
@@ -166,17 +167,16 @@ void start() {
         };
 
         context* co = context_new(c, params, flags, keywords, &buf);
-        ADVANCE_DEFAULT_CTX(NOFREE_DATA(command_name), start, co, COMMAND_EXEC);
+        ADVANCE_DEFAULT_CTX(NOFREE_DATA(command_name), co, COMMAND_EXEC);
         object* result = NULL; // in case the function doesnt return
         tcontext* tc = TC();
 
-        ADVANCE_DEFAULT_CTX(NULL, start, co, MIDDLEWARE_EXEC);
+        ADVANCE_DEFAULT_CTX(NULL, co, MIDDLEWARE_EXEC);
         for (int i = 0; i < VECTOR_LENGTH(cm_middleware); i++)
             ((middleware*) VECTOR_GET(cm_middleware, i))->func(tc, co);
 
         tcontext_pop();
         result = c->caller(co);
-
 end:
         tcontext_pop();
         context_free(co);

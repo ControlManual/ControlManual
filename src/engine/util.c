@@ -67,7 +67,7 @@ void create_dir(const char* path) {
 #else
     if (!CreateDirectory(path, NULL)) FAIL(
         "failed to create directory"
-    ); 
+    );
 #endif
 }
 
@@ -105,7 +105,7 @@ bool iterate_dir(const char* path, dir_iter_func func) {
     HANDLE find = FindFirstFile(path, &data);
     if (find == INVALID_HANDLE_VALUE) {
         ITERDIR_ERR();
-    } 
+    }
 
     do {
         func(data.cFileName);

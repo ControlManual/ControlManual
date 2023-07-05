@@ -8,6 +8,7 @@
 #include <controlmanual/engine/util.h>
 #include <controlmanual/engine/config.h>
 #include <controlmanual/engine/main.h>
+#include <controlmanual/engine/lexer.h>
 #include <stdio.h> // sprintf
 #include <string.h> // strlen
 #define LOAD_ERROR(msg) { \
@@ -18,6 +19,7 @@
     return; \
 }
 #define NOSYMBOL(sym) LOAD_ERROR(sym " is not exported by '%s'")
+#define ESTR(name) case name: return #name
 
 #ifdef COMMAND
 #undef COMMAND
@@ -44,10 +46,11 @@
 /*
     Dummy type for representing "any" in schemas.
     Do not use as an actual type.
-*/
+ */
 type cm_any_wrapper = {};
 
-map* commands;
+map* commands = NULL;
+vector* packages = NULL;
 
 void middleware_loader(char* path);
 void plugin_loader(char* path);
@@ -103,6 +106,99 @@ object* help_impl(context* c) {
     return NULL;
 }
 
+object* fail_impl(context* c) {
+    char* msg;
+    parse_context(c, &msg);
+    FAIL(msg);
+}
+
+object* let_impl(context* c) {
+    char* name;
+    object* value;
+    parse_context(c, &name, &value);
+    SET_VAR(HEAP_DATA(strdup(name)), OBJECT_DATA(value));
+
+    return value;
+}
+
+object* type_impl(context* c) {
+    object* obj;
+    parse_context(c, &obj);
+    return obj->tp->base;
+}
+
+object* concat_impl(context* c) {
+    char* str_a;
+    char* str_b;
+    parse_context(c, &str_a, &str_b);
+    char* res = safe_malloc(strlen(str_a) + strlen(str_b) + 1);
+    sprintf(res, "%s%s", str_a, str_b);
+    return string_from(HEAP_DATA(res));
+}
+
+const char* btoken_to_string(btoken_type tp) {
+    switch (tp) {
+    ESTR(NOTOK);
+    ESTR(DSTRING_OPEN);
+    ESTR(DSTRING_CLOSE);
+    ESTR(SSTRING_OPEN);
+    ESTR(SSTRING_CLOSE);
+    ESTR(ARRAY_OPEN);
+    ESTR(COMMA);
+    ESTR(ARRAY_CLOSE);
+    ESTR(DIGIT);
+    ESTR(PAREN_OPEN);
+    ESTR(PAREN_CLOSE);
+    ESTR(WHITESPACE);
+    ESTR(BRACKET_OPEN);
+    ESTR(BRACKET_CLOSE);
+    ESTR(FLAGC);
+    default:
+        FAIL("got bad btoken type");
+    }
+}
+
+const char* token_to_string(token_type tp) {
+    switch (tp) {
+    ESTR(STRING_LITERAL);
+    ESTR(ARRAY_LITERAL);
+    ESTR(REFERENCE);
+    ESTR(GROUP_LITERAL);
+    ESTR(INTEGER_LITERAL);
+    ESTR(CALL);
+    ESTR(SFLAG_NVAL);
+    ESTR(KFLAG_NVAL);
+    ESTR(SFLAG);
+    ESTR(KFLAG);
+    default:
+        FAIL("got bad token type");
+    }
+}
+
+object* tokenize_impl(context* c) {
+    char* comm;
+    parse_context(c, &comm);
+    vector* btokens = tokenize_basic(comm);
+
+    for (int i = 0; i < VECTOR_LENGTH(btokens); i++) {
+        btoken* t = VECTOR_GET(btokens, i);
+        print_noline(btoken_to_string(t->type));
+        print_noline(" ");
+    }
+
+    print("");
+    vector* tokens = tokenize(comm);
+
+    for (int i = 0; i < VECTOR_LENGTH(tokens); i++) {
+        token* t = VECTOR_GET(tokens, i);
+        print_noline(token_to_string(t->type));
+        print_noline(" ");
+    }
+
+    print("");
+    return NULL;
+}
+
 param* param_new(
     data* name,
     data* description,
@@ -140,7 +236,7 @@ param* param_new(
 param** param_array_from(param** array, size_t size) {
     param** a = safe_calloc(size, sizeof(param*));
 
-    for (int i = 0; i < size; i++) 
+    for (int i = 0; i < size; i++)
         a[i] = array[i];
 
     return a;
@@ -163,22 +259,39 @@ void command_dealloc(command* c) {
     free(c);
 }
 
+void package_loader(char* path) {
+    ADVANCE_DEFAULT(NOFREE_DATA(path), PACKAGE_LOAD);
+    library l = OPEN_LIB(path);
+    if (!l) LOAD_ERROR("couldn't load library at '%s'");
+
+    get_str_func name_func = GET_SYMBOL(l, "cm_package_name");
+    if (!name_func) NOSYMBOL("cm_package_name");
+
+    get_str_func desc_func = GET_SYMBOL(l, "cm_package_description");
+    if (!desc_func) NOSYMBOL("cm_package_description");
+
+    data* name = name_func();
+    data* desc = desc_func();
+
+    /* package* pack = safe_malloc(sizeof(package)); */
+}
+
 void command_loader(char* path) {
-    ADVANCE_DEFAULT(NOFREE_DATA(path), command_loader, COMMAND_LOAD);
+    ADVANCE_DEFAULT(NOFREE_DATA(path), COMMAND_LOAD);
     if (is_file(path)) {
         library l = OPEN_LIB(path);
         if (!l) LOAD_ERROR("couldn't load library at '%s'");
 
         param_construct_func pcf = GET_SYMBOL(l, "cm_param_construct");
         if (!pcf) NOSYMBOL("cm_param_construct")
-        paramcontext* command_params = pcf();
+            paramcontext* command_params = pcf();
         get_str_func name_func = GET_SYMBOL(l, "cm_command_name");
         if (!name_func) NOSYMBOL("cm_command_name")
-        get_str_func desc_func = GET_SYMBOL(l, "cm_command_description");
+            get_str_func desc_func = GET_SYMBOL(l, "cm_command_description");
         if (!desc_func) NOSYMBOL("cm_command_description")
-        command_caller command_impl = GET_SYMBOL(l, "cm_command_caller");
+            command_caller command_impl = GET_SYMBOL(l, "cm_command_caller");
         if (!command_impl) NOSYMBOL("cm_command_caller")
-        plugin_impl_func init_func = GET_SYMBOL(l, "cm_command_init");
+            plugin_impl_func init_func = GET_SYMBOL(l, "cm_command_init");
         if (init_func) init_func();
 
         data* name = name_func();
@@ -225,24 +338,29 @@ void command_loader(char* path) {
 
 void plugin_loader(char* path) {
     ui* u = UI();
-    ADVANCE_DEFAULT(NOFREE_DATA(path), plugin_loader, PLUGIN_LOAD);
+    ADVANCE_DEFAULT(NOFREE_DATA(path), PLUGIN_LOAD);
 
     if (is_file(path)) {
         library l = OPEN_LIB(path);
         if (!l) LOAD_ERROR("couldn't load library at '%s'");
-        
+
         get_str_func name_func = GET_SYMBOL(l, "cm_plugin_name");
         if (!name_func) NOSYMBOL("cm_plugin_name")
-        plugin_impl_func plugin_func = GET_SYMBOL(l, "cm_plugin_func");
+            plugin_impl_func plugin_func = GET_SYMBOL(l, "cm_plugin_func");
         if (!plugin_func) NOSYMBOL("cm_plugin_func")
 
-        data* name = name_func();
+            data* name = name_func();
         plugin_func();
 
         char* str = safe_malloc(17 + strlen(CONTENT_STR(name)));
         sprintf(str, "loaded plugin \"%s\"", CONTENT_STR(name));
         u->alert(str);
         free(str);
+
+        get_str_func pack_name = GET_SYMBOL(l, "cm_package_name");
+        if (pack_name) {
+            package_loader(path);
+        }
 
         sym_flags_func flags_func = GET_SYMBOL(l, "cm_symbol_flags");
         if (flags_func) {
@@ -276,7 +394,7 @@ void middleware_loader(char* path) {
     if (!cm_middleware) cm_middleware = vector_new();
     // in case the loader gets called early
 
-    ADVANCE_DEFAULT(NOFREE_DATA(path), middleware_loader, MIDDLEWARE_LOAD);
+    ADVANCE_DEFAULT(NOFREE_DATA(path), MIDDLEWARE_LOAD);
 
     if (is_file(path)) {
         library l = OPEN_LIB(path);
@@ -303,7 +421,8 @@ void middleware_loader(char* path) {
 }
 
 void load_commands(void) {
-    ADVANCE_DEFAULT(NULL, load_commands, COMMAND_LOAD);
+    ADVANCE_DEFAULT(NULL, COMMAND_LOAD);
+    packages = vector_new();
     commands = map_new(4);
 
     COMMAND(
@@ -322,8 +441,34 @@ void load_commands(void) {
             0
         )
     )
-
     COMMAND(help, "Display help menu.");
+    COMMAND(
+        fail,
+        "Crash Control Manual.",
+        ARG(msg, "Failure message.", string)
+    );
+    COMMAND(
+        tokenize,
+        "Tokenize a command.",
+        ARG(command, "Command to tokenize.", string)
+    );
+    COMMAND(
+        let,
+        "Set a variable.",
+        ARG(name, "Name of the variable", string),
+        ARG(value, "Value of the variable.", any)
+    )
+    COMMAND(
+        type,
+        "Get the type of an object.",
+        ARG(obj, "Object to get type of.", any)
+    )
+    COMMAND(
+        concat,
+        "Concatenate two strings.",
+        ARG(a, "First string.", string),
+        ARG(b, "Second string.", string)
+    )
 
     char* p = cat_path(cm_dir, "commands");
     if (!exists(p)) create_dir(p);
@@ -334,7 +479,7 @@ void load_commands(void) {
 
 void load_plugins(void) {
     // NOTE: the runtime should be fully initalized at the time of calling this!
-    ADVANCE_DEFAULT(NULL, load_plugins, PLUGIN_LOAD);
+    ADVANCE_DEFAULT(NULL, PLUGIN_LOAD);
     char* p = cat_path(cm_dir, "plugins");
     if (!exists(p)) create_dir(p);
     else iterate_dir(p, plugin_loader);
@@ -344,7 +489,7 @@ void load_plugins(void) {
 
 void load_middleware(void) {
     cm_middleware = vector_new();
-    ADVANCE_DEFAULT(NULL, load_plugins, MIDDLEWARE_LOAD);
+    ADVANCE_DEFAULT(NULL, MIDDLEWARE_LOAD);
     char* p = cat_path(cm_dir, "middleware");
     if (!exists(p)) create_dir(p);
     else iterate_dir(p, middleware_loader);

@@ -5,8 +5,11 @@
 #include <controlmanual/core/util.h> // FUNCTYPE
 #include <controlmanual/core/list.h>
 
-#define ADVANCE_DEFAULT(name, origin, state) tcontext_advance(name, STACK_DATA(#origin), NULL, state)
-#define ADVANCE_DEFAULT_CTX(name, origin, ctx, state) tcontext_advance(name, STACK_DATA(#origin), ctx, state)
+#define ADVANCE_DEFAULT(name, state) \
+    tcontext_advance(name, STACK_DATA((void*) __func__), NULL, state)
+#define ADVANCE_DEFAULT_CTX(name, ctx, \
+                            state) \
+    tcontext_advance(name, STACK_DATA((void*) __func__), ctx, state)
 #define TC() tcontext_acquire()
 #define FINALIZE(finalizer) tcontext_add_finalizer_inplace(finalizer)
 
@@ -14,9 +17,10 @@ typedef struct STRUCT_CONTEXT context;
 
 typedef enum ENUM_TCONTEXT_STATE {
     INITALIZING, /* runtime is still initalizing */
-    COMMAND_LOAD, /* commands are being loaded */
+    COMMAND_LOAD, /* command is being loaded */
     MIDDLEWARE_LOAD, /* middleware is being loaded */
-    PLUGIN_LOAD, /* plugins are being loaded */
+    PLUGIN_LOAD, /* plugin is being loaded */
+    PACKAGE_LOAD, /* package is being loaded */
     COMMAND_LOOP, /* runtime is ready, we are now in the command loop */
     MIDDLEWARE_EXEC, /* we are executing middleware */
     COMMAND_EXEC, /* we are executing a command */

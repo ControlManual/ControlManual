@@ -15,7 +15,9 @@
     NULL, \
     NULL \
 )
-#define THROW_HEAP(content, where) throw_error(HEAP_DATA(content), STACK_DATA(where), NULL, NULL)
+#define THROW_HEAP(content, \
+                   where) \
+    throw_error(HEAP_DATA(content), STACK_DATA(where), NULL, NULL)
 
 typedef struct STRUCT_ERROR error;
 typedef FUNCTYPE(ui_error, void, (error*, tcontext*));
@@ -40,7 +42,9 @@ API void throw_error(
     vector* problems
 );
 
+API void throw_errno(data* origin);
 API extern bool error_occurred();
+API void* generic_error(void);
 
 #define DISALLOW_ERRORS { errors_suppressed = true
 #define ALLOW_ERRORS errors_suppressed = false; }

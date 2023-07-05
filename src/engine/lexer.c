@@ -85,31 +85,6 @@
     } \
     CLEAR_BUFFER_NOWRITE();
 
-typedef enum ENUM_BTOKEN_TYPE {
-    NOTOK,
-    DSTRING_OPEN,
-    DSTRING_CLOSE,
-    SSTRING_OPEN,
-    SSTRING_CLOSE,
-    ARRAY_OPEN,
-    COMMA,
-    ARRAY_CLOSE,
-    DIGIT,
-    PAREN_OPEN,
-    PAREN_CLOSE,
-    WHITESPACE,
-    BRACKET_OPEN,
-    BRACKET_CLOSE,
-    FLAGC,
-    OPERATORC
-} btoken_type;
-
-typedef struct STRUCT_BTOKEN {
-    btoken_type type;
-    char* content;
-    size_t index;
-} btoken;
-
 static btoken* btoken_new(btoken_type type, void* content, size_t index) {
     btoken* t = safe_malloc(sizeof(btoken));
     t->content = content;
@@ -191,25 +166,13 @@ vector* tokenize_basic(const char* str) {
         current_flags = item ? item->flags : 0;
 
         switch (c) {
-            case '+':
-            case '/':
-            case '*': {
-                if (CHECK(ignore_toks) == 0 || CHECK(is_bracket)) {
-                    PUSH_AND_DUMP(OPERATORC);
-                    break;
-                }
-                
-                WRITE();
-                break;
-            }
-            
             case '"': {
                 if (CHECK(is_dquote)) {
                     DUMP(DSTRING_CLOSE);
                     break;
-                }
-
-                PUSH(ignore_toks | is_dquote, DSTRING_OPEN);
+                } else if (CHECK(ignore_toks) == 0) {
+                    PUSH(ignore_toks | is_dquote, DSTRING_OPEN);
+                } else WRITE();
                 break;
             }
 
@@ -217,8 +180,9 @@ vector* tokenize_basic(const char* str) {
                 if (CHECK(is_squote)) {
                     DUMP(SSTRING_CLOSE);
                     break;
-                }
-                PUSH(ignore_toks | is_squote, SSTRING_OPEN);
+                } else if (CHECK(ignore_toks) == 0) {
+                    PUSH(ignore_toks | is_squote, SSTRING_OPEN);
+                } else WRITE();
                 break;
             }
 
@@ -309,7 +273,6 @@ vector* tokenize_basic(const char* str) {
                 break;
             }
 
-
             case '0':
             case '1':
             case '2':
@@ -330,9 +293,6 @@ vector* tokenize_basic(const char* str) {
             case '-':
                 if (CHECK(ignore_toks) == 0) {
                     PUSH_AND_DUMP(FLAGC);
-                    break;
-                } else if (CHECK(is_bracket)) {
-                    PUSH_AND_DUMP(OPERATORC);
                     break;
                 }
                 WRITE();
@@ -437,28 +397,8 @@ vector* tokenize(const char* str) {
                 break;
 
             case BRACKET_CLOSE: {
-                data* array = vector_pop(
-                    token_stack,
-                    VECTOR_LENGTH(token_stack) - 1
-                );
-                STACK_PUSH(
-                    token_new(REFERENCE, data_content(data_from(array)))
-                );
-                break;
-            }
-
-            case OPERATORC: {
-                if (!strcmp(btok->content, "*")) {
-                    
-                } else if (!strcmp(btok->content, "+")) {
-
-                } else if (!strcmp(btok->content, "-")) {
-
-                } else if (!strcmp(btok->content, "/")) {
-                    
-                } else {
-                    FAIL("invalid operatorc");
-                }
+                vector_append(tokens, token_new(REFERENCE, strdup(buf)));
+                CLEAR_BUFFER();
                 break;
             }
 
@@ -482,10 +422,8 @@ vector* tokenize(const char* str) {
 
             case PAREN_CLOSE:
                 CLEAR_BUFFER();
-                vector* group = (vector*) data_content(
-                    vector_pop(
-                        token_stack, VECTOR_LENGTH(token_stack) - 1
-                    )
+                vector* group = vector_get(
+                    token_stack, VECTOR_LENGTH(token_stack) - 1
                 );
                 vector* tstack = vector_get(
                     token_stack,
@@ -502,13 +440,10 @@ vector* tokenize(const char* str) {
                 void* content;
 
                 if (tp == CALL) {
+                    token* t = vector_get(tstack, VECTOR_LENGTH(tstack) - 1);
                     content = callexpr_new(
                         group,
-                        data_content(
-                            data_from(
-                                vector_pop(tstack, VECTOR_LENGTH(tstack) - 1)
-                            )
-                        )
+                        t
                     );
                 }  else {
                     content = group;
@@ -531,6 +466,7 @@ vector* tokenize(const char* str) {
                 STACK_PUSH(
                     token_new(ARRAY_LITERAL, data_content(data_from(array)))
                 );
+                data_free(array);
                 break;
 
             case NOTOK:
@@ -638,16 +574,18 @@ void params_from_tokens(
     map* keywords
 ) {
     if (VECTOR_LENGTH(tokens) == 0) return;
-    data* name = vector_pop(tokens, 0);
-    token* t = data_content(name);
+    if (command_name) {
+        data* name = vector_pop(tokens, 0);
+        token* t = data_content(name);
 
-    if (t->type != STRING_LITERAL) {
-        THROW_STATIC("command name must be a string", "<parsing>");
-        return;
+        if (t->type != STRING_LITERAL) {
+            THROW_STATIC("command name must be a string", "<parsing>");
+            return;
+        }
+
+        *command_name = data_from(name);
+        data_free(name);
     }
-
-    if (command_name) *command_name = data_from(name);
-    data_free(name);
 
     for (int i = 0; i < VECTOR_LENGTH(tokens); i++) {
         token* t = vector_get(tokens, i);
@@ -668,7 +606,6 @@ void params_from_tokens(
                 if (!comm) {
                     ADVANCE_DEFAULT(
                         NOFREE_DATA(c->name->content),
-                        params_from_tokens,
                         OBJECT_EXEC
                     );
                     object* var = scope_get(GLOBAL, c->name->content);
@@ -704,45 +641,32 @@ void params_from_tokens(
                 ctx = context_new(comm, p, f, k, &buf);
                 ADVANCE_DEFAULT_CTX(
                     NOFREE_DATA(c->name->content),
-                    params_from_tokens,
                     ctx,
                     COMMAND_EXEC
                 );
                 object* ob = comm->caller(ctx);
+                if (ob) vector_append(params, OBJECT_DATA(ob));
                 context_free(ctx);
                 tcontext_pop();
-
-                if (ob) vector_append(params, OBJECT_DATA(ob));
                 break;
             }
 
             case REFERENCE: {
-                vector* result = vector_new();
-                vector_insert(
-                    t->content,
-                    0,
-                    HEAP_DATA(token_new(STRING_LITERAL, ""))
+                object* ob = scope_get(CURRENT_SCOPE, t->content);
+                if (!ob) return;
+                vector_append(
+                    params,
+                    NOFREE_DATA(ob)
                 );
-                params_from_tokens(t->content, NULL, result, NULL, NULL);
-                if (error_occurred()) return;
-                for (int i = 0; i < VECTOR_LENGTH(result); i++) {
-                    object* o = VECTOR_GET(result, i); 
-                    print_obj(o);
-                }
                 break;
             }
 
             case GROUP_LITERAL:
             case ARRAY_LITERAL: {
                 vector* result = vector_new();
-                vector_insert(
-                    t->content,
-                    0,
-                    HEAP_DATA(token_new(STRING_LITERAL, ""))
-                );
                 params_from_tokens(t->content, NULL, result, NULL, NULL);
                 if (error_occurred()) return;
-                vector_append(params, OBJECT_DATA(array_from(t->content)));
+                vector_append(params, OBJECT_DATA(array_from(result)));
                 break;
             }
 

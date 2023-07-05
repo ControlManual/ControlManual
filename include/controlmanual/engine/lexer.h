@@ -6,7 +6,32 @@
 #include <controlmanual/core/data.h>
 #include <controlmanual/core/util.h>
 
+vector* tokenize_basic(const char* str);
 vector* tokenize(const char* str);
+
+typedef enum ENUM_BTOKEN_TYPE {
+    NOTOK,
+    DSTRING_OPEN,
+    DSTRING_CLOSE,
+    SSTRING_OPEN,
+    SSTRING_CLOSE,
+    ARRAY_OPEN,
+    COMMA,
+    ARRAY_CLOSE,
+    DIGIT,
+    PAREN_OPEN,
+    PAREN_CLOSE,
+    WHITESPACE,
+    BRACKET_OPEN,
+    BRACKET_CLOSE,
+    FLAGC,
+} btoken_type;
+
+typedef struct STRUCT_BTOKEN {
+    btoken_type type;
+    char* content;
+    size_t index;
+} btoken;
 
 typedef enum ENUM_TOKEN_TYPE {
     STRING_LITERAL,

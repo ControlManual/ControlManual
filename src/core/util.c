@@ -10,7 +10,9 @@
 #include <signal.h>
 #include <stdnoreturn.h>
 #define STR_OR_NULL(d) d ? CONTENT_STR(d) : "<null>"
-#define INCBUF(amount) do { bufsize += amount; str = safe_realloc(str, bufsize); } while (0);
+#define INCBUF( \
+    amount) \
+    do { bufsize += amount; str = safe_realloc(str, bufsize); } while (0);
 #define CATSTR(s) do { \
     INCBUF(strlen(s)); \
     strcat(str, strdup(s)); \
@@ -24,21 +26,27 @@
                 }
 
 
-noreturn void fail(const char* message, int lineno, const char* file) {
+noreturn void fail(
+    const char* message,
+    int lineno,
+    const char* file,
+    const char* func_name
+) {
 #ifdef CM_DEBUG
     signal(SIGSEGV, SIG_DFL);
     /* we need to reset the signal handler in case something goes wrong in this function */
 #endif
     fprintf(
         stderr,
-        "(%s:%d) fatal control manual error: %s\n\n"
+        "(%s:%d in %s) fatal control manual error: %s\n\n"
         "-- DEBUG INFORMATION --\n\n",
-        /* 
+        /*
             NOTE: lineno and file only show where fail
             was called, not where the problem occured.
-        */
+         */
         file,
         lineno,
+        func_name,
         message
     );
 
@@ -68,9 +76,26 @@ noreturn void fail(const char* message, int lineno, const char* file) {
         );
     } else
         fputs(
-            "runtime not initalized, no further information available\n",
+            "runtime not initalized!\n",
             stderr
         );
+
+    #ifdef CM_TC_ERRORPROC
+    error* e = CONTENT_CAST(error_stack->last->value, error*);
+    if (e) {
+        fprintf(
+            stderr,
+            "-=- control manual error thrown -=-\n"
+            "origin: %s\n"
+            "content: %s\n\n",
+            CONTENT_STR(e->origin),
+            CONTENT_STR(e->content)
+        );
+    }
+    #else
+    fputs("CM_TC_ERRORPROC not defined, skipping\n", stderr);
+    #endif
+
 
     fputs("\n-- END DEBUG INFORMATION --\n", stderr);
     fflush(stderr);
@@ -106,7 +131,7 @@ int* int_convert(int value) {
 }
 
 char* format_size_va(
-    const char* fmt,
+    const char* restrict fmt,
     size_t* bufsize_target,
     va_list vargs,
     ...
@@ -122,58 +147,58 @@ char* format_size_va(
 
         if (last == '%') {
             switch (c) {
-                case 's': {
-                    char* ptr = va_arg(vargs, char*);
-                    CATSTR(ptr);
-                    break;
-                }
+            case 's': {
+                char* ptr = va_arg(vargs, char*);
+                CATSTR(ptr);
+                break;
+            }
 
-                case 'S': {
-                    object* ob = va_arg(vargs, object*);
-                    object* ob_str = object_to_string(ob);
-                    if (!ob_str) return NULL;
-                    char* result = STRING_VALUE(ob_str);
-                    CATSTR(result);
-                    break;
-                }
-                
-                case 'i': INTFMT(int, d);
-                case 'u': INTFMT(unsigned int, u);
-                case 'U': INTFMT(unsigned long, lu);
-                case 'l': INTFMT(long, ld);
-                case 'L': INTFMT(long long, lld);
-                case 'f': {
-                    double f = va_arg(vargs, double);
-                    int len = snprintf(NULL, 0, "%f", f);
-                    char* result = safe_malloc(len + 1);
-                    snprintf(result, len + 1, "%f", f);
-                    CATSTR(result);
-                    break;
-                }
+            case 'S': {
+                object* ob = va_arg(vargs, object*);
+                object* ob_str = object_to_string(ob);
+                if (!ob_str) return NULL;
+                char* result = STRING_VALUE(ob_str);
+                CATSTR(result);
+                break;
+            }
 
-                case 'p': {
-                    void* ptr = va_arg(vargs, void*);
-                    int len = snprintf(NULL, 0, "%p", ptr);
-                    char* result = safe_malloc(len + 1);
-                    snprintf(result, len + 1, "%p", ptr);
-                    CATSTR(result);
-                    break;
-                }
+            case 'i': INTFMT(int, d);
+            case 'u': INTFMT(unsigned int, u);
+            case 'U': INTFMT(unsigned long, lu);
+            case 'l': INTFMT(long, ld);
+            case 'L': INTFMT(long long, lld);
+            case 'f': {
+                double f = va_arg(vargs, double);
+                int len = snprintf(NULL, 0, "%f", f);
+                char* result = safe_malloc(len + 1);
+                snprintf(result, len + 1, "%f", f);
+                CATSTR(result);
+                break;
+            }
 
-                case 'c': {
-                    int ch = va_arg(vargs, int);
-                    char* chstr = char_to_string((char) ch);
-                    INCBUF(2);
-                    strcat(str, chstr);
-                    break;
-                }
+            case 'p': {
+                void* ptr = va_arg(vargs, void*);
+                int len = snprintf(NULL, 0, "%p", ptr);
+                char* result = safe_malloc(len + 1);
+                snprintf(result, len + 1, "%p", ptr);
+                CATSTR(result);
+                break;
+            }
 
-                case '%': {
-                    char* tmp = char_to_string('%');
-                    INCBUF(2);
-                    strcat(str, tmp);
-                    break;
-                }
+            case 'c': {
+                int ch = va_arg(vargs, int);
+                char* chstr = char_to_string((char) ch);
+                INCBUF(2);
+                strcat(str, chstr);
+                break;
+            }
+
+            case '%': {
+                char* tmp = char_to_string('%');
+                INCBUF(2);
+                strcat(str, tmp);
+                break;
+            }
             }
         }
     }
@@ -182,7 +207,7 @@ char* format_size_va(
     return str;
 }
 
-char* format_size(const char* fmt, size_t* bufsize, ...) {
+char* format_size(const char* restrict fmt, size_t* bufsize, ...) {
     va_list vargs;
     va_start(vargs, bufsize);
     char* result = format_size_va(fmt, bufsize, vargs);
@@ -190,11 +215,11 @@ char* format_size(const char* fmt, size_t* bufsize, ...) {
     return result;
 }
 
-inline char* format_va(const char* fmt, va_list vargs) {
+inline char* format_va(const char* restrict fmt, va_list vargs) {
     return format_size_va(fmt, NULL, vargs);
 }
 
-char* format(const char* fmt, ...) {
+char* format(const char* restrict fmt, ...) {
     va_list vargs;
     va_start(vargs, fmt);
     char* result = format_size_va(fmt, NULL, vargs);
@@ -202,3 +227,8 @@ char* format(const char* fmt, ...) {
     return result;
 }
 
+char* safe_strdup(const char* data) {
+    char* copy = strdup(data);
+    if (!copy) FAIL("strdup returned NULL!");
+    return copy;
+}

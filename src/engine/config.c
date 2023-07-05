@@ -17,32 +17,49 @@ settings cm_settings = {
 };
 
 void load_config(void) {
-    char* file = cat_path(DIR, ".cminit");
+    char* file = cat_path(
+        DIR,
+        ".cminit"
+    );
 
     if (!exists(file))
-        fclose(fopen(file, "w"));
+        fclose(
+            fopen(
+                file,
+                "w"
+            )
+        );
 
     char* content = read_file(file);
 
     size_t len = strlen(content);
     char* buf = safe_malloc(len + 1);
-    strcpy(buf, "");
+    strcpy(
+        buf,
+        ""
+    );
 
     for (int i = 0; i < len; i++) {
         char c = content[i];
         if (c != ';') {
             char* charstr = char_to_string(c);
-            strcat(buf, charstr);
+            strcat(
+                buf,
+                charstr
+            );
             free(charstr);
             continue;
         }
-        
+
         command_exec(buf);
         process_errors(false);
 
         free(buf);
         buf = safe_malloc(len + 1);
-        strcpy(buf, "");
+        strcpy(
+            buf,
+            ""
+        );
     }
 
     free(buf);

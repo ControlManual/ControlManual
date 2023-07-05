@@ -13,18 +13,30 @@ API char* read_file(const char* path);
 
 typedef FUNCTYPE(dir_iter_func, void, (char*));
 
-#define COMMAND_NAME(value) EXPORT data* cm_command_name(void) { return STACK_DATA(#value); }
-#define COMMAND_DESCRIPTION(value) EXPORT data* cm_command_description(void) { return STACK_DATA(value); }
+#define COMMAND_NAME( \
+    value) EXPORT data* cm_command_name(void) { return STACK_DATA(#value); }
+#define COMMAND_DESCRIPTION( \
+    value) \
+    EXPORT data* cm_command_description(void) { return STACK_DATA(value); }
 #define COMMAND_PARAMS(...) EXPORT paramcontext* cm_param_construct(void) { \
     return paramcontext_new(param_array_from((param*[]) { __VA_ARGS__ }, NUMARGS(__VA_ARGS__)), NUMARGS(__VA_ARGS__)); \
 }
 #define COMMAND EXPORT object* cm_command_caller
 #define COMMAND_INIT EXPORT void cm_command_init
 
-#define PLUGIN_NAME(value) EXPORT data* cm_plugin_name(void) { return STACK_DATA(#value); }
+#define PLUGIN_NAME( \
+    value) EXPORT data* cm_plugin_name(void) { return STACK_DATA(#value); }
 #define PLUGIN EXPORT void cm_plugin_func
 
 #define MIDDLEWARE EXPORT void cm_middleware_func
+
+#define PACKAGE_NAME( \
+    name) EXPORT data* cm_package_name(void) { return STACK_DATA(#name); }
+#define PACKAGE_DESCRIPTION( \
+    value) \
+    EXPORT data* cm_package_description(void) { return STACK_DATA(#value); }
+#define PACKAGE_LIST(...)
+#define PACKAGE_COMMAND(name, desc, ...)
 
 #define IS_COMMAND (1UL << 1)
 #define IS_PLUGIN (1UL << 2)

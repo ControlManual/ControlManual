@@ -17,21 +17,22 @@ typedef enum ENUM_INPUT_SCOPE {
 typedef size_t windowid;
 
 typedef FUNCTYPE(ui_onearg, void, (const char*));
+typedef FUNCTYPE(ui_print, void, (const char*, bool));
 typedef FUNCTYPE(ui_twoargs, void, (const char*, const char*));
 typedef FUNCTYPE(ui_input, data*, (input_scope, const char*));
 typedef FUNCTYPE(ui_none, void, ());
-typedef FUNCTYPE(ui_help, void, (map*))
-typedef FUNCTYPE(ui_confirm, bool, (const char*))
+typedef FUNCTYPE (ui_help, void, (map*))
+typedef FUNCTYPE (ui_confirm, bool, (const char*))
 typedef FUNCTYPE(ui_window, windowid, (const char*));
 typedef FUNCTYPE(ui_window_close, void, (windowid));
 typedef FUNCTYPE(ui_window_write, void, (windowid, const char*));
-typedef FUNCTYPE(ui_choose, size_t, (const char*, const char*[], size_t))
+typedef FUNCTYPE (ui_choose, size_t, (const char*, const char*[], size_t))
 typedef FUNCTYPE(ui_list, void, (const char*[], size_t))
 
 typedef struct STRUCT_UI {
     ui_error error;
     ui_onearg warn;
-    ui_onearg print;
+    ui_print print;
     ui_input input;
     ui_none start;
     ui_none end;
@@ -52,7 +53,7 @@ extern ui* cm_impl_ui_wrapper;
 API void ui_register(
     ui_error error,
     ui_onearg warn,
-    ui_onearg print,
+    ui_print print,
     ui_input input,
     ui_none start,
     ui_none end,
@@ -83,5 +84,6 @@ API void write_log(const char* message, const char* funcname);
 API void print_fmt(const char* fmt, ...);
 API void alert_fmt(const char* fmt, ...);
 API void warn_fmt(const char* fmt, ...);
+API void print_noline(const char* str);
 
 #endif

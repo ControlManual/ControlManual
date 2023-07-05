@@ -5,6 +5,10 @@
 #include <controlmanual/core/util.h> // safe_malloc
 #include <controlmanual/core/ui.h>
 #include <stdbool.h>
+#include <errno.h>
+#include <math.h> // log10, ceil
+#include <string.h> // strerror
+#include <stdio.h> // sprintf
 
 list* error_stack = NULL;
 bool errors_suppressed = false;
@@ -47,4 +51,25 @@ void throw_error(
     e->problems = problems;
     e->tc = tc;
     list_append(error_stack, HEAP_DATA(e));
+}
+
+void throw_errno(data* origin) {
+    if (errors_suppressed) return;
+    char* str = strerror(errno);
+    char* err = safe_malloc(((int) ceil(log10(errno + 2)) + strlen(str) + 9));
+    sprintf(err, "errno %d: %s", errno, str);
+    throw_error(HEAP_DATA(err), origin, NULL, NULL);
+}
+
+void* generic_error(void) {
+    if (!error_occurred()) {
+        tcontext* tc = tcontext_acquire();
+        throw_error(
+            STACK_DATA(CONTENT_STR(tc->name)),
+            STACK_DATA("An error occurred!"),
+            NULL,
+            NULL
+        );
+    }
+    return NULL;
 }

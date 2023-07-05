@@ -29,7 +29,7 @@ inline ui* ui_acquire() {
 void ui_register(
     ui_error error,
     ui_onearg warn,
-    ui_onearg print,
+    ui_print print,
     ui_input input,
     ui_none start,
     ui_none end,
@@ -68,13 +68,18 @@ void print_obj(object* o) {
     ui* u = ui_acquire();
     object* str = object_to_string(o);
     if (process_errors()) return;
-    u->print(STRING_VALUE(str));
+    u->print(STRING_VALUE(str), true);
 }
 
 void print(const char* str) {
     ui* u = ui_acquire();
-    u->print(str);
+    u->print(str, true);
 }
+
+void print_noline(const char* str) {
+    ui* u = ui_acquire();
+    u->print(str, false);
+};
 
 void alert(const char* str) {
     ui* u = ui_acquire();
@@ -121,6 +126,37 @@ void write_log(const char* message, const char* funcname) {
     u->log(message, funcname);
 }
 
-void print_fmt(const char* fmt, ...) FMT(print)
+void print_fmt(const char* fmt, ...) {
+    ui* u = ui_acquire();
+    va_list vargs;
+    va_start(vargs, fmt);
+    char* result = format_va(fmt, vargs);
+    va_end(vargs);
+    if (!result) {
+        process_errors();
+        return;
+    }
+    u->print(result, true);
+    free(result);
+}
 void alert_fmt(const char* fmt, ...) FMT(alert)
 void warn_fmt(const char* fmt, ...) FMT(warn)
+
+inline size_t choose(const char* name, const char** choices, size_t nchoices) {
+    ui* u = ui_acquire();
+    return u->choose(name, choices, nchoices);
+}
+
+size_t choosef(const char* name, size_t nargs, ...) {
+    ui* u = ui_acquire();
+    char** choices = safe_calloc(nargs, sizeof(char*));
+    va_list vargs;
+    va_start(vargs, nargs);
+
+    for (int i = 0; i < nargs; i++)
+        choices[i] = va_arg(vargs, char*);
+
+    size_t res = u->choose(name, (const char**) choices, nargs);
+    free(choices);
+    return res;
+}
