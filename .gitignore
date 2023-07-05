@@ -2,7 +2,6 @@
 out
 run
 vgcore.*
-esh.c
 test.c
 dll.c
 esh
